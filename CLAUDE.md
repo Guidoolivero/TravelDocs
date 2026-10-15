@@ -89,6 +89,7 @@ Definido en `utils.js` y testeado en `alerts.test.mjs`: 🔴 Vencido (días < 0)
   - **Ponytail:** antes de escribir código, la escalera (¿hace falta? ¿ya existe? ¿stdlib? ¿feature nativa?). Al terminar un cambio no trivial, ponytail-review del diff antes de entregar.
   - **Humanizer:** toda prosa que va a ver otra persona (docs, manuales, propuestas, emails, copy) se revisa antes de entregar. No aplica a código, commits ni comentarios.
 - **Al cerrar un cambio de código:** correr `npm test` y reindexar el grafo con `index_repository` en el mismo turno. No esperar a que lo pidan. Si se tocaron `firestore.rules`, también `npm run test:rules:emulator`.
+- **Después de cada cambio, además de reindexar:** commit y `git push` a `origin main` (repo privado `Guidoolivero/TravelDocs`). Solo `main`: nunca `git push --all` ni subir `historial-viejo` o `feat/*`, que tienen en su historial PDFs con datos de pasajeros. Antes del commit, mirar `git status` para confirmar que no entre nada con datos personales.
 - Los strings SSR/FOID y los formatos de fecha GDS no se tocan salvo bug confirmado.
 
 ## Documentación relevante (en `docs/`)
