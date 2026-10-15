@@ -1,0 +1,7 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "@sentry/node": "^11.7.0",
+    "firebase-admin": "^13.4.0"
+  }
+}

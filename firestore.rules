@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Custom claims en el JWT (seteados por scripts/seed-trading-travel.mjs).
+    // Necesarios para queries/listas — get() en users/{uid} falla en onSnapshot.
+    function hasTenantClaims() {
+      return request.auth != null
+        && request.auth.token.agencyId is string
+        && request.auth.token.role is string;
+    }
+
+    function userAgency() {
+      return request.auth.token.agencyId;
+    }
+
+    function userRole() {
+      return request.auth.token.role;
+    }
+
+    function isMemberOf(agencyId) {
+      return hasTenantClaims()
+        && userAgency() == agencyId
+        && userRole() in ['owner', 'admin', 'agent'];
+    }
+
+    function isAdminOf(agencyId) {
+      return hasTenantClaims()
+        && userAgency() == agencyId
+        && userRole() in ['owner', 'admin'];
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Cache global de resultados de gemini-travel (requisitos por ruta +
+    // nacionalidad, compartido entre agencias). Lo escriben y leen las
+    // Functions vía Admin SDK: el cliente no accede (mismo patrón que usage).
+    match /travelCache/{docId} {
+      allow read, write: if false;
+    }
+
+    match /agencies/{agencyId} {
+      allow read: if isMemberOf(agencyId);
+      allow create, delete: if false;
+      allow update: if isAdminOf(agencyId);
+
+      match /passengers/{passengerId} {
+        allow read, write: if isMemberOf(agencyId);
+      }
+
+      match /reservations/{reservationId} {
+        allow read, write: if isMemberOf(agencyId);
+      }
+
+      match /notifications/{key} {
+        allow read, write: if isMemberOf(agencyId);
+      }
+
+      match /members/{memberId} {
+        allow read: if isMemberOf(agencyId);
+        allow write: if isAdminOf(agencyId);
+      }
+
+      match /invites/{inviteId} {
+        allow read: if isAdminOf(agencyId);
+        allow write: if isAdminOf(agencyId);
+      }
+
+      match /settings/{docId} {
+        allow read: if isMemberOf(agencyId);
+        allow write: if isAdminOf(agencyId)
+          || (isMemberOf(agencyId) && docId == 'gdsCities');
+      }
+
+      // Medición de uso por agencia (contador diario de escaneos / travel).
+      // Escritura solo desde las Netlify Functions vía Admin SDK (service account,
+      // que saltea las rules). Lectura acá denegada por defecto: el reporte de uso
+      // se sirve por la ruta super-admin /usage (admin-api), no por el cliente.
+      match /usage/{dayId} {
+        allow read, write: if false;
+      }
+    }
+  }
+}

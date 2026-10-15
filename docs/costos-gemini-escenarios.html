@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>DocTravel - Analisis de costos Gemini y margen</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #1a1a1a; margin: 0; font-size: 12.5px; line-height: 1.5;
+  }
+  .header { border-bottom: 3px solid #0b5fff; padding-bottom: 10px; margin-bottom: 18px; }
+  .header h1 { margin: 0; font-size: 19px; color: #0b3a8c; }
+  .header .sub { margin-top: 4px; color: #555; font-size: 11.5px; }
+  h2 { font-size: 13.5px; color: #0b3a8c; margin: 20px 0 8px; border-left: 4px solid #0b5fff; padding-left: 8px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; }
+  th, td { border: 1px solid #c9d4e8; padding: 7px 9px; text-align: left; font-size: 11.8px; }
+  th { background: #eaf1ff; color: #0b3a8c; font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.opt td { background: #f4fbf4; }
+  tr.mix td { background: #fffdf3; }
+  tr.worst td { background: #fdf5f5; }
+  .note { font-size: 11px; color: #555; margin-top: 4px; }
+  .kpi-row { display: flex; gap: 10px; margin: 10px 0 4px; }
+  .kpi { flex: 1; border: 1px solid #c9d4e8; border-radius: 6px; padding: 9px 11px; background: #f7faff; }
+  .kpi .lab { font-size: 10.5px; color: #555; text-transform: uppercase; letter-spacing: .03em; }
+  .kpi .val { font-size: 16px; font-weight: 700; color: #0b3a8c; margin-top: 3px; }
+  .conclusion { margin-top: 16px; padding: 11px 13px; background: #eaf1ff; border-radius: 6px; border-left: 4px solid #0b5fff; }
+  .conclusion strong { color: #0b3a8c; }
+  .foot { margin-top: 18px; font-size: 10.5px; color: #777; border-top: 1px solid #ddd; padding-top: 8px; }
+  code { background: #f0f2f5; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>DocTravel / TradingDocs - Analisis de costos Gemini y margen</h1>
+  <div class="sub">Respaldo interno - basado en facturacion real de Google Cloud (01-ene-2026 a 30-jun-2026)</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="lab">Costo real 6 meses (CSV)</div><div class="val">USD 12,96</div></div>
+  <div class="kpi"><div class="lab">Costo real mensual promedio</div><div class="val">USD 2,16</div></div>
+  <div class="kpi"><div class="lab">Precio venta a RICALE</div><div class="val">USD 49 / mes</div></div>
+  <div class="kpi"><div class="lab">Margen estimado</div><div class="val">> 88%</div></div>
+</div>
+
+<h2>1. Tarifas reales por millon de tokens (del CSV)</h2>
+<table>
+  <tr><th>Modelo</th><th class="num">Input imagen</th><th class="num">Input texto</th><th class="num">Output</th></tr>
+  <tr><td>gemini-3.1-flash-lite (primario)</td><td class="num">$0,25</td><td class="num">$0,24</td><td class="num">$1,50</td></tr>
+  <tr><td>gemini-3.5-flash (fallback)</td><td class="num">$1,50</td><td class="num">$1,50</td><td class="num">$9,00</td></tr>
+</table>
+<p class="note">Valores en USD por millon de tokens. Fuente: <code>My Billing Account_Informes, 2026-01-01 - 2026-06-30.csv</code>. Firestore, Cloud Run, App Engine y Cloud Build facturaron $0,00 (free tier).</p>
+
+<h2>2. Costo unitario (5 imagenes por pasajero, sin reintentos)</h2>
+<table>
+  <tr><th>Modelo en uso</th><th class="num">Costo por imagen</th><th class="num">Costo por pasajero (5 img)</th></tr>
+  <tr class="opt"><td>Todo flash-lite (optimo)</td><td class="num">$0,0008</td><td class="num">$0,0040</td></tr>
+  <tr class="mix"><td>Mezcla realista (lite + fallback)</td><td class="num">$0,0015</td><td class="num">$0,0075</td></tr>
+  <tr class="worst"><td>Todo 3.5-flash (peor caso)</td><td class="num">$0,0050</td><td class="num">$0,0250</td></tr>
+</table>
+
+<h2>3. Cantidad de imagenes y pasajeros por presupuesto</h2>
+<table>
+  <tr>
+    <th>Escenario</th>
+    <th class="num">Imagenes con $5</th>
+    <th class="num">Imagenes con $50</th>
+    <th class="num">Pasajeros con $5</th>
+    <th class="num">Pasajeros con $50</th>
+  </tr>
+  <tr class="opt">
+    <td>Todo flash-lite (optimo)</td>
+    <td class="num">6.250</td><td class="num">62.000</td>
+    <td class="num">1.250</td><td class="num">12.500</td>
+  </tr>
+  <tr class="mix">
+    <td>Mezcla realista</td>
+    <td class="num">3.300</td><td class="num">33.000</td>
+    <td class="num">660</td><td class="num">6.600</td>
+  </tr>
+  <tr class="worst">
+    <td>Todo 3.5-flash (peor caso)</td>
+    <td class="num">1.000</td><td class="num">10.000</td>
+    <td class="num">200</td><td class="num">2.000</td>
+  </tr>
+</table>
+
+<h2>4. Margen estimado cobrando USD 49/mes a RICALE</h2>
+<table>
+  <tr>
+    <th>Escenario</th>
+    <th class="num">Costo Gemini/mes</th>
+    <th class="num">Ingreso (venta)</th>
+    <th class="num">Ganancia/mes</th>
+    <th class="num">Margen %</th>
+  </tr>
+  <tr class="opt">
+    <td>Todo flash-lite (optimo)</td>
+    <td class="num">~$2</td><td class="num">$49</td><td class="num">~$47</td><td class="num">~96%</td>
+  </tr>
+  <tr class="mix">
+    <td>Mezcla realista</td>
+    <td class="num">~$4</td><td class="num">$49</td><td class="num">~$45</td><td class="num">~92%</td>
+  </tr>
+  <tr class="worst">
+    <td>Todo 3.5-flash (peor caso)</td>
+    <td class="num">~$6</td><td class="num">$49</td><td class="num">~$43</td><td class="num">~88%</td>
+  </tr>
+</table>
+<p class="note">Estimacion sobre una agencia corporativa chica/media (200-800 pasajeros/mes). Para que el costo Gemini iguale los USD 49 cobrados, RICALE tendria que cargar entre 2.000 y 12.500 pasajeros/mes segun el modelo.</p>
+
+<div class="conclusion">
+  <strong>Conclusion:</strong> el costo marginal de Gemini es despreciable frente al precio de venta. El riesgo de pico de consumo no se controla con un techo de escaneos por agencia (que ademas complica la venta), sino con el tope mensual de USD configurado en la key de Google, que actua como red de seguridad de plataforma. Se recomienda precio plano por agencia (USD 49/mes o USD 490/año), usuarios y escaneos ilimitados, onboarding y soporte incluidos.
+</div>
+
+<div class="foot">
+  Documento de respaldo interno - DocTravel / TradingDocs. Precios en USD. No incluye IVA. Generado a partir de datos reales de facturacion de Google Cloud correspondientes al primer semestre 2026.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Homepage pública -> landing de presentación.
+# Rewrite 200: la URL queda en / y Google indexa una sola URL (antes era 302 y
+# podía indexar / y /landing.html como duplicadas). El 301 de abajo consolida
+# en / lo que ya haya indexado en /landing.html.
+# El flag ! (force) es clave: sin él, Netlify sirve index.html y engulle la regla.
+/ /landing.html 200!
+/landing.html / 301!
+
+/login /login.html 200
+/login/ /login.html 200
+/* /index.html 200
+
+# Fallback si Netlify publica dentro de /doctravel
+/doctravel/login /doctravel/login.html 200
+/doctravel/login/ /doctravel/login.html 200
+/doctravel/* /doctravel/index.html 200

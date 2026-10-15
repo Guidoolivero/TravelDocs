@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) — la config vive en js/analytics.js (script externo:
+     el CSP enforced bloquea los scripts inline, la config inline no se ejecutaba) -->
+<script src="https://browser.sentry-cdn.com/11.7.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+<script src="/js/sentry.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JTG1QQCTXC"></script>
+<script src="/js/analytics.js"></script>
+<!-- SPA detrás de login: no indexable (cubre también las URLs del catch-all) -->
+<meta name="robots" content="noindex">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TravelDocs — Gestión de Documentos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- LOADING OVERLAY (pasaporte escaneado) -->
+<div id="app-loading" role="status" aria-live="polite">
+  <div class="scan-stage" id="scan-stage">
+    <div class="loader-brand" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+      </svg>
+      <span>TravelDocs</span>
+    </div>
+    <div class="scan-frame">
+      <span class="corner tl" aria-hidden="true"></span>
+      <span class="corner tr" aria-hidden="true"></span>
+      <span class="corner bl" aria-hidden="true"></span>
+      <span class="corner br" aria-hidden="true"></span>
+      <div class="passport">
+        <div class="guilloche" aria-hidden="true"><svg id="guilloche" viewBox="0 0 440 320" preserveAspectRatio="xMidYMid slice"></svg></div>
+        <div class="pass-watermark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <circle cx="32" cy="32" r="27" />
+            <circle cx="32" cy="32" r="20" stroke-width="1" />
+            <circle cx="32" cy="32" r="6" fill="currentColor" stroke="none" />
+            <g stroke-width="1.4">
+              <line x1="32" y1="4" x2="32" y2="11" /><line x1="32" y1="53" x2="32" y2="60" />
+              <line x1="4" y1="32" x2="11" y2="32" /><line x1="53" y1="32" x2="60" y2="32" />
+              <line x1="12" y1="12" x2="17" y2="17" /><line x1="47" y1="47" x2="52" y2="52" />
+              <line x1="52" y1="12" x2="47" y2="17" /><line x1="17" y1="47" x2="12" y2="52" />
+            </g>
+          </svg>
+        </div>
+        <div class="pass-page">
+          <div class="pass-top">
+            <svg class="pass-emblem" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="32" cy="32" r="26" />
+              <circle cx="32" cy="32" r="6" fill="currentColor" stroke="none" />
+            </svg>
+            <div class="pass-top-txt">
+              <div class="pass-country">REPUBLICA ARGENTINA</div>
+              <div class="pass-type">PASAPORTE / PASSPORT</div>
+            </div>
+          </div>
+          <div class="pass-body">
+            <div class="pass-photo" aria-hidden="true">
+              <svg viewBox="0 0 64 80" fill="currentColor" aria-hidden="true">
+                <circle cx="32" cy="26" r="13" />
+                <path d="M10 78c0-13 10-21 22-21s22 8 22 21z" />
+              </svg>
+            </div>
+            <div class="pass-fields">
+              <div class="field full"><span class="lbl">APELLIDOS</span><span class="val" id="f-surname">-</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field full"><span class="lbl">NOMBRES</span><span class="val" id="f-given">-</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field"><span class="lbl">NACIONALIDAD</span><span class="val">ARGENTINA</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field"><span class="lbl">DOC Nº</span><span class="val" id="f-doc">-</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field"><span class="lbl">NACIMIENTO</span><span class="val" id="f-dob">-</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field"><span class="lbl">SEXO</span><span class="val" id="f-sex">-</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field"><span class="lbl">VENCIMIENTO</span><span class="val" id="f-exp">-</span><span class="ok" aria-hidden="true"></span></div>
+              <div class="field"><span class="lbl">LUGAR DE NAC.</span><span class="val" id="f-place">-</span><span class="ok" aria-hidden="true"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="pass-mrz">
+          <div class="mrz l1" id="mrz-line1"></div>
+          <div class="mrz l2" id="mrz-line2"></div>
+        </div>
+        <div class="scan-glow" aria-hidden="true"></div>
+        <div class="scan-beam" aria-hidden="true"></div>
+        <div class="stamp" aria-hidden="true">VERIFICADO<small>TRAVELDOCS · OK</small></div>
+      </div>
+    </div>
+    <div class="pass-progress">
+      <div class="pass-bar"><div class="pass-bar-fill"></div></div>
+      <span class="pass-pct" id="pass-pct">0%</span>
+    </div>
+  </div>
+</div>
+<script src="js/loader.js"></script>
+
+<!-- Backdrop para drawer móvil -->
+<div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
+<div class="app" id="app-root" style="display:none;">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+  <div class="sidebar-logo">
+    <img class="sidebar-brand-logo" alt="" width="168" height="auto" style="display:none;">
+  </div>
+  <nav class="sidebar-nav" aria-label="Secciones">
+    <button class="nav-item active" data-view="dashboard" aria-current="page">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="2" y="9" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/><rect x="9" y="9" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-item" data-view="passengers">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5" fill="currentColor"/><path d="M3 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <span>Pasajeros</span>
+    </button>
+    <button class="nav-item" data-view="reservations">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2.5h10v11H3z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5.5 6h5M5.5 9h5M5.5 11.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <span>Check ins</span>
+      <span id="reservations-badge" class="notif" style="display:none;margin-left:auto;background:var(--accent);" aria-live="polite"></span>
+    </button>
+    <button class="nav-item" data-view="documents">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="2" width="10" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 6h4M6 9h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <span>Documentos</span>
+    </button>
+    <button class="nav-item" data-view="alerts">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2a4 4 0 0 1 4 4v2l1 2H3l1-2V6a4 4 0 0 1 4-4z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6.5 12.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <span>Alertas</span>
+      <span id="alert-badge" class="notif" style="display:none;margin-left:auto;" aria-live="polite"></span>
+    </button>
+    <button class="nav-item" data-view="import">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Importar masivo</span>
+    </button>
+    <button class="nav-item" data-view="travel">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 2.5C8 2.5 5.5 5 5.5 8s2.5 5.5 2.5 5.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" fill="none"/><path d="M8 2.5c0 0 2.5 2.5 2.5 5.5S8 13.5 8 13.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" fill="none"/><path d="M2.5 8h11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+      <span>Requisitos de Vuelo</span>
+    </button>
+    <button class="nav-item" data-view="security" id="nav-security">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5l5 2v4c0 3.5-2.2 6-5 7-2.8-1-5-3.5-5-7v-4l5-2z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M6 8l1.5 1.5L10 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Seguridad</span>
+    </button>
+    <button class="nav-item" data-view="cities" id="nav-cities">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5a4.5 4.5 0 0 1 4.5 4.5c0 3.2-4.5 8-4.5 8S3.5 9.2 3.5 6A4.5 4.5 0 0 1 8 1.5z" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="8" cy="6" r="1.5" fill="currentColor"/></svg>
+      <span>Ciudades</span>
+    </button>
+    <button class="nav-item" data-view="admin" id="nav-admin" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" stroke="currentColor" stroke-width="1.5"/><path d="M2 11a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z" stroke="currentColor" stroke-width="1.5" opacity=".6"/><circle cx="4.5" cy="5" r=".7" fill="currentColor"/></svg>
+      <span>Administración</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar" id="user-avatar" aria-hidden="true">?</div>
+      <div class="user-email" id="user-email"></div>
+      <button class="btn-logout" aria-label="Cerrar sesión" title="Cerrar sesión">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 8h8M11 5l3 3-3 3M6 4V2H2v12h4v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <button class="btn-hamburger" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false" id="btn-hamburger">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-actions">
+      <div class="search-wrap">
+        <label for="global-search" class="sr-only">Buscar pasajero</label>
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" class="search-input" placeholder="Buscar pasajero..." id="global-search">
+      </div>
+      <button class="btn btn-primary" aria-label="Nuevo pasajero">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Nuevo pasajero
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="stats-grid" id="stats-grid"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚠ Ultimas alertas</span>
+            <button class="btn btn-ghost btn-sm" data-view="alerts">Ver todos →</button>
+          </div>
+          <div class="card-body" id="dash-urgent" style="padding:14px 16px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">👤 Últimos pasajeros</span>
+            <button class="btn btn-ghost btn-sm" data-view="passengers">Ver todos →</button>
+          </div>
+          <div class="card-body" id="dash-recent" style="padding:14px 16px;"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+          <span class="card-title">✈ Check-ins para hoy y mañana</span>
+          <button class="btn btn-ghost btn-sm" data-view="reservations">Ver todos →</button>
+        </div>
+        <div class="card-body" id="dash-checkins" style="padding:14px 16px;"></div>
+      </div>
+    </div>
+
+    <!-- PASSENGERS -->
+    <div id="view-passengers" class="view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:600;">Pasajeros</h2>
+          <p style="color:var(--text3);font-size:13px;margin-top:2px;" id="passengers-count"></p>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <select id="filter-status" class="btn btn-secondary" style="cursor:pointer;">
+            <option value="">Todos</option>
+            <option value="ok">Documentación OK</option>
+            <option value="warning">Por vencer</option>
+            <option value="expired">Vencidos / Críticos</option>
+          </select>
+          <button class="btn btn-primary" id="passengers-new-btn">+ Nuevo pasajero</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Pasajero</th>
+                <th>F. Nacimiento</th>
+                <th>DNI</th>
+                <th>Pasaporte ARG</th>
+                <th>Pas. Extranjero</th>
+                <th>Visas</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="passengers-tbody">
+              <tr><td colspan="8">
+                <div style="padding:16px;display:flex;flex-direction:column;gap:12px;" aria-busy="true" aria-label="Cargando pasajeros">
+                  <div style="display:flex;align-items:center;gap:12px;"><span class="skeleton skeleton-circle"></span><span class="skeleton skeleton-row" style="width:35%;"></span><span class="skeleton skeleton-row xs" style="width:20%;"></span></div>
+                  <div style="display:flex;align-items:center;gap:12px;"><span class="skeleton skeleton-circle"></span><span class="skeleton skeleton-row" style="width:45%;"></span><span class="skeleton skeleton-row xs" style="width:15%;"></span></div>
+                  <div style="display:flex;align-items:center;gap:12px;"><span class="skeleton skeleton-circle"></span><span class="skeleton skeleton-row" style="width:30%;"></span><span class="skeleton skeleton-row xs" style="width:25%;"></span></div>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESERVATIONS -->
+    <div id="view-reservations" class="view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:600;">Check ins</h2>
+          <p style="color:var(--text3);font-size:13px;margin-top:2px;" id="reservations-count"></p>
+        </div>
+        <button class="btn btn-primary" id="reservations-new-btn">+ Nuevo check-in</button>
+      </div>
+      <div class="card" style="margin-bottom:16px;padding:10px 12px;">
+        <input type="text" id="reservations-search" placeholder="Buscar por nombre o apellido..." autocomplete="off">
+      </div>
+      <div class="card">
+        <div id="reservations-list" style="padding:8px;"></div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div id="view-documents" class="view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Todos los documentos</h2>
+      </div>
+      <div class="tabs" id="doc-tabs">
+        <button class="tab active" data-doc-filter="all">Todos</button>
+        <button class="tab" data-doc-filter="dni">DNI</button>
+        <button class="tab" data-doc-filter="passport_arg">Pasaporte ARG</button>
+        <button class="tab" data-doc-filter="passport_ext">Pas. Extranjero</button>
+        <button class="tab" data-doc-filter="visa">Visas</button>
+        <button class="tab" data-doc-filter="asistencia">Asistencias Médicas</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Pasajero</th><th>Tipo</th><th>País</th><th>Número</th><th>Emisión</th><th>Vencimiento</th><th>Estado</th></tr>
+            </thead>
+            <tbody id="documents-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="view-alerts" class="view">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Alertas de vencimiento</h2>
+        <p style="color:var(--text3);font-size:13px;margin-top:2px;">Documentos ordenados por urgencia</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;" id="alerts-grid">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Vencidos y críticos (0–30 días)</div>
+          <div id="alerts-critical"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Por vencer (31–90 días)</div>
+          <div id="alerts-warning"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">DNI, Visas y Pasaporte · Vencen en 6 meses (91–180 días)</div>
+          <div id="alerts-6months"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Viajes a verificar requisitos migratorios y sanitarios (30 días)</div>
+          <div id="alerts-requisitos"></div>
+        </div>
+      </div>
+      <div style="margin-top:24px;">
+        <div style="font-size:12px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Cumpleaños próximos (30 días)</div>
+        <div id="alerts-birthdays"></div>
+      </div>
+    </div>
+
+    <!-- IMPORTACION MASIVA -->
+    <div id="view-import" class="view">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Importación masiva</h2>
+        <p style="color:var(--text3);font-size:13px;margin-top:2px;">Seleccioná una carpeta con imágenes o PDF de pasaportes y visas. El sistema agrupa los documentos por pasajero.</p>
+      </div>
+
+      <!-- Zona de selección -->
+      <div id="import-dropzone" class="card" style="padding:36px;text-align:center;cursor:pointer;border-style:dashed;transition:all .15s;" role="button" tabindex="0">
+        <input type="file" id="import-file-input" accept="image/jpeg,image/png,image/webp,application/pdf" multiple webkitdirectory style="display:none">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="color:var(--text3);margin-bottom:12px;"><path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        <div style="font-size:14px;font-weight:500;color:var(--text2);">Seleccioná la carpeta de documentos</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px;">JPG, PNG, WebP · Máx 4MB. PDF · Máx 20MB</div>
+      </div>
+
+      <!-- Import desde Excel/CSV -->
+      <div style="text-align:center;margin-top:14px;">
+        <button type="button" class="btn btn-ghost btn-sm" id="import-excel-btn">Importar desde Excel/CSV</button>
+        <input type="file" id="import-excel-input" accept=".xlsx,.xls,.csv" style="display:none">
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Columnas: APELLIDO, NOMBRE, DNI, VTO DNI, PASAPORTE, VTO PASS, FECHA NAC, CUILS</div>
+      </div>
+
+      <!-- Progreso OCR -->
+      <div id="import-progress-wrap" style="display:none;margin-top:20px;">
+        <div class="card" style="padding:20px 24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:500;" id="import-progress-label">Procesando...</span>
+            <span style="font-size:12px;color:var(--text3);" id="import-progress-count"></span>
+          </div>
+          <div style="background:var(--border);border-radius:99px;height:6px;">
+            <div id="import-progress-bar" style="background:var(--accent);height:6px;border-radius:99px;width:0%;transition:width .3s;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de revisión -->
+      <div id="import-review-wrap" style="display:none;margin-top:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <span style="font-size:15px;font-weight:600;" id="import-review-title">Revisá los resultados</span>
+            <span style="font-size:12px;color:var(--text3);margin-left:10px;" id="import-review-sub"></span>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-ghost btn-sm" id="btn-import-cancel">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="btn-import-save">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 11l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Guardar todos
+            </button>
+          </div>
+        </div>
+        <div id="import-review-table"></div>
+      </div>
+    </div>
+
+    <!-- REQUISITOS DE VUELO -->
+    <div id="view-travel" class="view">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Requisitos de Vuelo</h2>
+        <p style="color:var(--text3);font-size:13px;margin-top:2px;">Verificá visas, eTA, tasas de ingreso, vacunas y paradas técnicas que no figuran en GDS</p>
+      </div>
+
+      <!-- Formulario de consulta -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><span class="card-title">Datos del vuelo</span></div>
+        <div class="card-body">
+
+          <!-- Toggle modo -->
+          <div class="travel-mode-tabs">
+            <button class="travel-mode-btn active" id="btn-mode-single">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Vuelo individual
+            </button>
+            <button class="travel-mode-btn" id="btn-mode-gds">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h6M5 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Pegar segmentos GDS
+            </button>
+            <button class="travel-mode-btn" id="btn-mode-pdf">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5l3 3V13.5H4v-11z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 2.5V6h3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              Itinerario
+            </button>
+          </div>
+
+          <!-- Modo: vuelo individual -->
+          <div id="travel-panel-single">
+            <div class="travel-form-grid">
+              <div class="form-group">
+                <label for="tv-vuelo">Número de vuelo *</label>
+                <input type="text" id="tv-vuelo" placeholder="MU746" style="font-family:var(--mono);text-transform:uppercase;">
+              </div>
+              <div class="form-group">
+                <label for="tv-origen">Origen (IATA) *</label>
+                <input type="text" id="tv-origen" placeholder="EZE" maxlength="3" required style="font-family:var(--mono);text-transform:uppercase;">
+              </div>
+              <div class="form-group">
+                <label for="tv-destino">Destino (IATA) *</label>
+                <input type="text" id="tv-destino" placeholder="AUA" maxlength="3" required style="font-family:var(--mono);text-transform:uppercase;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Modo: segmentos GDS (Amadeus) -->
+          <div id="travel-panel-gds" style="display:none;">
+            <div class="form-group">
+              <label for="tv-gds-text">Segmentos del itinerario — copiá las líneas de vuelo del PNR de Amadeus</label>
+              <textarea id="tv-gds-text" class="gds-textarea"
+                placeholder=" 2  MU 746 R 28APR 2*EZEPVG HK1  0215 1810  29APR  E  CA/QBRHFZ&#10; 3  MU5325 R 29APR 3*PVGCAN HK1  2225 0050  30APR  E  CA/QBRHFZ&#10; 4  MU5318 L 10MAY 7*CANPVG HK1  2000 2220  10MAY  E  CA/QBRHFZ&#10; 5  MU 745 L 11MAY 1*PVGEZE HK1  0200 1630  11MAY  E  CA/QBRHFZ"
+                ></textarea>
+            </div>
+            <div id="gds-preview" style="display:none;"></div>
+          </div>
+
+          <!-- Modo: itinerario PDF (texto local, sin subir el archivo) -->
+          <div id="travel-panel-pdf" style="display:none;">
+            <div id="pdf-dropzone" class="pdf-dropzone">
+              <span style="position:relative;display:inline-flex;">
+                <button type="button" class="btn btn-attach" id="btn-pdf-itinerario">Adjuntar itinerario</button>
+                <input type="file" id="tv-pdf-file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic" aria-label="PDF o foto del itinerario" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;">
+              </span>
+              <span id="tv-pdf-msg" style="font-size:12px;color:var(--text3);">Arrastrá el PDF o una foto. Se lee en este equipo. No se sube el archivo.</span>
+            </div>
+            <div id="pdf-preview" style="display:none;"></div>
+          </div>
+
+          <!-- Fila 2: fecha + nacionalidad (común a ambos modos) -->
+          <div class="travel-form-row2" style="margin-top:14px;">
+            <div class="form-group">
+              <label for="tv-fecha">Fecha de viaje</label>
+              <input type="date" id="tv-fecha">
+            </div>
+            <div class="form-group">
+              <label for="tv-nacionalidad">Nacionalidad del pasajero *</label>
+              <select id="tv-nacionalidad">
+                <option value="Argentina (ARG)">Argentina</option>
+                <option value="Bolivia (BOL)">Bolivia</option>
+                <option value="Brasil (BRA)">Brasil</option>
+                <option value="Chile (CHL)">Chile</option>
+                <option value="Colombia (COL)">Colombia</option>
+                <option value="Ecuador (ECU)">Ecuador</option>
+                <option value="Guyana (GUY)">Guyana</option>
+                <option value="Paraguay (PRY)">Paraguay</option>
+                <option value="Perú (PER)">Perú</option>
+                <option value="Surinam (SUR)">Surinam</option>
+                <option value="Uruguay (URY)">Uruguay</option>
+                <option value="Venezuela (VEN)">Venezuela</option>
+                <option value="España (ESP)">España</option>
+                <option value="Italia (ITA)">Italia</option>
+                <option value="Alemania (DEU)">Alemania</option>
+                <option value="Francia (FRA)">Francia</option>
+                <option value="Portugal (PRT)">Portugal</option>
+                <option value="Estados Unidos (USA)">Estados Unidos</option>
+                <option value="Reino Unido (GBR)">Reino Unido</option>
+                <option value="México (MEX)">México</option>
+                <option value="China (CHN)">China</option>
+                <option value="Japón (JPN)">Japón</option>
+                <option value="Corea del Sur (KOR)">Corea del Sur</option>
+                <option value="India (IND)">India</option>
+                <option value="Rusia (RUS)">Rusia</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-primary" id="tv-btn-consultar">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Consultar requisitos
+            </button>
+            <button class="btn btn-ghost" id="tv-btn-reset" style="font-size:12px;">Limpiar</button>
+            <span id="tv-hint" style="font-size:12px;color:var(--text3);"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de resultados -->
+      <div id="tv-results" style="display:none;"></div>
+    </div>
+
+    <!-- SEGURIDAD (2FA) -->
+    <div id="view-security" class="view">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Seguridad</h2>
+        <p style="color:var(--text3);font-size:13px;margin-top:2px;">Autenticación en dos pasos (Google Authenticator).</p>
+      </div>
+      <div class="card" style="padding:16px 18px;margin-bottom:16px;">
+        <div id="security-self-status" style="font-size:14px;">Cargando…</div>
+      </div>
+      <div id="security-admin-block" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 style="font-size:15px;font-weight:600;">2FA de los miembros de la agencia</h3>
+          <button class="btn btn-ghost btn-sm" id="btn-security-refresh">Refrescar</button>
+        </div>
+        <div class="card" style="padding:8px;">
+          <div id="security-members-list"></div>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;">Para resetear el 2FA de un miembro que perdió el teléfono, pedile un código de recuperación y usalo acá. El miembro deberá re-configurar su autenticador.</p>
+      </div>
+    </div>
+
+    <!-- CIUDADES GDS -->
+    <div id="view-cities" class="view">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Ciudades</h2>
+        <p style="color:var(--text3);font-size:13px;margin-top:2px;">Códigos de ciudad de Amadeus y Sabre. Se guardan en la agencia y se copian con un clic.</p>
+      </div>
+      <div id="gds-cities-list" class="gds-cities-list"></div>
+      <button type="button" class="btn btn-secondary" id="btn-gds-city-add" style="margin-top:12px;">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Agregar ciudad
+      </button>
+    </div>
+
+    <!-- ADMINISTRACIÓN (solo super-admin) -->
+    <div id="view-admin" class="view">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:600;">Administración</h2>
+        <p style="color:var(--text3);font-size:13px;margin-top:2px;">Gestioná agencias y usuarios de la plataforma</p>
+      </div>
+
+      <div class="admin-tabs" id="admin-tabs">
+        <button class="admin-tab-btn active" data-admin-tab="agencies">Agencias</button>
+        <button class="admin-tab-btn" data-admin-tab="users">Usuarios</button>
+        <button class="admin-tab-btn" data-admin-tab="usage">Uso y gasto</button>
+      </div>
+
+      <!-- Panel Agencias -->
+      <div id="admin-panel-agencies" class="admin-panel">
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-header"><span class="card-title" id="admin-agency-form-title">Nueva agencia</span></div>
+          <div class="card-body">
+            <input type="hidden" id="admin-agency-edit-id">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="admin-ag-name">Nombre comercial *</label>
+                <input type="text" id="admin-ag-name" placeholder="Viajes del Sur">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-slug">Slug / ID *</label>
+                <input type="text" id="admin-ag-slug" placeholder="viajes-del-sur" style="font-family:var(--mono);">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-plan">Plan</label>
+                <select id="admin-ag-plan">
+                  <option value="trial">trial</option>
+                  <option value="starter">starter</option>
+                  <option value="pro">pro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-status">Estado</label>
+                <select id="admin-ag-status">
+                  <option value="active">active</option>
+                  <option value="suspended">suspended</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-alerts-email">Email de alertas *</label>
+                <input type="email" id="admin-ag-alerts-email" placeholder="alertas@agencia.com">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-app-name">Nombre de la app (branding)</label>
+                <input type="text" id="admin-ag-app-name" placeholder="SurDocs">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-color">Color primario</label>
+                <input type="color" id="admin-ag-color" value="#1a3a5c" style="height:38px;">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-logo-file">Logo de la agencia</label>
+                <input type="file" id="admin-ag-logo-file" accept="image/png,image/jpeg,image/webp,image/gif">
+                <div id="admin-ag-logo-preview-wrap" style="margin-top:8px;display:flex;align-items:center;gap:10px;">
+                  <img id="admin-ag-logo-preview" alt="Vista previa del logo" style="max-height:56px;max-width:160px;display:none;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff;">
+                  <button type="button" id="admin-ag-logo-remove" class="btn btn-ghost btn-sm" style="display:none;">Quitar logo</button>
+                </div>
+                <small style="color:var(--text2);">PNG (con transparencia), JPEG o WebP. Se achica a 400px.</small>
+              </div>
+            </div>
+            <div class="form-grid-3" style="margin-top:4px;">
+              <div class="form-group">
+                <label for="admin-ag-emailjs-pk">EmailJS Public Key</label>
+                <input type="text" id="admin-ag-emailjs-pk" value="9hDeLGPwhgAkqc7HZ" style="font-family:var(--mono);">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-emailjs-svc">EmailJS Service ID</label>
+                <input type="text" id="admin-ag-emailjs-svc" value="service_g7h8qrd" style="font-family:var(--mono);">
+              </div>
+              <div class="form-group">
+                <label for="admin-ag-emailjs-tpl">EmailJS Template ID</label>
+                <input type="text" id="admin-ag-emailjs-tpl" value="template_jwdgrsr" style="font-family:var(--mono);">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button class="btn btn-primary" id="admin-ag-save">Crear agencia</button>
+              <button class="btn btn-ghost" id="admin-ag-cancel" style="display:none;">Cancelar edición</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Agencias registradas</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Nombre</th><th>Slug</th><th>P lan</th><th>Estado</th><th>Usuarios</th><th></th></tr>
+              </thead>
+              <tbody id="admin-agencies-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Usuarios -->
+      <div id="admin-panel-users" class="admin-panel" style="display:none;">
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-header"><span class="card-title">Crear / vincular usuario</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="admin-us-agency">Agencia *</label>
+                <select id="admin-us-agency"></select>
+              </div>
+              <div class="form-group">
+                <label for="admin-us-email">Email *</label>
+                <input type="email" id="admin-us-email" placeholder="owner@agencia.com">
+              </div>
+              <div class="form-group">
+                <label for="admin-us-password">Contraseña</label>
+                <input type="password" id="admin-us-password" placeholder="Mín. 8 caracteres" autocomplete="new-password">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;">
+                  <button type="button" class="btn btn-ghost btn-sm" id="admin-us-password-gen">Generar contraseña</button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="admin-us-password-copy" hidden>Copiar</button>
+                </div>
+                <small style="color:var(--text3);font-size:11px;">Solo requerida si el usuario no existe en Auth, o para resetear la existente.</small>
+              </div>
+              <div class="form-group">
+                <label for="admin-us-role">Rol *</label>
+                <select id="admin-us-role">
+                  <option value="owner">owner</option>
+                  <option value="admin">admin</option>
+                  <option value="agent">agent</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="admin-us-name">Nombre</label>
+                <input type="text" id="admin-us-name" placeholder="Juan Pérez">
+              </div>
+            </div>
+            <div style="margin-top:16px;">
+              <button class="btn btn-primary" id="admin-us-save">Crear / vincular usuario</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Usuarios</span>
+            <select id="admin-us-filter-agency" class="btn btn-secondary" style="cursor:pointer;font-size:12px;"></select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody id="admin-users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Uso y gasto -->
+      <div id="admin-panel-usage" class="admin-panel" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Uso y gasto estimado por agencia</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="admin-usage-range" class="btn btn-secondary" style="cursor:pointer;font-size:12px;">
+                <option value="monthly">Mensual</option>
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="historical">Histórico</option>
+              </select>
+              <input type="month" id="admin-usage-month" style="font-size:12px;height:34px;border:1px solid var(--border);border-radius:8px;padding:0 8px;" disabled>
+              <button class="btn btn-primary btn-sm" id="admin-usage-refresh">Actualizar</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:0;">
+            <small style="color:var(--text3);font-size:12px;display:block;margin-bottom:12px;">
+              Gasto <strong>estimado</strong> según tarifas configuradas (COST_PER_SCAN_GEMINI / _CLAUDE / _TRAVEL). La factura real la da Google por key/proyecto; este número es la base para cobrar a cada agencia. El % Claude indica cuántos escaneos cayeron al fallback (más caro).
+            </small>
+            <div id="admin-usage-status" style="display:none;font-size:13px;color:var(--text2);margin-bottom:10px;"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th id="admin-usage-th-key">Agencia</th><th>Escaneos</th><th>Travel</th><th>Total</th><th>% Claude</th><th>Gasto est. (USD)</th></tr>
+                </thead>
+                <tbody id="admin-usage-tbody"></tbody>
+                <tfoot>
+                  <tr id="admin-usage-totals" style="font-weight:600;"></tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /app -->
+
+<!-- MODAL: PASAJERO (nuevo/editar) -->
+<div class="modal-overlay" id="modal-passenger">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-passenger-title">Nuevo pasajero</span>
+      <button class="close-btn" aria-label="Cerrar" id="modal-passenger-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <!-- SCANNER OCR -->
+      <div class="form-section">
+        <div class="form-section-title">📷 Leer documento con OCR (opcional)</div>
+        <div class="scan-dropzone" id="scan-dropzone" role="button" tabindex="0">
+          <input type="file" id="scan-file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="margin-bottom:8px;color:var(--text3);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div style="font-size:13px;font-weight:500;color:var(--text2);">Arrastrá o hacé click para subir</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Podés subir varios documentos a la vez · JPG, PNG, WebP, PDF · Máx 20MB c/u</div>
+          <img id="scan-preview" class="scan-preview" style="display:none;">
+        </div>
+        <div id="scan-status" style="display:none;font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
+        <div id="scan-error" class="scan-error" style="display:none;"></div>
+        <div id="scan-other-passengers" style="display:none;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg2);">
+          <div id="scan-other-passengers-text" style="font-size:12px;color:var(--text2);margin-bottom:8px;"></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="scan-other-passengers-btn">Agregar pasajeros detectados</button>
+        </div>
+      </div>
+
+      <input type="hidden" id="form-id">
+
+      <!-- Datos personales -->
+      <div class="form-section">
+        <div class="form-section-title">Datos personales</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-lastname">Apellido *</label>
+            <input type="text" id="form-lastname" placeholder="MARTINEZ" required>
+          </div>
+          <div class="form-group">
+            <label for="form-firstname">Nombre *</label>
+            <input type="text" id="form-firstname" placeholder="SANDRA PATRICIA" required>
+          </div>
+          <div class="form-group">
+            <label for="form-dob">Fecha de nacimiento *</label>
+            <input type="date" id="form-dob" required>
+          </div>
+          <div class="form-group">
+            <label for="form-gender">Sexo</label>
+            <select id="form-gender">
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-nationality">Nacionalidad (código IATA)</label>
+            <select id="form-nationality">
+              <option value="ARG">ARG — Argentina</option>
+                <option value="BOL">BOL — Bolivia</option>
+                <option value="BRA">BRA — Brasil</option>
+                <option value="CHL">CHL — Chile</option>
+                <option value="COL">COL — Colombia</option>
+                <option value="ECU">ECU — Ecuador</option>
+                <option value="GUY">GUY — Guyana</option>
+                <option value="PRY">PRY — Paraguay</option>
+                <option value="PER">PER — Perú</option>
+                <option value="SUR">SUR — Surinam</option>
+                <option value="URY">URY — Uruguay</option>
+                <option value="VEN">VEN — Venezuela</option>
+              <option value="ITA">ITA — Italia</option>
+              <option value="ESP">ESP — España</option>
+              <option value="DEU">DEU — Alemania</option>
+              <option value="FRA">FRA — Francia</option>
+              <option value="USA">USA — Estados Unidos</option>
+              <option value="GBR">GBR — Reino Unido</option>
+              <option value="PRT">PRT — Portugal</option>
+              <option value="MEX">MEX — México</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-cuil">CUIT/CUIL</label>
+            <input type="text" id="form-cuil" placeholder="20-12345678-3" style="font-family:var(--mono);">
+          </div>
+          <div class="form-group">
+            <label for="form-email">Email de contacto</label>
+            <input type="email" id="form-email" placeholder="cliente@email.com">
+          </div>
+          <div class="form-group">
+            <label for="form-whatsapp">WhatsApp</label>
+            <input type="tel" id="form-whatsapp" placeholder="+54 9 11 1234-5678">
+          </div>
+          <div class="form-group full">
+            <label for="form-notes">Observaciones</label>
+            <textarea id="form-notes" placeholder="Cliente VIP, infante asociado, preferencias..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- DNI -->
+      <div class="form-section">
+        <div class="form-section-title">DNI</div>
+        <div class="form-grid-4">
+          <div class="form-group">
+            <label for="form-dni-country">País emisor</label>
+            <select id="form-dni-country">
+              <option value="ARG">ARG — Argentina</option>
+              <option value="BOL">BOL — Bolivia</option>
+              <option value="BRA">BRA — Brasil</option>
+              <option value="CHL">CHL — Chile</option>
+              <option value="COL">COL — Colombia</option>
+              <option value="ECU">ECU — Ecuador</option>
+              <option value="GUY">GUY — Guyana</option>
+              <option value="PRY">PRY — Paraguay</option>
+              <option value="PER">PER — Perú</option>
+              <option value="SUR">SUR — Surinam</option>
+              <option value="URY">URY — Uruguay</option>
+              <option value="VEN">VEN — Venezuela</option>
+              <option value="ITA">ITA — Italia</option>
+              <option value="ESP">ESP — España</option>
+              <option value="DEU">DEU — Alemania</option>
+              <option value="FRA">FRA — Francia</option>
+              <option value="PRT">PRT — Portugal</option>
+              <option value="GBR">GBR — Reino Unido</option>
+              <option value="USA">USA — Estados Unidos</option>
+              <option value="MEX">MEX — México</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-dni-num">Número</label>
+            <input type="text" id="form-dni-num" placeholder="39171901" style="font-family:var(--mono);">
+          </div>
+          <div class="form-group">
+            <label for="form-dni-issue">Fecha emisión</label>
+            <input type="date" id="form-dni-issue">
+          </div>
+          <div class="form-group">
+            <label for="form-dni-exp">Fecha vencimiento</label>
+            <input type="date" id="form-dni-exp">
+          </div>
+        </div>
+      </div>
+
+      <!-- Pasaporte ARG -->
+      <div class="form-section">
+        <div class="form-section-title">Pasaporte Argentino</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label for="form-parg-num">Número</label>
+            <input type="text" id="form-parg-num" placeholder="AAI204554" style="font-family:var(--mono);">
+          </div>
+          <div class="form-group">
+            <label for="form-parg-issue">Fecha emisión</label>
+            <input type="date" id="form-parg-issue">
+          </div>
+          <div class="form-group">
+            <label for="form-parg-exp">Fecha vencimiento</label>
+            <input type="date" id="form-parg-exp">
+          </div>
+        </div>
+      </div>
+
+      <!-- Pasaporte Extranjero -->
+      <div class="form-section">
+        <div class="form-section-title">Pasaporte Extranjero</div>
+        <div class="form-grid-2" style="margin-bottom:10px;">
+          <div class="form-group">
+            <label for="form-pext-lastname">Apellido (en este pasaporte)</label>
+            <input type="text" id="form-pext-lastname" placeholder="NUNEZ BARACH" style="text-transform:uppercase;">
+          </div>
+          <div class="form-group">
+            <label for="form-pext-firstname">Nombre (en este pasaporte)</label>
+            <input type="text" id="form-pext-firstname" placeholder="AGUSTINA" style="text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="form-grid-4">
+          <div class="form-group">
+            <label for="form-pext-country">País emisor</label>
+            <select id="form-pext-country">
+              <option value="">— No tiene —</option>
+              <option value="ARG">ARG — Argentina</option>
+              <option value="BOL">BOL — Bolivia</option>
+              <option value="BRA">BRA — Brasil</option>
+              <option value="CHL">CHL — Chile</option>
+              <option value="COL">COL — Colombia</option>
+              <option value="ECU">ECU — Ecuador</option>
+              <option value="GUY">GUY — Guyana</option>
+              <option value="PRY">PRY — Paraguay</option>
+              <option value="PER">PER — Perú</option>
+              <option value="SUR">SUR — Surinam</option>
+              <option value="URY">URY — Uruguay</option>
+              <option value="VEN">VEN — Venezuela</option>
+              <option value="ITA">ITA — Italia</option>
+              <option value="ESP">ESP — España</option>
+              <option value="DEU">DEU — Alemania</option>
+              <option value="FRA">FRA — Francia</option>
+              <option value="PRT">PRT — Portugal</option>
+              <option value="GBR">GBR — Reino Unido</option>
+              <option value="USA">USA — Estados Unidos</option>
+              <option value="MEX">MEX — México</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-pext-num">Número</label>
+            <input type="text" id="form-pext-num" placeholder="YB6340724" style="font-family:var(--mono);">
+          </div>
+          <div class="form-group">
+            <label for="form-pext-issue">Fecha emisión</label>
+            <input type="date" id="form-pext-issue">
+          </div>
+          <div class="form-group">
+            <label for="form-pext-exp">Fecha vencimiento</label>
+            <input type="date" id="form-pext-exp">
+          </div>
+        </div>
+      </div>
+
+      <!-- Visas (grupo dinámico) -->
+      <div class="form-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Visa</div>
+          <button type="button" class="btn btn-ghost" id="visa-add-btn" style="font-size:12px;padding:4px 11px;height:auto;">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Agregar
+          </button>
+        </div>
+        <div id="visa-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="visa-empty" style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0;">Sin visas cargadas.</div>
+      </div>
+
+      <!-- Asistencias Médicas (grupo dinámico - reutiliza patrón de visas) -->
+      <div class="form-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Asistencia Médica</div>
+          <button type="button" class="btn btn-ghost" id="asistencia-add-btn" style="font-size:12px;padding:4px 11px;height:auto;">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Agregar
+          </button>
+        </div>
+        <div id="asistencia-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="asistencia-empty" style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0;">Sin asistencias médicas cargadas.</div>
+      </div>
+
+      <!-- Viajero Frecuente -->
+      <div class="form-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Viajero Frecuente</div>
+          <button type="button" class="btn btn-ghost" id="ffn-add-btn" style="font-size:12px;padding:4px 11px;height:auto;">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Agregar
+          </button>
+        </div>
+        <div id="ffn-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="ffn-empty" style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0;">Sin programas de viajero frecuente cargados.</div>
+      </div>
+
+
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-passenger-cancel-btn">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-passenger">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 11l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Guardar pasajero
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RESERVA -->
+<div class="modal-overlay" id="modal-reservation">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-reservation-title">Nuevo check-in</span>
+      <button class="close-btn" aria-label="Cerrar" id="modal-reservation-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="res-id">
+      <div class="form-section">
+        <div class="form-section-title">Pegar PNR o adjuntar e-ticket</div>
+        <div class="form-group">
+          <label for="res-pnr-raw">Copiá el PNR del GDS</label>
+          <textarea id="res-pnr-raw" class="gds-textarea" rows="5" placeholder="APELLIDO/NOMBRE&#9; 6  IB 110 I 08JUL 3 EZEMAD         FLWN&#10; 7  IB 105 I 29JUL 3 MADEZE HK5  0845 1605  29JUL  E  IB/xxxxxx"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" id="btn-interpret-pnr">Decodificar PNR</button>
+          <button type="button" class="btn btn-attach" id="btn-attach-pdf">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Adjuntar e-ticket PDF
+          </button>
+          <span style="font-size:11px;color:var(--text3);font-weight:600;">Podés elegir varios a la vez</span>
+          <input type="file" id="res-pdf-input" accept="application/pdf" multiple style="display:none;">
+          <span id="res-pnr-status" style="font-size:12px;color:var(--text3);"></span>
+        </div>
+        <div id="res-pnr-preview" style="display:none;margin-top:10px;"></div>
+      </div>
+      <input type="hidden" id="res-pnr">
+      <div class="form-section" style="margin-top:16px;">
+        <div class="form-section-title">Datos del vuelo</div>
+        <div id="res-compania-wrap">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="res-reserva-vuelo">Reserva aerolínea (check-in web)</label>
+              <input type="text" id="res-reserva-vuelo" placeholder="KRBJJ" style="font-family:var(--mono);">
+            </div>
+            <div class="form-group">
+              <label for="res-compania">Compañía aérea *</label>
+              <input type="text" id="res-compania" placeholder="AA, AR, LA..." maxlength="3" style="font-family:var(--mono);">
+              <span id="res-compania-badge" style="margin-top:4px;display:block;"></span>
+            </div>
+          </div>
+        </div>
+        <div id="res-multi-note" style="display:none;margin-bottom:10px;font-size:12px;color:var(--text3);background:var(--surface2);border-radius:8px;padding:8px 10px;">Itinerario multi-aerolínea: completá la aerolínea y el código de reserva de cada tramo.</div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>Tramos del viaje (un check-in por tramo)</label>
+          <div id="res-piernas" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="res-add-pierna" style="margin-top:8px;">+ Agregar tramo</button>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Aviso de check-in</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="res-alert-email">Email para el aviso (opcional)</label>
+            <input type="email" id="res-alert-email" placeholder="Vacío = email de la agencia">
+          </div>
+          <div class="form-group">
+            <label for="res-alert-horas">Avisar con anticipación</label>
+            <select id="res-alert-horas">
+              <option value="24" selected>24 horas antes (día previo)</option>
+              <option value="48">48 horas antes (2 días)</option>
+              <option value="72">72 horas antes (3 días)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Pasajeros</div>
+        <div id="res-pax-selected" style="margin-bottom:10px;"></div>
+        <input type="text" id="res-pax-search" placeholder="Buscar pasajero para agregar..." style="margin-bottom:10px;">
+        <div id="res-pax-list" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:6px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-reservation-cancel-btn">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-reservation">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 11l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Guardar check-in
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LECTURA CHECK-IN -->
+<div class="modal-overlay" id="modal-reservation-view">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="res-view-title">Check-in</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondary btn-sm" id="res-view-edit-btn">Editar</button>
+        <button class="close-btn" aria-label="Cerrar" id="res-view-close-btn">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body" id="res-view-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: DETALLE PASAJERO -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal" style="max-width:860px;">
+    <div class="modal-header">
+      <span class="modal-title" id="detail-title"></span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondary btn-sm" id="detail-edit-btn">✏ Editar</button>
+        <button class="btn btn-danger btn-sm" id="detail-delete-btn">Eliminar</button>
+        <button class="close-btn" aria-label="Cerrar" id="modal-detail-close-btn">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: BÚSQUEDA -->
+<div class="modal-overlay" id="modal-search">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <span class="modal-title">Resultados de búsqueda</span>
+      <button class="close-btn" aria-label="Cerrar" id="modal-search-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="search-results-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRM DELETE -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title" id="confirm-title">¿Estás seguro?</span>
+      <button class="close-btn" aria-label="Cerrar" id="modal-confirm-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-text" style="font-size:14px;color:var(--text2);line-height:1.6;"></p>
+      <p id="confirm-subtext" style="font-size:12px;color:var(--text3);line-height:1.5;margin-top:10px;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-confirm-cancel-btn">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MENSAJE DIRECTO (una vez por usuario) -->
+<div class="modal-overlay" id="modal-direct-message">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title" id="direct-message-title"></span>
+      <button class="close-btn" aria-label="Cerrar" id="direct-message-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="direct-message-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="direct-message-ok-btn">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR USUARIO (super-admin) -->
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <span class="modal-title">Editar usuario</span>
+      <button class="close-btn" aria-label="Cerrar" id="modal-edit-user-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="admin-edit-user-uid">
+      <div class="form-group">
+        <label for="admin-edit-user-email">Email</label>
+        <input type="email" id="admin-edit-user-email" placeholder="owner@agencia.com">
+      </div>
+      <div class="form-group">
+        <label for="admin-edit-user-name">Nombre</label>
+        <input type="text" id="admin-edit-user-name" placeholder="Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label for="admin-edit-user-role">Rol</label>
+        <select id="admin-edit-user-role">
+          <option value="owner">owner</option>
+          <option value="admin">admin</option>
+          <option value="agent">agent</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="admin-edit-user-password">Nueva contraseña</label>
+        <input type="password" id="admin-edit-user-password" placeholder="Dejar vacío para no cambiar">
+        <small style="color:var(--text3);font-size:11px;">Mín. 8 caracteres. Se cerrará la sesión activa del usuario.</small>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="admin-edit-user-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="admin-edit-user-save">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR AGENCIA (confirmación con slug) -->
+<div class="modal-overlay" id="modal-agency-delete">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <span class="modal-title">Eliminar agencia</span>
+      <button class="close-btn" aria-label="Cerrar" id="modal-agency-delete-close-btn">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="admin-agency-delete-target">
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;">Esta acción borra la agencia, <strong>todos sus datos</strong> (pasajeros, notificaciones, uso, ajustes) y las <strong>cuentas de Auth de sus usuarios</strong>. No se puede deshacer.</p>
+      <p style="font-size:13px;color:var(--text2);margin-top:14px;">Para confirmar, escribí el slug exacto de la agencia:</p>
+      <input type="text" id="admin-agency-delete-input" style="font-family:var(--mono);margin-top:6px;" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="admin-agency-delete-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="admin-agency-delete-confirm" disabled>Eliminar agencia</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="toast-wrap" role="status" aria-live="polite">
+  <div class="toast-body" id="toast-text"></div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT (ES Modules)
+     ============================================================ -->
+<script type="module" src="./js/app.mjs"></script>
+</body>
+</html>

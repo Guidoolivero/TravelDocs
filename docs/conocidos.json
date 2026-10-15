@@ -1,0 +1,4761 @@
+{
+ "paises": [
+  {
+   "iso3": [
+    "CHN"
+   ],
+   "iatas": [
+    "PVG",
+    "SHA",
+    "PEK",
+    "PKX",
+    "CAN",
+    "SZX",
+    "CTU"
+   ],
+   "nombres": [
+    "CHINA",
+    "CHINA CONTINENTAL",
+    "REPUBLICA POPULAR CHINA"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Tarjeta de Llegada a China (digital)",
+     "solo_arg": false,
+     "obligatorio": true,
+     "descripcion": "Tarjeta de llegada digital de la Administración Nacional de Inmigración (NIA), obligatoria para todo extranjero que ingresa a China continental, también sin visa. No se necesita en tránsito sin desembarcar. Es gratuita: cuidarse de sitios de terceros que la cobran.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "antes de la llegada (recomendado dentro de las 24hs previas)",
+     "url_oficial": "https://s.nia.gov.cn/ArrivalCardFillingPC/",
+     "sameAs": {
+      "__regex": "arrival\\s*card|tarjeta de llegada|入境卡|nia\\.gov\\.cn",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "declaracion_salud",
+     "nombre": "Declaración de Salud de Aduanas de China",
+     "solo_arg": false,
+     "obligatorio": false,
+     "descripcion": "Desde el 1/11/2023 la Aduana de China eliminó la obligación de llenarla para todos los viajeros: solo deben declararla quienes tengan síntomas (fiebre, tos, vómitos, diarrea, erupciones) o estén diagnosticados con una enfermedad contagiosa. Para el resto es voluntaria/recomendada: genera un código QR que suele agilizar el control en el aeropuerto.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "a la llegada (recomendado generar el QR antes)",
+     "url_oficial": "https://htdecl.customs.gov.cn/",
+     "sameAs": {
+      "__regex": "declaraci[oó]n de salud|health declaration|htdecl|customs\\.gov\\.cn",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "JAM"
+   ],
+   "iatas": [
+    "MBJ",
+    "KIN"
+   ],
+   "nombres": [
+    "JAMAICA"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Formulario C5 (Declaración de Inmigración y Aduanas)",
+     "solo_arg": false,
+     "obligatorio": true,
+     "descripcion": "Declaración electrónica obligatoria de inmigración y aduanas para ingresar a Jamaica.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "mín. 72hs antes",
+     "url_oficial": "https://enterjamaica.gov.jm/",
+     "sameAs": {
+      "__regex": "C5|enterjamaica",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ABW"
+   ],
+   "iatas": [
+    "AUA"
+   ],
+   "nombres": [
+    "ARUBA"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Aruba ED Card (Embarkation/Disembarkation Card)",
+     "solo_arg": false,
+     "obligatorio": true,
+     "descripcion": "Formulario electrónico obligatorio de inmigración para ingresar a Aruba. Incluye el pago de la Sustainability Fee (USD 20) para visitantes no residentes que arriban por vía aérea.",
+     "costo_aproximado": "USD 20 (Sustainability Fee)",
+     "anticipacion_recomendada": "dentro de los 7 días previos al viaje",
+     "url_oficial": "https://edcardaruba.aw/welcome",
+     "sameAs": {
+      "__regex": "ED.?CARD|EMBARKATION|DISEMBARKATION|SUSTAINABILITY|SOSTENIB|edcardaruba",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "solo_arg": false,
+     "obligatorio": false,
+     "descripcion": "Aruba exige el certificado solo si el pasajero llega desde o transitó por zona de riesgo de fiebre amarilla (países endémicos según WHO). En vuelo directo sin escala previa en zona de riesgo, no se exige. Verificar el itinerario completo del pasajero.",
+     "costo_aproximado": "Gratuito en centros públicos (verificar por país)",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio solo si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "DOM",
+    "DO"
+   ],
+   "iatas": [
+    "PUJ",
+    "SDQ",
+    "STI",
+    "POP",
+    "JBQ",
+    "LRM",
+    "AZS"
+   ],
+   "nombres": [
+    "REPUBLICA DOMINICANA",
+    "DOMINICANA",
+    "DOMINICAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Formulario electrónico de entrada y salida (E-Ticket de Migración)",
+     "solo_arg": false,
+     "obligatorio": true,
+     "descripcion": "Formulario electrónico obligatorio de entrada y salida de República Dominicana. Unifica migración, aduanas y declaración de salud.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "mín. 72hs antes",
+     "url_oficial": "https://eticket.migracion.gob.do/",
+     "sameAs": {
+      "__regex": "E.?TICKET|ETICKET|TICKET ELECTRONICO|eticket.migracion",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "IND",
+    "IN"
+   ],
+   "iatas": [
+    "DEL",
+    "BOM",
+    "MAA",
+    "BLR",
+    "HYD",
+    "CCU",
+    "AMD",
+    "GOI"
+   ],
+   "nombres": [
+    "INDIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de India (Turista/Negocios/Médica)",
+     "obligatorio": true,
+     "descripcion": "Requiere e-Visa (Turista/Negocios/Médica). Turista: 30 días (doble entrada), 1 año (90 días continuos) o 5 años (180 días continuos).",
+     "costo_aproximado": "USD 25-80 aprox. (según modalidad)",
+     "anticipacion_recomendada": "mín. 4 días antes",
+     "url_oficial": "https://indianvisaonline.gov.in/evisa/tvoa.html",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "PLF",
+     "nombre": "Air Suvidha (Declaración Jurada de Salud)",
+     "solo_arg": false,
+     "obligatorio": true,
+     "descripcion": "Air Suvidha (Self-Declaration Form / SDF): autodeclaración electrónica obligatoria de salud para todos los pasajeros internacionales que llegan a India. Incluye historial de viaje de los últimos 21 días, síntomas y estado de salud. Genera un código QR al arribar. Tramitar solo en el portal oficial …",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "dentro de las 72hs previas a la llegada",
+     "url_oficial": "https://airsuvidha.civilaviation.gov.in/",
+     "sameAs": {
+      "__regex": "air.?suvidha",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "OBLIGATORIA para viajeros desde Argentina: India aplica el criterio amplio y considera a Argentina país de riesgo aun con vuelo directo. Tambien exigida a otros 8 paises sudamericanos de riesgo (no a Chile ni Uruguay). Certificado internacional (CIVP).",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.ihpoe.mohfw.gov.in/vaccination.php",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "VNM",
+    "VN"
+   ],
+   "iatas": [
+    "HAN",
+    "SGN",
+    "DAD"
+   ],
+   "nombres": [
+    "VIETNAM"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Vietnam (Turista)",
+     "obligatorio": true,
+     "descripcion": "NO exento. Requiere e-Visa (hasta 90 días, entrada única o múltiple), trámite online obligatorio antes de viajar.",
+     "costo_aproximado": "USD 25 aprox.",
+     "anticipacion_recomendada": "mín. 4 días antes",
+     "url_oficial": "https://evisa.gov.vn/",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: el único dominio oficial es evisa.gov.vn (.gov.vn). Sitios como evisa-vietnam.org, vietnam-visa.com, getvisavietnam.com son falsos."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "KHM",
+    "KH"
+   ],
+   "iatas": [
+    "PNH",
+    "REP"
+   ],
+   "nombres": [
+    "CAMBOYA",
+    "CAMBODIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Camboya (Turista)",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere visado. e-Visa turística de entrada única, válida 3 meses desde emisión, estadía de 30 días.",
+     "costo_aproximado": "USD 36 aprox.",
+     "anticipacion_recomendada": "mín. 3 días antes",
+     "url_oficial": "https://www.evisa.gov.kh/",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: el único dominio oficial es evisa.gov.kh. Sitios como evisagov.co, evisa-kh.org son falsos."
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Certificado de fiebre amarilla exigido solo si el pasajero llega desde/transitó por zona de riesgo (incluye el norte de Argentina: Misiones, Corrientes).",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LAO",
+    "LA"
+   ],
+   "iatas": [
+    "VTE",
+    "LPQ"
+   ],
+   "nombres": [
+    "LAOS"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Laos (Turista)",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere visado. e-Visa: Carta de Aprobación válida 60 días para el ingreso, estadía de 30 días una vez dentro del país.",
+     "costo_aproximado": "USD 50 aprox.",
+     "anticipacion_recomendada": "mín. 3 días antes",
+     "url_oficial": "https://laoevisa.gov.la/",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: el dominio oficial es laoevisa.gov.la (todo junto). evisa.gov.la NO existe; evisagov.la y lao-evisa.com son comerciales no oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MMR",
+    "MM"
+   ],
+   "iatas": [
+    "RGN",
+    "MDL"
+   ],
+   "nombres": [
+    "MYANMAR"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Myanmar (Turista)",
+     "obligatorio": true,
+     "descripcion": "Requiere e-Visa turística (Argentina está entre las 100 nacionalidades elegibles). Estadía: 28 días desde el arribo.",
+     "costo_aproximado": "USD 50 aprox.",
+     "anticipacion_recomendada": "mín. 7 días antes",
+     "url_oficial": "https://tourism.gov.mm/en/e-visa",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Certificado de fiebre amarilla exigido solo si hubo tránsito >12h en país de riesgo. Argentina no es país de riesgo para Myanmar.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://cdn.who.int/media/docs/default-source/travel-and-health/vaccination-requirements-and-who-recommendations-ith-2022-country-list.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LKA",
+    "LK"
+   ],
+   "iatas": [
+    "CMB"
+   ],
+   "nombres": [
+    "SRI LANKA",
+    "CEILAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "ETA Sri Lanka (Electronic Travel Authorization)",
+     "obligatorio": true,
+     "descripcion": "Requiere ETA (Electronic Travel Authorization). Argentina no está en la lista de ETA gratuita: cuesta USD 50 (online) o USD 60 (a la llegada). Válida 30 días, prorrogable hasta 6 meses.",
+     "costo_aproximado": "USD 50 (online) / USD 60 (a la llegada)",
+     "anticipacion_recomendada": "mín. 72hs antes",
+     "url_oficial": "https://eta.gov.lk/slvisa/visainfo/fees.jsp?locale=en_US",
+     "sameAs": {
+      "__regex": "\\beta\\b|electronic travel authorization|eta",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: el dominio 'govt.sl' es de Sierra Leona, NO de Sri Lanka (que usa .lk). Usar solo eta.gov.lk e immigration.gov.lk."
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "Certificado de fiebre amarilla OBLIGATORIO: Argentina figura explícitamente listada bajo 'South American Region'. Sin certificado, se niega el ingreso.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.immigration.gov.lk/pages_e.php?id=22",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Argentina figura como país de riesgo de fiebre amarilla para este destino; se exige el certificado aun con vuelo directo.",
+     "nota_fuentes": "Sin certificado válido, riesgo de rechazo de ingreso o cuarentena. Vacunar con mín. 10 días de anticipación."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "KOR",
+    "KR"
+   ],
+   "iatas": [
+    "ICN",
+    "PUS"
+   ],
+   "nombres": [
+    "COREA DEL SUR",
+    "COREA SUR",
+    "SOUTH KOREA"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "K-ETA (Korea Electronic Travel Authorization)",
+     "obligatorio": true,
+     "descripcion": "No requiere visa para turismo, hasta 90 días. SÍ es obligatorio tramitar el K-ETA (autorización electrónica) antes de embarcar, salvo menores de 18 y mayores de 65 (voluntario para ellos).",
+     "costo_aproximado": "USD 9 aprox. (10.000 KRW)",
+     "anticipacion_recomendada": "mín. 72hs antes",
+     "url_oficial": "https://www.k-eta.go.kr/",
+     "sameAs": {
+      "__regex": "k.?eta",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ISR",
+    "IL"
+   ],
+   "iatas": [
+    "TLV"
+   ],
+   "nombres": [
+    "ISRAEL"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "ETA-IL (Electronic Travel Authorization de Israel)",
+     "obligatorio": true,
+     "descripcion": "Exento de visa tradicional (hasta 90 días), pero desde 1/1/2025 es OBLIGATORIA la ETA-IL (autorización electrónica), NIS 25, válida 2 años, entradas múltiples.",
+     "costo_aproximado": "NIS 25 (~USD 7)",
+     "anticipacion_recomendada": "mín. 72hs antes",
+     "url_oficial": "https://israel-entry.piba.gov.il/",
+     "sameAs": {
+      "__regex": "eta.?il|electronic travel authorization",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE VIAJE VIGENTE de Cancillería Argentina para Medio Oriente; verificar antes de vender."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "THA",
+    "TH"
+   ],
+   "iatas": [
+    "BKK",
+    "HKT",
+    "CNX",
+    "USM",
+    "DMK"
+   ],
+   "nombres": [
+    "TAILANDIA",
+    "THAILAND"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Thailand Digital Arrival Card (TDAC)",
+     "obligatorio": true,
+     "descripcion": "Exento de visa por acuerdo bilateral: hasta 90 días para turismo/negocios sin actividad remunerada. OBLIGATORIO completar el Thailand Digital Arrival Card (TDAC) online hasta 3 días antes de viajar.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "hasta 3 días antes de viajar",
+     "url_oficial": "https://tdac.immigration.go.th",
+     "sameAs": {
+      "__regex": "tdac|digital arrival|arrival card",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No hay vacunas obligatorias para quien sale directo de Buenos Aires. Argentina figura en la lista tailandesa de 'zonas con riesgo de fiebre amarilla' (por el norte del país) — si el pasajero salió de zona de riesgo (Misiones, Corrientes) sí se exige certificado.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://mfa.go.th/en/page/list-of-countries-which?menu=5e1ff729c4281a00c95bd753",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MYS",
+    "MY"
+   ],
+   "iatas": [
+    "KUL",
+    "PEN",
+    "BKI"
+   ],
+   "nombres": [
+    "MALASIA",
+    "MALAYSIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Malaysia Digital Arrival Card (MDAC)",
+     "obligatorio": true,
+     "descripcion": "No requiere visa para turismo (Argentina no figura en la lista de países que sí requieren visa). Cantidad exacta de días no confirmada con texto oficial (fuentes no oficiales citan 90 días).",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "antes de ingresar",
+     "url_oficial": "https://www.imi.gov.my/index.php/en/main-services/visa/visa-requirement-by-country/",
+     "sameAs": {
+      "__regex": "mdac|digital arrival|arrival card",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SGP",
+    "SG"
+   ],
+   "iatas": [
+    "SIN"
+   ],
+   "nombres": [
+    "SINGAPUR",
+    "SINGAPORE"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "SG Arrival Card (Singapur)",
+     "obligatorio": true,
+     "descripcion": "No requiere visa para turismo (Argentina no figura en la lista de países que requieren visa). Días de estadía los determina el Visit Pass al momento del ingreso, no hay un número fijo publicado.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "antes de ingresar",
+     "url_oficial": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements",
+     "sameAs": {
+      "__regex": "arrival card",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "Certificado de fiebre amarilla OBLIGATORIO: Argentina figura explícitamente listada como país de riesgo para Singapur (aplica a todo el país, vuelo directo incluido, dentro de los 6 días previos a la llegada).",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/yellow-fever-vaccination-certificate",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Argentina figura como país de riesgo de fiebre amarilla para este destino; se exige el certificado aun con vuelo directo.",
+     "nota_fuentes": "Sin certificado válido, riesgo de rechazo de ingreso o cuarentena. Vacunar con mín. 10 días de anticipación."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MDV",
+    "MV"
+   ],
+   "iatas": [
+    "MLE"
+   ],
+   "nombres": [
+    "MALDIVAS",
+    "MALDIVES"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Declaración IMUGA (Maldivas) + Tourist Visa on Arrival",
+     "obligatorio": true,
+     "descripcion": "No requiere visa previa: Tourist Visa on Arrival automática. Requiere pasaporte con 1 mes de validez, pasaje de regreso, reserva de alojamiento y completar declaración IMUGA hasta 96h antes de llegar.",
+     "costo_aproximado": "Gratuito (VOA automática)",
+     "anticipacion_recomendada": "hasta 96hs antes de llegar",
+     "url_oficial": "https://www.immigration.gov.mv/visa/tourist-visa",
+     "sameAs": {
+      "__regex": "imuga|tourist visa|arrival card",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "Certificado de fiebre amarilla OBLIGATORIO: Argentina figura explícitamente en el Anexo 1 de 'zonas endémicas' del Ministerio de Salud de Maldivas.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://health.gov.mv/storage/uploads/50wNllqA/9j5xm5sg.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Argentina figura como país de riesgo de fiebre amarilla para este destino; se exige el certificado aun con vuelo directo.",
+     "nota_fuentes": "Sin certificado válido, riesgo de rechazo de ingreso o cuarentena. Vacunar con mín. 10 días de anticipación."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "NPL",
+    "NP"
+   ],
+   "iatas": [
+    "KTM"
+   ],
+   "nombres": [
+    "NEPAL"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival de Nepal (Turista)",
+     "obligatorio": true,
+     "descripcion": "Visa on arrival de pago: 15 días (USD 30), 30 días (USD 50) o 90 días (USD 125), reingreso múltiple.",
+     "costo_aproximado": "USD 30 (15d) / USD 50 (30d) / USD 125 (90d)",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://tia.immigration.gov.np/en/page/on-arrival-tourist-visa",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "El Ministerio de Salud de Nepal incluye a Argentina en su listado de países 'de riesgo' de fiebre amarilla (criterio más amplio que el estándar internacional habitual).",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://edcd.gov.np/resources/download/information-for-international-travellers",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Argentina figura como país de riesgo de fiebre amarilla para este destino; se exige el certificado aun con vuelo directo.",
+     "nota_fuentes": "Sin certificado válido, riesgo de rechazo de ingreso o cuarentena. Vacunar con mín. 10 días de anticipación."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "IDN",
+    "ID"
+   ],
+   "iatas": [
+    "CGK",
+    "DPS",
+    "SUB",
+    "UPG"
+   ],
+   "nombres": [
+    "INDONESIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival (VOA) de Indonesia",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere Visa on Arrival (VOA) de pago: IDR 500.000, válida 30 días, prorrogable una vez por 30 días más (total 60 días). Trámite online vía evisa.imigrasi.go.id.",
+     "costo_aproximado": "IDR 500.000 (~USD 35)",
+     "anticipacion_recomendada": "al arribo o online",
+     "url_oficial": "https://evisa.imigrasi.go.id/",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TWN",
+    "TW"
+   ],
+   "iatas": [
+    "TPE",
+    "KHH"
+   ],
+   "nombres": [
+    "TAIWAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de visitante de Taiwán",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere visado de visitante (no hay exención para Argentina, no hay relaciones diplomáticas formales). Trámite ante la Oficina Comercial y Cultural de Taipei en Argentina. Estadía habitual 14-90 días según tipo.",
+     "costo_aproximado": "Consultar Oficina de Taipei en Bs. As.",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.boca.gov.tw/np-157-2.html",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "No hay relaciones diplomáticas formales; trámite ante la Oficina Comercial y Cultural de Taipei en Argentina."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MNG",
+    "MN"
+   ],
+   "iatas": [
+    "UBN"
+   ],
+   "nombres": [
+    "MONGOLIA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "BRN",
+    "BN"
+   ],
+   "iatas": [
+    "BWN"
+   ],
+   "nombres": [
+    "BRUNEI"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de Brunei (Categoría B)",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere visado (Argentina en 'Categoría B'). Trámite en la misión diplomática de Brunei más cercana (no hay representación en Argentina).",
+     "costo_aproximado": "Consultar misión diplomática de Brunei",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.mfa.gov.bn/Pages/Visa-Information.aspx",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "No hay embajada de Brunei en Argentina; gestionar vía representación en otro país."
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Certificado de fiebre amarilla exigido solo si hubo tránsito >12h en país de riesgo. Argentina no es país de riesgo para Brunei.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://cdn.who.int/media/docs/default-source/travel-and-health/vaccination-requirements-and-who-recommendations-ith-2022-country-list.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TLS",
+    "TL"
+   ],
+   "iatas": [
+    "DIL",
+    "FLK"
+   ],
+   "nombres": [
+    "TIMOR ORIENTAL",
+    "TIMOR LESTE"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival de Timor Oriental",
+     "obligatorio": true,
+     "descripcion": "Visa on arrival en el Aeropuerto/Puerto de Dili: válida 30 días, prorrogable una vez (máx. 60 días). Para ingreso terrestre se recomienda tramitar visa anticipada.",
+     "costo_aproximado": "USD 30 aprox.",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://www.migracao.gov.tl/zip/html/sub0301.php",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Certificado de fiebre amarilla exigido solo si hubo tránsito/origen en zona de riesgo. Argentina no es país de riesgo para Timor-Leste.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.who.int/docs/default-source/documents/emergencies/travel-advice/yellow-fever-country-list-ith-travel.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CHN",
+    "CN"
+   ],
+   "iatas": [
+    "PEK",
+    "PVG",
+    "CAN",
+    "SZX"
+   ],
+   "nombres": [
+    "CHINA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "JPN",
+    "JP"
+   ],
+   "iatas": [
+    "NRT",
+    "HND",
+    "KIX",
+    "ITM"
+   ],
+   "nombres": [
+    "JAPON"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "PHL",
+    "PH"
+   ],
+   "iatas": [
+    "MNL",
+    "CEB",
+    "KLO"
+   ],
+   "nombres": [
+    "FILIPINAS",
+    "PHILIPPINES"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "PAK",
+    "PK"
+   ],
+   "iatas": [
+    "KHI",
+    "ISB",
+    "LHE"
+   ],
+   "nombres": [
+    "PAKISTAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Pakistán (Pakistan Online Visa System)",
+     "obligatorio": true,
+     "descripcion": "Requiere e-visa (Pakistan Online Visa System). Categoría turista, entrada única, hasta 3 meses (90 días), extendible.",
+     "costo_aproximado": "Consultar visa.nadra.gov.pk",
+     "anticipacion_recomendada": "mín. 7 días antes",
+     "url_oficial": "https://visa.nadra.gov.pk/tourist-visa/",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BGD",
+    "BD"
+   ],
+   "iatas": [
+    "DAC"
+   ],
+   "nombres": [
+    "BANGLADESH"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de turista de Bangladesh",
+     "obligatorio": true,
+     "descripcion": "NO exento y NO elegible para visa on arrival. Requiere visa de turista tramitada por adelantado vía portal oficial.",
+     "costo_aproximado": "Consultar visa.gov.bd",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://visa.gov.bd/",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Bangladesh no tiene embajada en Argentina; tramitar vía visa.gov.bd."
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Fiebre amarilla exigida solo si el viajero viene de zona de riesgo. Argentina solo tiene riesgo declarado en Misiones y Corrientes; saliendo de Buenos Aires en principio no aplica.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://cdn.who.int/media/docs/default-source/travel-and-health/vaccination-requirements-and-who-recommendations-ith-2022-country-list.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BTN",
+    "BT"
+   ],
+   "iatas": [
+    "PBH"
+   ],
+   "nombres": [
+    "BUTAN",
+    "BHUTAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa/Permiso de Bután + Sustainable Development Fee",
+     "obligatorio": true,
+     "descripcion": "Requiere visa/permiso previo (solo India, Bangladesh y Maldivas están exentos). Trámite online USD 40 (no reembolsable) + Sustainable Development Fee (SDF) de USD 100 por adulto por día.",
+     "costo_aproximado": "USD 40 (visa) + USD 100/día (SDF)",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://visit.doi.gov.bt",
+     "sameAs": {
+      "__regex": "visa|permiso|sdf|sustainable development",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ARE",
+    "AE"
+   ],
+   "iatas": [
+    "DXB",
+    "AUH",
+    "SHJ"
+   ],
+   "nombres": [
+    "EMIRATOS ARABES UNIDOS",
+    "EAU",
+    "UAE",
+    "EMIRATES ARABES UNIDOS"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "QAT",
+    "QA"
+   ],
+   "iatas": [
+    "DOH"
+   ],
+   "nombres": [
+    "QATAR"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa Hayya de Qatar",
+     "obligatorio": true,
+     "descripcion": "Argentina NO está en la lista de exención de visa. Requiere e-visa Hayya (categoría A1), con reserva de hotel y pago de QAR 100. Días de estadía no confirmados en fuente oficial (no oficial: 30 días).",
+     "costo_aproximado": "QAR 100 aprox.",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://visitqatar.com/intl-en/plan-your-trip/visas",
+     "sameAs": {
+      "__regex": "e.?visa|hayya",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SAU",
+    "SA"
+   ],
+   "iatas": [
+    "JED",
+    "RUH",
+    "MED"
+   ],
+   "nombres": [
+    "ARABIA SAUDITA",
+    "SAUDI ARABIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de Arabia Saudita (turismo)",
+     "obligatorio": true,
+     "descripcion": "Argentina NO está entre los 66 países elegibles para eVisa turística. Debe tramitarse visado tradicional en la Embajada de Arabia Saudita en Buenos Aires.",
+     "costo_aproximado": "Consultar visa.visitsaudi.com",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://visa.visitsaudi.com/",
+     "sameAs": {
+      "__regex": "visado|visa|visitsaudi",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Argentina NO está entre los 66 países elegibles para eVisa turística; visa tradicional en embajada."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TUR",
+    "TR"
+   ],
+   "iatas": [
+    "IST",
+    "SAW",
+    "AYT",
+    "ADB"
+   ],
+   "nombres": [
+    "TURQUIA",
+    "TURKEY"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "JOR",
+    "JO"
+   ],
+   "iatas": [
+    "AMM",
+    "AQJ"
+   ],
+   "nombres": [
+    "JORDANIA",
+    "JORDAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival de Jordania",
+     "obligatorio": true,
+     "descripcion": "Visa on arrival para la mayoría de nacionalidades: 40 JOD (~USD 56), entrada simple, válida 1 mes, extendible. No disponible en cruces terrestres Allenby/King Hussein Bridge ni Wadi Araba (tramitar antes).",
+     "costo_aproximado": "40 JOD (~USD 56)",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://international.visitjordan.com/page/21/border-crossing/",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LBN",
+    "LB"
+   ],
+   "iatas": [
+    "BEY"
+   ],
+   "nombres": [
+    "LIBANO"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival del Líbano (gratuita)",
+     "obligatorio": true,
+     "descripcion": "Visa on arrival GRATUITA por 1 mes, extendible a 3 meses. Argentina está listada explícitamente por nombre en el reglamento oficial.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://www.general-security.gov.lb/en/posts/38",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE VIAJE VIGENTE de Cancillería Argentina para Líbano."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "OMN",
+    "OM"
+   ],
+   "iatas": [
+    "MCT",
+    "SLL"
+   ],
+   "nombres": [
+    "OMAN"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "KWT",
+    "KW"
+   ],
+   "iatas": [
+    "KWI"
+   ],
+   "nombres": [
+    "KUWAIT"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de Kuwait (consular)",
+     "obligatorio": true,
+     "descripcion": "Argentina NO está entre los ~53 países elegibles para e-visa/visa a la llegada. Requiere visado consular tradicional en la embajada de Kuwait.",
+     "costo_aproximado": "Consultar Embajada de Kuwait en Bs. As.",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://evisa.moi.gov.kw/",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Argentina NO está entre los países elegibles para e-visa/VOA; visa consular tradicional."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BHR",
+    "BH"
+   ],
+   "iatas": [
+    "BAH"
+   ],
+   "nombres": [
+    "BAHREIN",
+    "BAHRAIN"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Bahréin",
+     "obligatorio": true,
+     "descripcion": "SÍ elegible para e-Visa. Entrada simple hasta 14 días (~USD 34) o múltiples entradas hasta 1 año con estadías de hasta 90 días/año (~USD 116).",
+     "costo_aproximado": "USD 34 (14d) / USD 116 (1 año)",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.evisa.gov.bh/list-of-online-visa-country.html",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "IRQ",
+    "IQ"
+   ],
+   "iatas": [
+    "BGW",
+    "EBL",
+    "NJL"
+   ],
+   "nombres": [
+    "IRAK",
+    "IRAQ"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Irak (turista)",
+     "obligatorio": true,
+     "descripcion": "Requiere e-Visa de turista (30 días, entrada simple o múltiple). La Región del Kurdistán (entrada por Erbil) tiene sistema propio: Argentina en 'List B', debe solicitarse por adelantado, 30 días prorrogable hasta 90.",
+     "costo_aproximado": "Consultar evisa.iq",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://evisa.iq/en/Instructions",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "La Región del Kurdistán (Erbil) tiene sistema propio; verificar punto de ingreso."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "IRN",
+    "IR"
+   ],
+   "iatas": [
+    "IKA",
+    "THR"
+   ],
+   "nombres": [
+    "IRAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Irán",
+     "obligatorio": true,
+     "descripcion": "Requiere visa (Argentina no está entre las 27 nacionalidades exentas). Tramitar e-Visa online o visa a la llegada en aeropuertos internacionales (recomendado gestionar con 2 días de anticipación).",
+     "costo_aproximado": "Consultar evisa.mfa.ir",
+     "anticipacion_recomendada": "mín. 2 días antes",
+     "url_oficial": "https://evisa.mfa.ir",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE VIAJE VIGENTE de Cancillería Argentina para Irán."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SYR",
+    "SY"
+   ],
+   "iatas": [
+    "DAM"
+   ],
+   "nombres": [
+    "SIRIA",
+    "SYRIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Siria",
+     "obligatorio": true,
+     "descripcion": "Requiere visa. Desde 1/5/2024 el trámite es exclusivamente vía e-Visa online (ya no se emite en embajadas). No hay detalle específico por nacionalidad en la fuente oficial.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://mofaex.gov.sy/en",
+     "sameAs": {
+      "__regex": "e.?visa|visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE VIAJE VIGENTE de Cancillería Argentina para Siria."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "YEM",
+    "YE"
+   ],
+   "iatas": [
+    "SAH",
+    "ADE"
+   ],
+   "nombres": [
+    "YEMEN"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "BOL",
+    "BO"
+   ],
+   "iatas": [
+    "LPB",
+    "VVI",
+    "CBB",
+    "SRE"
+   ],
+   "nombres": [
+    "BOLIVIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No es obligatoria para quien llega desde Argentina. Recomendada si visita tierras bajas/selva (Beni, Pando, Santa Cruz, Yungas). Brotes activos 2025-2026 en Santa Cruz.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.paho.org/en/documents/country-profile-yellow-fever-bolivia",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BRA",
+    "BR"
+   ],
+   "iatas": [
+    "GRU",
+    "GIG",
+    "BSB",
+    "SSA",
+    "REC",
+    "FOR"
+   ],
+   "nombres": [
+    "BRASIL",
+    "BRAZIL"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No es obligatorio certificado de vacunación (incl. fiebre amarilla) para ingresar. Se recomienda para quien visite \"Áreas con Recomendación de Vacunación\" dentro de Brasil.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.gov.br/saude/pt-br/vacinacao/viajantes",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "PER",
+    "PE"
+   ],
+   "iatas": [
+    "LIM",
+    "CUZ",
+    "AQP",
+    "TRU"
+   ],
+   "nombres": [
+    "PERU"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No es obligatoria. Se recomienda vacuna de fiebre amarilla si el viaje incluye selva/Amazonía (Iquitos, Madre de Dios, Ucayali, selva de Cusco/Puno). Brotes recientes 2025-2026.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.gob.pe/25427-conocer-centros-de-vacunacion-contra-la-fiebre-amarilla-en-el-peru",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "COL",
+    "CO"
+   ],
+   "iatas": [
+    "BOG",
+    "MDE",
+    "CLO",
+    "CTG"
+   ],
+   "nombres": [
+    "COLOMBIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No se exige certificado de fiebre amarilla como requisito general. Obligatorio solo para quien vaya a municipios de riesgo Alto/Muy Alto dentro de Colombia (aplicar 10 días antes).",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.minsalud.gov.co/salud/publica/PET/Paginas/fiebre-amarilla.aspx",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ECU",
+    "EC"
+   ],
+   "iatas": [
+    "UIO",
+    "GYE"
+   ],
+   "nombres": [
+    "ECUADOR"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No obligatorio para quien llega directo desde Argentina. Desde 12/05/2025 sí se exige a quien llegue de Perú, Colombia, Bolivia o Brasil (o haya estado allí +10 días antes).",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://www.salud.gob.ec/requisitos-de-ingreso-al-ecuador/",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "VEN",
+    "VE"
+   ],
+   "iatas": [
+    "CCS",
+    "MAR",
+    "VLN"
+   ],
+   "nombres": [
+    "VENEZUELA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No exigida explícitamente a argentinos, pero hay brote activo de fiebre amarilla en 2026 (Aragua, Lara, Portuguesa, Barinas). Se recomienda fuertemente certificado de vacunación.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://mpps.gob.ve/salud-del-viajero/",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "GUY",
+    "GY"
+   ],
+   "iatas": [
+    "GEO",
+    "OGL"
+   ],
+   "nombres": [
+    "GUYANA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Aviso de fiebre amarilla exige certificado a quien llega de países \"endémicos\" (principalmente África/Asia); no menciona a Sudamérica/Argentina explícitamente.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://dpi.gov.gy/yellow-fever-immunization-requirements-for-entry-into-guyana/",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SUR",
+    "SR"
+   ],
+   "iatas": [
+    "PBM"
+   ],
+   "nombres": [
+    "SURINAM"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Tourist Card / Entry Fee de Surinam",
+     "obligatorio": true,
+     "descripcion": "No requiere visa para turismo/visita familiar. Hasta 90 días. Se cobra \"Tourist Card\"/Entry Fee de USD/EUR 50 + USD/EUR 8 de servicio (desde 01/07/2022).",
+     "costo_aproximado": "USD/EUR 50 + USD/EUR 8 (servicio)",
+     "anticipacion_recomendada": "al ingresar",
+     "url_oficial": "https://netherlands.consulate.gov.sr/consular-affairs/visa-information/list-of-countries-exempted-from-visa-for-suriname/",
+     "sameAs": {
+      "__regex": "tourist card|entry fee|visado|visa",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "Vacuna de fiebre amarilla obligatoria (con Certificado Internacional) para quien proviene de país de riesgo OMS o transitó +12h por uno, aplicada con 10 días de anticipación.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "mín. 10 días antes",
+     "url_oficial": "https://netherlands.consulate.gov.sr/announcements/yellow-fever/",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Argentina figura como país de riesgo de fiebre amarilla para este destino; se exige el certificado aun con vuelo directo.",
+     "nota_fuentes": "Sin certificado válido, riesgo de rechazo de ingreso o cuarentena. Vacunar con mín. 10 días de anticipación."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "PRY",
+    "PY"
+   ],
+   "iatas": [
+    "ASU",
+    "AGT"
+   ],
+   "nombres": [
+    "PARAGUAY"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "CHL",
+    "CL"
+   ],
+   "iatas": [
+    "SCL",
+    "IPC"
+   ],
+   "nombres": [
+    "CHILE"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "URY",
+    "UY"
+   ],
+   "iatas": [
+    "MVD",
+    "PDP"
+   ],
+   "nombres": [
+    "URUGUAY"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "ESP",
+    "ES"
+   ],
+   "iatas": [
+    "MAD",
+    "BCN"
+   ],
+   "nombres": [
+    "ESPANA",
+    "SPAIN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.exteriores.gob.es/DocumentosAuxiliaresSC/Argentina/BUENOS%20AIRES%20(C)/FAQ_Visados_18_02_2026.pdf",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ITA",
+    "IT"
+   ],
+   "iatas": [
+    "FCO",
+    "MXP",
+    "LIN"
+   ],
+   "nombres": [
+    "ITALIA",
+    "ITALY"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.esteri.it/en/servizi-opportunita/ingressosoggiornoinitalia/visto_ingresso/paesi_esenti_visto/",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "FRA",
+    "FR"
+   ],
+   "iatas": [
+    "CDG",
+    "ORY",
+    "NCE"
+   ],
+   "nombres": [
+    "FRANCIA",
+    "FRANCE"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://france-visas.gouv.fr/argentine",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "DEU",
+    "DE"
+   ],
+   "iatas": [
+    "FRA",
+    "MUC",
+    "BER"
+   ],
+   "nombres": [
+    "ALEMANIA",
+    "DEUTSCHLAND",
+    "GERMANY"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://buenos-aires.diplo.de/ar-es/service/visa-einreise",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "PRT",
+    "PT"
+   ],
+   "iatas": [
+    "LIS",
+    "OPO",
+    "FAO"
+   ],
+   "nombres": [
+    "PORTUGAL"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://vistos.mne.gov.pt/pt/vistos-schengen/informacao-geral/quem-precisa-de-visto",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "NLD",
+    "NL"
+   ],
+   "iatas": [
+    "AMS",
+    "EIN",
+    "RTM"
+   ],
+   "nombres": [
+    "PAISES BAJOS",
+    "HOLANDA",
+    "NETHERLANDS"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.nederlandwereldwijd.nl/visum-nederland/schengenvisum/aanvragen-argentinie",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "GRC",
+    "GR"
+   ],
+   "iatas": [
+    "ATH",
+    "SKG",
+    "HER"
+   ],
+   "nombres": [
+    "GRECIA",
+    "GREECE"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.mfa.gr/missionsabroad/es/argentina-es/visas/schengen.html",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BEL",
+    "BE"
+   ],
+   "iatas": [
+    "BRU",
+    "CRL",
+    "ANR"
+   ],
+   "nombres": [
+    "BELGICA",
+    "BELGIUM"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://argentina.diplomatie.belgium.be/es/venir-belgica/viajar-belgica",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CHE",
+    "CH"
+   ],
+   "iatas": [
+    "ZRH",
+    "GVA",
+    "BSL"
+   ],
+   "nombres": [
+    "SUIZA",
+    "SWITZERLAND"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.sem.admin.ch/sem/en/home/publiservice/weisungen-kreisschreiben/visa/liste1_staatsangehoerigkeit/a.html",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "AUT",
+    "AT"
+   ],
+   "iatas": [
+    "VIE",
+    "SZG",
+    "INN"
+   ],
+   "nombres": [
+    "AUSTRIA",
+    "OESTERREICH"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.bmi.gv.at/202/Fremdenpolizei_und_Grenzkontrolle/Visumpflichtige_Laender/start.aspx",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ISL",
+    "IS"
+   ],
+   "iatas": [
+    "KEF",
+    "RKV"
+   ],
+   "nombres": [
+    "ISLANDIA",
+    "ICELAND"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://island.is/en/do-you-need-a-visa",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "NOR",
+    "NO"
+   ],
+   "iatas": [
+    "OSL",
+    "BGO",
+    "TRD"
+   ],
+   "nombres": [
+    "NORUEGA",
+    "NORWAY"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.udi.no/en/word-definitions/persons-who-do-not-need-a-visa-to-visit-norway-/",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "DNK",
+    "DK"
+   ],
+   "iatas": [
+    "CPH",
+    "AAL",
+    "BLL"
+   ],
+   "nombres": [
+    "DINAMARCA",
+    "DENMARK"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.nyidanmark.dk/en-GB/Words-and-concepts/US/Visum/Countries-with-a-visa-requirement-and-visa-free-countries",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SWE",
+    "SE"
+   ],
+   "iatas": [
+    "ARN",
+    "GOT",
+    "MMX"
+   ],
+   "nombres": [
+    "SUECIA",
+    "SWEDEN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden/",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "FIN",
+    "FI"
+   ],
+   "iatas": [
+    "HEL",
+    "TMP",
+    "TKU"
+   ],
+   "nombres": [
+    "FINLANDIA",
+    "FINLAND"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://um.fi/visa-requirement-and-travel-documents-accepted-by-finland/-/asset_publisher/Obdz8bMcFgrI/content/argentina-travel-documents-to-finland/385107",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "GBR",
+    "GB"
+   ],
+   "iatas": [
+    "LHR",
+    "LGW",
+    "MAN",
+    "STN"
+   ],
+   "nombres": [
+    "REINO UNIDO",
+    "UK",
+    "INGLATERRA",
+    "GRAN BRETANA",
+    "BRITAIN"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "ETA-UK (Electronic Travel Authorisation)",
+     "obligatorio": true,
+     "descripcion": "No requiere visa, pero SÍ es OBLIGATORIO el ETA (Electronic Travel Authorisation) desde el 8/1/2025. Costo £20, válido 2 años, entradas múltiples, estadías de hasta 6 meses por visita.",
+     "costo_aproximado": "£20",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.gov.uk/eta",
+     "sameAs": {
+      "__regex": "eta.?uk|electronic travel authorisation|uk eta|visa|visado",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: evitar sitios como uk-eta.com o agencias privadas; el trámite oficial cuesta £20 y se hace solo en gov.uk/eta o la app oficial UK ETA."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "IRL",
+    "IE"
+   ],
+   "iatas": [
+    "DUB",
+    "ORK",
+    "SNN"
+   ],
+   "nombres": [
+    "IRLANDA",
+    "IRELAND"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "AND",
+    "AD"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ANDORRA",
+    "PRINCIPADO DE ANDORRA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.govern.ad/en/ministries-and-secretaries-of-state/ministry-of-foreign-affairs/the-ministry/bilateral-and-consular-affairs/consular-affairs/tourist-visas",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MCO",
+    "MC"
+   ],
+   "iatas": [],
+   "nombres": [
+    "MONACO",
+    "PRINCIPADO DE MONACO"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://ambassade-en-france.gouv.mc/en/information-and-services/visiting-monaco",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MAR",
+    "MA"
+   ],
+   "iatas": [
+    "CMN",
+    "RAK",
+    "AGA"
+   ],
+   "nombres": [
+    "MARRUECOS",
+    "MOROCCO"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "DZA",
+    "DZ"
+   ],
+   "iatas": [
+    "ALG",
+    "ORN"
+   ],
+   "nombres": [
+    "ARGELIA",
+    "ALGERIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de turismo de Argelia",
+     "obligatorio": true,
+     "descripcion": "SÍ necesita visa de turismo (no hay exención). Trámite en la Embajada de Argelia en Buenos Aires. Documentación, costo y plazos a confirmar directamente con la embajada.",
+     "costo_aproximado": "Confirmar con la Embajada de Argelia en Buenos Aires",
+     "anticipacion_recomendada": "Confirmar con la embajada",
+     "url_oficial": "https://earge.cancilleria.gob.ar/es",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "La URL anteriormente enlazada (earge/node/2310) describía los requisitos de visa de ARGENTINA para ciudadanos argelinos, no los de Argelia para argentinos. Corregido a la página principal de la embajada."
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Según la lista OMS, Argelia exigiría certificado de fiebre amarilla solo a viajeros desde países de riesgo o con tránsito de 12+ hs en aeropuerto de riesgo. Como la OMS clasifica a Misiones y Corrientes como zona de riesgo dentro de Argentina, hay ambigüedad si el pasajero parte de esas provincias.",
+     "costo_aproximado": "Gratuito en centros publicos argentinos",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://www.who.int/docs/default-source/documents/emergencies/travel-advice/yellow-fever-country-list-ith-travel.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TUN",
+    "TN"
+   ],
+   "iatas": [
+    "TUN",
+    "DJE"
+   ],
+   "nombres": [
+    "TUNEZ",
+    "TUNISIA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "LBY",
+    "LY"
+   ],
+   "iatas": [
+    "TIP"
+   ],
+   "nombres": [
+    "LIBIA",
+    "LIBYA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de turismo de Libia",
+     "obligatorio": true,
+     "descripcion": "SÍ necesita visa de turismo. Trámite en la Embajada de Libia en Buenos Aires (Av. Corrientes 1439, piso 12, tel. +54 11 4395 5102). Documentación y costo a confirmar con la embajada.",
+     "costo_aproximado": "Confirmar con la Embajada de Libia en Buenos Aires",
+     "anticipacion_recomendada": "Confirmar con la embajada (se recomienda varias semanas de anticipación)",
+     "url_oficial": "https://www.mofaicly.com/HomeEng.html",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE SEGURIDAD: la propia Embajada de Libia declara que actualmente no emiten visas de turismo. País con fragmentación institucional (dos gobiernos paralelos) y sin sitio de gobierno libio funcional para verificar. No ofrecer como destino sin confirmación directa y por escrito de la embajada libia. Verificar recomendaciones de viaje del gobierno argentino antes de planificar el viaje."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "EGY",
+    "EG"
+   ],
+   "iatas": [
+    "CAI",
+    "HRG",
+    "LXR",
+    "SSH"
+   ],
+   "nombres": [
+    "EGIPTO",
+    "EGYPT"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "e-Visa de Egipto",
+     "obligatorio": true,
+     "descripcion": "SÍ necesita visa. Dos vías oficiales: (1) e-Visa vía visa2egypt.gov.eg (portal oficial enlazado desde mfa.gov.eg); o (2) visa a la llegada en el Aeropuerto de El Cairo, 30 días, entrada única (Sinaí Sur tiene permiso específico de 15 días). Costo habitual del e-visa: USD 25 (entrada única) / USD 60…",
+     "costo_aproximado": "USD 25 (entrada única) / USD 60 (múltiples entradas); verificar en portal oficial",
+     "anticipacion_recomendada": "min. 15 dias antes",
+     "url_oficial": "https://eegip.cancilleria.gob.ar/es/ingreso-y-estad%C3%ADa-en-egipto",
+     "sameAs": {
+      "__regex": "e.?visa",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Según la Embajada Argentina, los viajeros desde Argentina deben llevar certificado de vacunación contra fiebre amarilla. No se pudo verificar de forma independiente en una fuente sanitaria oficial egipcia (mohp.gov.eg bloqueó el acceso).",
+     "costo_aproximado": "Gratuito en centros publicos argentinos",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://eegip.cancilleria.gob.ar/es/ingreso-y-estad%C3%ADa-en-egipto",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "AUS",
+    "AU"
+   ],
+   "iatas": [
+    "SYD",
+    "MEL",
+    "BNE",
+    "PER",
+    "ADL"
+   ],
+   "nombres": [
+    "AUSTRALIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visitor visa (subclass 600) - Tourist stream",
+     "obligatorio": true,
+     "descripcion": "Los argentinos NO son elegibles para eVisitor ni ETA (embajada australiana: 'Argentine, Uruguayan and Paraguayan passport holders are not eligible to apply for an ETA'). Corresponde tramitar Visitor visa (subclass 600), Tourist stream, 100% online vía ImmiAccount. Estadía: 3, 6 o 12 meses.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/visitor-600/tourist-stream-overseas",
+     "sameAs": {
+      "__regex": "visado|visa|subclass 600|visitor visa|e.?ta|evisitor",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Reconfirmar el arancel exacto de la visa 600 en el 'visa pricing estimator' de Home Affairs antes de cotizar."
+    },
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No hay vacuna obligatoria para la generalidad de los viajeros argentinos. El certificado de fiebre amarilla es obligatorio SOLO para quienes, dentro de los 6 días previos a su llegada, hayan pasado al menos una noche en Paraguay o en la provincia de Misiones (Argentina), mayores de 1 año.",
+     "costo_aproximado": "Gratuito en centros publicos argentinos",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://argentina.embassy.gov.au/baircastellano/yellowfbr.html",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever|e.?ta|evisitor",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "NZL",
+    "NZ"
+   ],
+   "iatas": [
+    "AKL",
+    "WLG",
+    "CHC"
+   ],
+   "nombres": [
+    "NUEVA ZELANDA",
+    "NEW ZEALAND",
+    "NZ"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "NZeTA (New Zealand Electronic Travel Authority)",
+     "obligatorio": true,
+     "descripcion": "Argentina exenta de visado tradicional para turismo (<3 meses), pero desde 2019 es OBLIGATORIO tramitar el NZeTA antes de viajar, incluso para tránsitos >24 hs en Auckland. Costo desde NZD 17. Validez: 2 años, múltiples entradas. Estadía por visita: hasta 3 meses (máx. 6 meses en 12 meses).",
+     "costo_aproximado": "desde NZD 17",
+     "anticipacion_recomendada": "min. 72 hs antes",
+     "url_oficial": "https://www.immigration.govt.nz/new-zealand-visas/visas/visa/nzeta",
+     "sameAs": {
+      "__regex": "nzeta|nz.?eta|new zealand electronic",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "FJI",
+    "FJ"
+   ],
+   "iatas": [
+    "NAN",
+    "SUV"
+   ],
+   "nombres": [
+    "FIJI",
+    "FIYI"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "PNG",
+    "PG"
+   ],
+   "iatas": [
+    "POM"
+   ],
+   "nombres": [
+    "PAPUA NUEVA GUINEA",
+    "PAPUA NEW GUINEA",
+    "PNG"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "Easy Visitor Permit (EVP) / eVisa",
+     "obligatorio": true,
+     "descripcion": "Argentina NO califica para Visa on Arrival. Debe tramitar visa antes: eVisa/'Easy Visitor Permit' (EVP) online (30 o 60 días, entrada única) o formulario en papel. Estadía: hasta 60 días. Costo: base 'Nil' + USD 50 procesamiento portal; extensión USD 150 (USD 700 si tardía).",
+     "costo_aproximado": "USD 50 (procesamiento del portal)",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://ica.gov.pg/visa/visit/visitor",
+     "sameAs": {
+      "__regex": "e.?visa|evp|easy visitor",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "WSM",
+    "WS"
+   ],
+   "iatas": [
+    "APW"
+   ],
+   "nombres": [
+    "SAMOA",
+    "SAMOA OCCIDENTAL",
+    "SAMOA WESTERN",
+    "WESTERN SAMOA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "TON",
+    "TO"
+   ],
+   "iatas": [
+    "TBU"
+   ],
+   "nombres": [
+    "TONGA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Permiso de entrada / visa (Immigration Department)",
+     "obligatorio": true,
+     "descripcion": "Argentina NO está en la lista oficial de países exentos (solo Brasil de Sudamérica). Debe tramitar el permiso de entrada/visa ante el Immigration Department ANTES de viajar (no hay visa a la llegada para Argentina). Permiso estándar de 31 días, tasa de 60 TOP.",
+     "costo_aproximado": "60 TOP",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.revenue.gov.to/immigration-and-general-services",
+     "sameAs": {
+      "__regex": "visado|visa|permiso",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "VUT",
+    "VU"
+   ],
+   "iatas": [
+    "VLI"
+   ],
+   "nombres": [
+    "VANUATU"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival",
+     "obligatorio": true,
+     "descripcion": "Argentina figura expresamente en la lista oficial de países exentos de visa. Se obtiene Visa on Arrival sin trámite previo. Estadía máxima: 120 días, SIN posibilidad de extensión.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://immigration.gov.vu/visa-exempted-countries/",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SLB",
+    "SB"
+   ],
+   "iatas": [
+    "HIR"
+   ],
+   "nombres": [
+    "ISLAS SALOMON",
+    "SOLOMON ISLANDS"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visitor Visa - Tourist (VOA o solicitud online previa)",
+     "obligatorio": true,
+     "descripcion": "Argentina NO figura en lista de exenciones (reservada al bloque MSG, China, UE, EAU, India e Indonesia). Debe tramitar 'Visitor Visa - Tourist': Visa on Arrival (30 días, USD 100) o solicitud online previa (USD 50). Entrada única, renovable hasta 150 días acumulados. No permite trabajar.",
+     "costo_aproximado": "USD 100 (VOA) / USD 50 (online)",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://immigration.gov.sb/visitor-visa-tourist/",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "PLW",
+    "PW"
+   ],
+   "iatas": [
+    "ROR"
+   ],
+   "nombres": [
+    "PALAOS",
+    "PALAU"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de turista a la llegada (Visa on Arrival)",
+     "obligatorio": true,
+     "descripcion": "No exenta de visa, pero se otorga visa de turista a la llegada ('visa on arrival'). Estadía inicial 30 días, extensible dos veces por 30 días (máx. 90 días, USD 50 por extensión). Exige completar el 'QR Code Arrival Form' 72 hs antes del vuelo y firmar el 'Palau Pledge' al ingresar.",
+     "costo_aproximado": "USD 50 (por extensión)",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://bcbp.pw/?page_id=165",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "FSM",
+    "FM"
+   ],
+   "iatas": [
+    "PNI",
+    "KSA",
+    "TKK",
+    "YAP"
+   ],
+   "nombres": [
+    "MICRONESIA ESTADOS FEDERADOS DE",
+    "MICRONESIA",
+    "ESTADOS FEDERADOS DE MICRONESIA",
+    "FSM"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "MHL",
+    "MH"
+   ],
+   "iatas": [
+    "MAJ"
+   ],
+   "nombres": [
+    "ISLAS MARSHALL",
+    "MARSHALL ISLANDS"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa on Arrival (VOA)",
+     "obligatorio": true,
+     "descripcion": "No exenta de visa, pero explícitamente habilitada para 'Visa on Arrival' (VOA). Estadía: 90 días. Costo: USD 100. Requiere pasaporte con 6+ meses de validez y pasaje de continuación/regreso. No permite extensión ni cambio de estatus.",
+     "costo_aproximado": "USD 100",
+     "anticipacion_recomendada": "al arribo",
+     "url_oficial": "https://rmiimmigration.org/wp-content/uploads/2024/04/VOA-MARCH-2024.pdf",
+     "sameAs": {
+      "__regex": "visa on arrival|voa|visado",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "KIR",
+    "KI"
+   ],
+   "iatas": [
+    "TRW"
+   ],
+   "nombres": [
+    "KIRIBATI"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "NRU",
+    "NR"
+   ],
+   "iatas": [
+    "INU"
+   ],
+   "nombres": [
+    "NAURU"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa (trámite previo por email a Nauru Immigration)",
+     "obligatorio": true,
+     "descripcion": "No hay exención general: todo visitante debe tramitar visa antes del viaje (formulario, copia de pasaporte y carta del motivo del viaje, por email a Nauru Immigration). Inmigración retiene el pasaporte al llegar para procesarlo. No se pudo confirmar la duración máxima de estadía.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.nauru.gov.nr/about-nauru/visiting-nauru/visa-requirements.aspx",
+     "sameAs": {
+      "__regex": "visado|visa|permiso",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TUV",
+    "TV"
+   ],
+   "iatas": [
+    "FUN"
+   ],
+   "nombres": [
+    "TUVALU"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "COK",
+    "CK"
+   ],
+   "iatas": [
+    "RAR"
+   ],
+   "nombres": [
+    "ISLAS COOK",
+    "COOK ISLANDS"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "NIU",
+    "NU"
+   ],
+   "iatas": [
+    "IUE"
+   ],
+   "nombres": [
+    "NIUE"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "KAZ",
+    "KZ"
+   ],
+   "iatas": [
+    "ALA",
+    "NQZ",
+    "GUW"
+   ],
+   "nombres": [
+    "KAZAJISTAN",
+    "KAZAKHSTAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Registro obligatorio ante autoridades locales",
+     "obligatorio": true,
+     "descripcion": "No necesita visa para turismo, hasta 30 días. Es obligatorio registrarse ante las autoridades locales dentro de los primeros 5 días de estadía.",
+     "costo_aproximado": "Gratuito",
+     "anticipacion_recomendada": "al arribo (dentro de 5 días)",
+     "url_oficial": "https://efrus.cancilleria.gob.ar/es/kazajst%C3%A1n",
+     "sameAs": {
+      "__regex": "registro|registration",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Verificación parcial (Embajada Argentina en Rusia); sitios oficiales kazajos .gov.kz son SPA inaccesibles. Reconfirmar con Embajada de Kazajistán acreditada o Embajada Argentina en Moscú."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "UZB",
+    "UZ"
+   ],
+   "iatas": [
+    "TAS",
+    "SKD",
+    "BHK"
+   ],
+   "nombres": [
+    "UZBEKISTAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Registro ante autoridades locales (estadía mayor a 3 días)",
+     "obligatorio": true,
+     "descripcion": "No necesita visa para turismo (exención total hasta 30 días/año). Si la estadía supera los 3 días, es obligatorio el registro ante autoridades locales (normalmente lo gestiona el hotel).",
+     "costo_aproximado": "Gratuito (lo gestiona el hotel)",
+     "anticipacion_recomendada": "al arribo (si estadía >3 días)",
+     "url_oficial": "https://gov.uz/en/mfa/activity_page/o-zbekiston-respublikasi-vizasi",
+     "sameAs": {
+      "__regex": "registro|registration",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: existe un sitio falso 'evisa.govn.uz' (con doble n) que imita al oficial evisa.gov.uz - no usarlo. Como Argentina está exenta de visa, no corresponde usar el sistema de e-Visa."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TKM",
+    "TM"
+   ],
+   "iatas": [
+    "ASB",
+    "KRW",
+    "CRZ"
+   ],
+   "nombres": [
+    "TURKMENISTAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa con Carta de Invitación (LOI)",
+     "obligatorio": true,
+     "descripcion": "SÍ necesita visa (no hay exención turística). Procedimiento: Carta de Invitación (LOI) emitida por el State Migration Service, tramitada vía agencia turkmena. Visa a la llegada en Asjabad presentando LOI certificada (USD 50 adicional).",
+     "costo_aproximado": "USD 50 adicional (visa a la llegada); LOI: consultar agencia",
+     "anticipacion_recomendada": "tramitar antes (LOI vía agencia turkmena)",
+     "url_oficial": "https://uk.tmembassy.gov.tm/en/consular-services/visa-info",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "Turkmenistán no tiene embajada en Argentina ni Argentina en Turkmenistán - el trámite de LOI se gestiona con embajada turkmena en otro país (EE.UU., UK, Turquía) o vía Embajada Argentina en Moscú. Régimen de visado cambiante: reconfirmar cerca de la fecha de viaje."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "KGZ",
+    "KG"
+   ],
+   "iatas": [
+    "FRU",
+    "OSS"
+   ],
+   "nombres": [
+    "KIRGUISTAN",
+    "KYRGYZSTAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Kirguistán exige el certificado a viajeros que lleguen desde (o hayan transitado más de 12 hs por aeropuerto de) un país/zona de riesgo. Misiones y Corrientes están clasificadas de riesgo por la OMS.",
+     "costo_aproximado": "Gratuito en centros públicos argentinos",
+     "anticipacion_recomendada": "min. 10 días antes",
+     "url_oficial": "https://mfa.gov.kg/en/dm/Embassy-of-the-Kyrgyz-Republic-to-Switzerland-Permanent-Mission-of-the-Kyrgyz-Republic-to-the-United-Nations-and-other-international-organizations-in-Geneva/Menu---Foreign-/Consular-issues/Useful-information/witzerland",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales. Consultar el itinerario completo: si el pasajero pasó por Misiones/Corrientes u otro país de riesgo antes de llegar a Kirguistán, sí correspondería el certificado. Reconfirmar el plazo de 60 días cerca de la fecha de viaje."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "TJK",
+    "TJ"
+   ],
+   "iatas": [
+    "DYU",
+    "LBD"
+   ],
+   "nombres": [
+    "TAYIKISTAN",
+    "TAJIKISTAN"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "GEO",
+    "GE"
+   ],
+   "iatas": [
+    "TBS",
+    "KUT",
+    "BUS"
+   ],
+   "nombres": [
+    "GEORGIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "seguro_medico",
+     "nombre": "Seguro médico obligatorio (Georgia)",
+     "solo_arg": false,
+     "obligatorio": true,
+     "descripcion": "Desde el 1/1/2026 Georgia exige seguro médico obligatorio (cobertura mínima ~USD 11.000) a TODOS los turistas, incluidos los exentos de visa por un año.",
+     "costo_aproximado": "seguro con cobertura ~USD 11.000",
+     "anticipacion_recomendada": "contratar antes del viaje",
+     "url_oficial": "",
+     "sameAs": {
+      "__regex": "seguro (m[eé]dico|de salud|de viaje)|travel (health )?insurance|seguro m[eé]dico obligatorio",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ARM",
+    "AM"
+   ],
+   "iatas": [
+    "EVN",
+    "LWN"
+   ],
+   "nombres": [
+    "ARMENIA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "AZE",
+    "AZ"
+   ],
+   "iatas": [
+    "GYD",
+    "GNJ",
+    "NAJ"
+   ],
+   "nombres": [
+    "AZERBAIYAN",
+    "AZERBAIJAN"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "ASAN Visa (e-Visa de Azerbaiyán)",
+     "obligatorio": true,
+     "descripcion": "SÍ necesita visa. Trámite exclusivo por e-Visa (ASAN Visa) en evisa.gov.az; Argentina es elegible. Validez 90 días, entrada única, estadía hasta 30 días. Pasaporte con 3+ meses de validez remanente.",
+     "costo_aproximado": "USD 20 estándar (3 días) / USD 50 urgente (3 horas)",
+     "anticipacion_recomendada": "3 días hábiles (estándar) o 3 horas (urgente)",
+     "url_oficial": "https://evisa.gov.az/en/countries",
+     "sameAs": {
+      "__regex": "e.?visa|evisa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ALERTA DE FRAUDE: existen sitios falsos que imitan al oficial (evisa.org.az, evisa.govt.az, evisa.com.az) - usar exclusivamente evisa.gov.az."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "GTM",
+    "GT"
+   ],
+   "iatas": [
+    "GUA",
+    "FRS"
+   ],
+   "nombres": [
+    "GUATEMALA",
+    "GUATE"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "HND",
+    "HN"
+   ],
+   "iatas": [
+    "TGU",
+    "SAP",
+    "RTB"
+   ],
+   "nombres": [
+    "HONDURAS"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "CONFIRMADO por cita textual del INM: se exige certificado de fiebre amarilla a viajeros procedentes de o en tránsito por países con riesgo de transmisión, y Argentina está EXPLÍCITAMENTE listada: 'Argentina, Bolivia, Brasil, Colombia, Ecuador, Guyana Francesa, Guyana, Perú, Suriname, Venezuela y Pa…",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://inm.gob.hn/visas.html",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales. Exigencia confirmada por el INM (autoridad migratoria, no de salud) y corroborada por CDC Yellow Book. Argentina listada explícitamente como país de riesgo. Confirmar con consulado si aplica a toda Argentina o solo zonas del NEA. Sitio INM inaccesible para verificación independiente (connection refused) al 19/08/2026."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SLV",
+    "SV"
+   ],
+   "iatas": [
+    "SAL"
+   ],
+   "nombres": [
+    "EL SALVADOR"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "NIC",
+    "NI"
+   ],
+   "iatas": [
+    "MGA"
+   ],
+   "nombres": [
+    "NICARAGUA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Nicaragua exige certificado internacional de fiebre amarilla a viajeros procedentes de países con riesgo de transmisión. La norma remite genéricamente a la lista de la OMS sin nombrar países; como el norte argentino (NEA) integra esa lista, podría aplicar a un pasajero proveniente de Misiones/Corrientes. Reconfirmar antes de vender el destino.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://www.minsa.gob.ni/centro-de-medios/noticias/ministerio-de-salud-fortalece-vigilancia-epidemiologica-contra-fiebre",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Caso ambiguo: la norma nicaragüense remite a la lista OMS sin nombrar países. MINSA y medios citan a Argentina (regiones del NEA) pero no hay cita textual directa como en Honduras. Recomendación: si el itinerario incluye salida desde Misiones/Corrientes, exigir el certificado; en otro caso, reconfirmar con el consulado antes de vender."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CRI",
+    "CR"
+   ],
+   "iatas": [
+    "SJO",
+    "LIR"
+   ],
+   "nombres": [
+    "COSTA RICA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Costa Rica NO incluye a Argentina en su lista de países con riesgo de fiebre amarilla, por lo que un vuelo directo desde Argentina no requiere el certificado. Puede aplicar si el pasajero proviene de o transitó por un país con riesgo de transmisión.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://www.ministeriodesalud.go.cr/index.php/prensa/67-noticias-2026/2364-ministerio-de-salud-actualiza-disposiciones-sobre-fiebre-amarilla-y-mantiene-vacunacion-obligatoria-para-viajeros-a-zonas-de-riesgo",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Argentina no figura en la lista de riesgo de fiebre amarilla de Costa Rica (verificado en fuente oficial). Sin certificado exigido, riesgo de cuarentena si el itinerario incluye tránsito por zona de riesgo. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "PAN",
+    "PA"
+   ],
+   "iatas": [
+    "PTY"
+   ],
+   "nombres": [
+    "PANAMA"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Panamá exige el certificado de fiebre amarilla a quienes SALen hacia zonas de riesgo del este (Darién, Guna Yala), no a quienes ingresan. Argentina no figura como país de riesgo de entrada. Un pasajero que solo visita Panamá no necesita el certificado.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://www.minsa.gob.pa/noticia/minsa-sigue-aplicando-la-vacuna-de-la-fiebre-amarilla-ante-casos-de-la-enfermedad-en-algunos",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero sale hacia zona de riesgo de fiebre amarilla dentro de Panamá (Darién, Guna Yala). No se exige al ingreso ni se asume por nacionalidad.",
+     "nota_fuentes": "La exigencia de Panamá aplica a la salida hacia zonas de riesgo (Darién, Guna Yala), no al ingreso. Argentina no está en la lista de riesgo de entrada de Panamá (verificado en fuente oficial)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BLZ",
+    "BZ"
+   ],
+   "iatas": [
+    "BZE"
+   ],
+   "nombres": [
+    "BELICE"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "Belice NO incluye a Argentina en su lista de países con riesgo de fiebre amarilla, por lo que un vuelo directo desde Argentina no requiere el certificado. Puede aplicar si el pasajero proviene de o transitó por un país con riesgo de transmisión.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://www.cdc.gov/yellow-book/hcp/americas-caribbean/guatemala-and-belize.html",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Argentina no figura en la lista de riesgo de fiebre amarilla de Belice (verificado en fuente oficial). Sin certificado exigido, riesgo de cuarentena si el itinerario incluye tránsito por zona de riesgo. Verificar el itinerario del pasajero y las fuentes oficiales."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "USA",
+    "US"
+   ],
+   "iatas": [
+    "JFK",
+    "LAX",
+    "MIA",
+    "ATL",
+    "ORD"
+   ],
+   "nombres": [
+    "ESTADOS UNIDOS",
+    "EEUU",
+    "USA",
+    "ESTADOS UNIDOS DE AMERICA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa B1/B2 (no visa de turismo)",
+     "obligatorio": true,
+     "descripcion": "Argentina NO integra el Visa Waiver Program (a diferencia de Chile): requiere visa B1/B2 tradicional (DS-160 + pago USD 185 + entrevista consular obligatoria). En julio 2025 el DHS inició el proceso para que Argentina reingrese al VWP, pero AÚN NO está vigente.",
+     "costo_aproximado": "USD 185",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html",
+     "sameAs": {
+      "__regex": "visado|visa|b1.?b2|ds.?160|visa waiver|esta",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CAN",
+    "CA"
+   ],
+   "iatas": [
+    "YYZ",
+    "YVR",
+    "YUL",
+    "YYC"
+   ],
+   "nombres": [
+    "CANADA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visa de visitante tradicional (TRV)",
+     "obligatorio": true,
+     "descripcion": "Requiere visa de visitante tradicional (TRV), NO eTA (el eTA solo aplica si el pasajero ya tuvo visa canadiense en los últimos 10 años o tiene visa vigente de EE.UU., y viaja en avión).",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html",
+     "sameAs": {
+      "__regex": "visado|visa|trv|temporary resident|e.?ta|electronic travel author",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MEX",
+    "MX"
+   ],
+   "iatas": [
+    "MEX",
+    "CUN",
+    "TIJ",
+    "GDL"
+   ],
+   "nombres": [
+    "MEXICO"
+   ],
+   "reqs": [
+    {
+     "categoria": "PLF",
+     "nombre": "Forma Migratoria Múltiple Digital (FMMd)",
+     "obligatorio": true,
+     "descripcion": "No requiere visa para turismo, hasta 180 días, sin actividades remuneradas. Requiere Forma Migratoria Múltiple Digital (FMMd).",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://embamex.sre.gob.mx/argentina/index.php/preguntas-frecuentes/visas-menu-faq",
+     "sameAs": {
+      "__regex": "forma migratoria|fmm",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CUB",
+    "CU"
+   ],
+   "iatas": [
+    "HAV",
+    "VRA",
+    "SCU"
+   ],
+   "nombres": [
+    "CUBA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "e-Visa de turismo (Cuba)",
+     "obligatorio": true,
+     "descripcion": "Visa de turismo 100% electrónica (evisacuba.cu) desde el 01/07/2025: la Tarjeta de Turista en papel dejó de emitirse el 30/06/2025. Entrada única, hasta 90+90 días.",
+     "costo_aproximado": "EUR 22 aprox.",
+     "anticipacion_recomendada": "mín. 72hs antes",
+     "url_oficial": "https://evisacuba.cu/",
+     "sameAs": {
+      "__regex": "tarjeta de turista|tourist card|visa de turista|e-?visa",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "seguro_medico",
+     "nombre": "Seguro médico de viaje con cobertura en Cuba",
+     "obligatorio": true,
+     "descripcion": "Seguro médico de viaje con cobertura en Cuba OBLIGATORIO.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://ecuba.cancilleria.gob.ar/es/content/recomendaciones-al-visitante",
+     "sameAs": {
+      "__regex": "seguro medico|seguro de viaje|travel insurance",
+      "__flags": "i"
+     }
+    },
+    {
+     "categoria": "PLF",
+     "nombre": "D'Viajeros (declaración digital)",
+     "obligatorio": true,
+     "descripcion": "Formulario online D'Viajeros obligatorio antes del viaje.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://ecuba.cancilleria.gob.ar/es/content/recomendaciones-al-visitante",
+     "sameAs": {
+      "__regex": "d.?viajeros|declaracion digital|viajeros",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BHS",
+    "BS"
+   ],
+   "iatas": [
+    "NAS",
+    "FPO",
+    "ELH"
+   ],
+   "nombres": [
+    "BAHAMAS",
+    "LAS BAHAMAS"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": true,
+     "descripcion": "Certificado de fiebre amarilla EXIGIDO: Argentina está listada explícitamente entre los países sudamericanos de riesgo para Bahamas.",
+     "costo_aproximado": "Gratuito en centros publicos argentinos",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://cdn.bahamas.gov.bs/tenant/tenanttgotb/documents/All%20Documents/Vaccinationrequirements-20240123161038.pdf",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Argentina figura como país de riesgo de fiebre amarilla para este destino; se exige el certificado aun con vuelo directo.",
+     "nota_fuentes": "Sin certificado válido, riesgo de rechazo de ingreso o cuarentena. Vacunar con mín. 10 días de anticipación."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BRB",
+    "BB"
+   ],
+   "iatas": [
+    "BGI"
+   ],
+   "nombres": [
+    "BARBADOS"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "TTO",
+    "TT"
+   ],
+   "iatas": [
+    "POS",
+    "TAB"
+   ],
+   "nombres": [
+    "TRINIDAD Y TOBAGO",
+    "TRINIDAD TOBAGO"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "eVisa o visa consular de Trinidad y Tobago",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere visa (Argentina NO está en la lista de países exentos; en Sudamérica solo están exentos Guyana, Surinam y Guayana Francesa). Debe tramitarse eVisa o visa consular antes de viajar.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://homelandsecurity.gov.tt/wp-content/uploads/2024/02/List-of-Countries-that-Do-Not-need-a-Visa-For-TT.pdf",
+     "sameAs": {
+      "__regex": "e.?visa|visado|visa",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LCA",
+    "LC"
+   ],
+   "iatas": [
+    "UVF"
+   ],
+   "nombres": [
+    "SANTA LUCIA",
+    "SAINT LUCIA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "GRD",
+    "GD"
+   ],
+   "iatas": [
+    "GND"
+   ],
+   "nombres": [
+    "GRANADA",
+    "GRENADA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "VCT",
+    "VC"
+   ],
+   "iatas": [
+    "SVD"
+   ],
+   "nombres": [
+    "SAN VICENTE Y LAS GRANADINAS",
+    "SAINT VINCENT AND THE GRENADINES",
+    "SAN VICENTE"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "ATG",
+    "AG"
+   ],
+   "iatas": [
+    "ANU"
+   ],
+   "nombres": [
+    "ANTIGUA Y BARBUDA",
+    "ANTIGUA",
+    "ANTIGUA BARBUDA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "DMA",
+    "DM"
+   ],
+   "iatas": [
+    "DOM"
+   ],
+   "nombres": [
+    "DOMINICA",
+    "COMMONWEALTH OF DOMINICA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "KNA",
+    "KN"
+   ],
+   "iatas": [
+    "SKB"
+   ],
+   "nombres": [
+    "SAN CRISTOBAL Y NIEVES",
+    "ST KITTS AND NEVIS",
+    "SAINT KITTS AND NEVIS",
+    "ST KITTS",
+    "SAN CRISTOBAL"
+   ],
+   "reqs": [
+    {
+     "categoria": "eVisa",
+     "nombre": "Autorización Electrónica de Viaje (ETA)",
+     "obligatorio": true,
+     "descripcion": "Desde el 26/05/2025 es OBLIGATORIA una Autorización Electrónica de Viaje (ETA) para TODOS los viajeros, exención de visa aparte.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://www.knatravelform.kn/",
+     "sameAs": {
+      "__regex": "eta|electronic travel authorisation|e.?visa",
+      "__flags": "i"
+     }
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "HTI",
+    "HT"
+   ],
+   "iatas": [
+    "PAP"
+   ],
+   "nombres": [
+    "HAITI"
+   ],
+   "reqs": [
+    {
+     "categoria": "vacuna",
+     "nombre": "Certificado internacional de fiebre amarilla",
+     "obligatorio": false,
+     "descripcion": "No exigida por normativa haitiana, pero las aerolíneas suelen pedir certificado de fiebre amarilla. Epidemia de cólera activa desde 2010, más riesgo de malaria, dengue, chikungunya y zika.",
+     "costo_aproximado": "Gratuito en centros publicos argentinos",
+     "anticipacion_recomendada": "min. 10 dias antes",
+     "url_oficial": "https://ehait.cancilleria.gob.ar/es/content/visitar-hait%C3%AD",
+     "sameAs": {
+      "__regex": "fiebre amarilla|yellow fever",
+      "__flags": "i"
+     },
+     "motivo_origen": "Obligatorio si el pasajero viene de o transitó por zona de riesgo de fiebre amarilla. No se asume por nacionalidad ni por aeropuerto de salida: revisar el itinerario completo.",
+     "nota_fuentes": "Sin certificado exigido, riesgo de cuarentena. Verificar el itinerario del pasajero y las fuentes oficiales. ALERTA DE VIAJE VIGENTE de Cancillería Argentina: recomienda reprogramar todo viaje no esencial por crisis de seguridad severa (control de bandas armadas en Puerto Príncipe, estado de emergencia)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "POL",
+    "PL"
+   ],
+   "iatas": [
+    "WAW",
+    "KRK",
+    "GDN"
+   ],
+   "nombres": [
+    "POLONIA",
+    "POLAND"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.gov.pl/web/argentyna/wizy-informacje-ogolne",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CZE",
+    "CZ"
+   ],
+   "iatas": [
+    "PRG",
+    "BRQ",
+    "OSR"
+   ],
+   "nombres": [
+    "REPUBLICA CHECA",
+    "CHEQUIA",
+    "CZECH REPUBLIC",
+    "CZECHIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://mzv.gov.cz/jnp/cz/informace_pro_cizince/kratkodobe_vizum/seznam_statu_jejichz_obcane_nepodlehaji/index.html",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SVK",
+    "SK"
+   ],
+   "iatas": [
+    "BTS",
+    "KSC"
+   ],
+   "nombres": [
+    "ESLOVAQUIA",
+    "SLOVAKIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.mzv.sk/sluzby/ak-cestujete-do-zahranicia/kam-viza-nepotrebujete",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "HUN",
+    "HU"
+   ],
+   "iatas": [
+    "BUD",
+    "DEB"
+   ],
+   "nombres": [
+    "HUNGRIA",
+    "HUNGARY"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://buenosaires.mfa.gov.hu/page/vizumok",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SVN",
+    "SI"
+   ],
+   "iatas": [
+    "LJU"
+   ],
+   "nombres": [
+    "ESLOVENIA",
+    "SLOVENIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.gov.si/es/representaciones/embajada-en-buenos-aires/informaciones-sobre-visas/",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "HRV",
+    "HR"
+   ],
+   "iatas": [
+    "ZAG",
+    "SPU",
+    "DBV"
+   ],
+   "nombres": [
+    "CROACIA",
+    "CROATIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://mvep.gov.hr/informacije-za-gradjane-244593/konzularne-informacije-22730/vize-22733/pregled-viznog-sustava/22853?country=1",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "BGR",
+    "BG"
+   ],
+   "iatas": [
+    "SOF",
+    "VAR",
+    "BOJ"
+   ],
+   "nombres": [
+    "BULGARIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.mfa.bg/upload/120500/13_12_2023_EN_VisaRegime_for_foreigners_ordinary_passports.pdf",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ROU",
+    "RO"
+   ],
+   "iatas": [
+    "OTP",
+    "CLJ",
+    "TSR"
+   ],
+   "nombres": [
+    "RUMANIA",
+    "ROMANIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://eviza.mae.ro/ro_LongStayVisa",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MLT",
+    "MT"
+   ],
+   "iatas": [
+    "MLA"
+   ],
+   "nombres": [
+    "MALTA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://identita.gov.mt/central-visa-unit-services-short-stay-visits/",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "CYP",
+    "CY"
+   ],
+   "iatas": [
+    "LCA",
+    "PFO"
+   ],
+   "nombres": [
+    "CHIPRE",
+    "CYPRUS"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "EST",
+    "EE"
+   ],
+   "iatas": [
+    "TLL"
+   ],
+   "nombres": [
+    "ESTONIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://vm.ee/en/consular-visa-and-travel-information/visa-information/who-does-not-need-visa-visit-estonia",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LVA",
+    "LV"
+   ],
+   "iatas": [
+    "RIX"
+   ],
+   "nombres": [
+    "LETONIA",
+    "LATVIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.mfa.gov.lv/en/countries-and-territories-whose-citizens-may-enter-latvia-without-visa",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LTU",
+    "LT"
+   ],
+   "iatas": [
+    "VNO",
+    "KUN"
+   ],
+   "nombres": [
+    "LITUANIA",
+    "LITHUANIA"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.migracija.lt/en/stay-less-than-3-months",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "LIE",
+    "LI"
+   ],
+   "iatas": [],
+   "nombres": [
+    "LIECHTENSTEIN"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.llv.li/en/national-administration/migration-and-passport-office/visa",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "SMR",
+    "SM"
+   ],
+   "iatas": [],
+   "nombres": [
+    "SAN MARINO"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.esteri.sm/pub2/EsteriSM/Servizi-per-utenza/Informazioni-per-chi-visita-SMR.html",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "VAT",
+    "VA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "CIUDAD DEL VATICANO",
+    "VATICANO",
+    "VATICAN",
+    "VATICAN CITY"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "No requiere visa (Argentina exenta, 90/180 días)",
+     "obligatorio": false,
+     "descripcion": "Argentina está exenta de visa Schengen para estancias de turismo hasta 90 días dentro de cualquier período de 180 días. ETIAS (European Travel Information and Authorisation System) todavía NO está vigente a agosto 2026: la fecha de lanzamiento se retiró del sitio oficial de la Comisión Europea sin …",
+     "costo_aproximado": "Gratuito (exento)",
+     "anticipacion_recomendada": "-",
+     "url_oficial": "https://www.vatican.va/roman_curia/secretariat_state/archivio/documents/rc_seg-st_19290211_patti-lateranensi_it.html",
+     "sameAs": {
+      "__regex": "etias|schengen|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "ETIAS no vigente a agosto 2026. Exento de visa Schengen (90/180 días)."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "ALB",
+    "AL"
+   ],
+   "iatas": [
+    "TIA"
+   ],
+   "nombres": [
+    "ALBANIA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "BIH",
+    "BA"
+   ],
+   "iatas": [
+    "SJJ",
+    "BNX",
+    "OMO"
+   ],
+   "nombres": [
+    "BOSNIA Y HERZEGOVINA",
+    "BOSNIA",
+    "BOSNIA HERZEGOVINA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "MNE",
+    "ME"
+   ],
+   "iatas": [
+    "TGD",
+    "TIV"
+   ],
+   "nombres": [
+    "MONTENEGRO"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "MKD",
+    "MK"
+   ],
+   "iatas": [
+    "SKP",
+    "OHD"
+   ],
+   "nombres": [
+    "MACEDONIA DEL NORTE",
+    "MACEDONIA",
+    "NORTH MACEDONIA",
+    "FYROM"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "SRB",
+    "RS"
+   ],
+   "iatas": [
+    "BEG",
+    "INI"
+   ],
+   "nombres": [
+    "SERBIA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "XKX",
+    "XK"
+   ],
+   "iatas": [
+    "PRN"
+   ],
+   "nombres": [
+    "KOSOVO"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "UKR",
+    "UA"
+   ],
+   "iatas": [
+    "KBP",
+    "LWO",
+    "ODS"
+   ],
+   "nombres": [
+    "UCRANIA",
+    "UKRAINE"
+   ],
+   "reqs": [
+    {
+     "categoria": "visado",
+     "nombre": "Visado consular de Ucrania",
+     "obligatorio": true,
+     "descripcion": "SÍ requiere visado (Argentina NO está en la lista de países exentos ni en la de e-Visa de Ucrania). Debe tramitarse por adelantado en la Embajada de Ucrania.",
+     "costo_aproximado": "Consultar fuente oficial",
+     "anticipacion_recomendada": "tramitar antes",
+     "url_oficial": "https://usa.mfa.gov.ua/en/consular-issues/visa-requirements",
+     "sameAs": {
+      "__regex": "visado|visa",
+      "__flags": "i"
+     },
+     "nota_fuentes": "País en guerra desde 2022: espacio aéreo cerrado al tráfico civil, ingreso solo por vía terrestre. Sin alerta formal vigente de Cancillería Argentina pero destino no seguro. Contactar Consular24 antes de cualquier venta de viaje."
+    }
+   ]
+  },
+  {
+   "iso3": [
+    "MDA",
+    "MD"
+   ],
+   "iatas": [
+    "KIV"
+   ],
+   "nombres": [
+    "MOLDAVIA",
+    "MOLDOVA"
+   ],
+   "reqs": []
+  },
+  {
+   "iso3": [
+    "BLR",
+    "BY"
+   ],
+   "iatas": [
+    "MSQ",
+    "GME"
+   ],
+   "nombres": [
+    "BIELORRUSIA",
+    "BELARUS",
+    "BELARUSIA"
+   ],
+   "reqs": []
+  }
+ ],
+ "alertas": [
+  {
+   "iso3": [
+    "RUS"
+   ],
+   "iatas": [
+    "SVO",
+    "DME",
+    "VKO",
+    "LED",
+    "AER"
+   ],
+   "nombres": [
+    "RUSIA",
+    "FEDERACION RUSA",
+    "FEDERACION DE RUSIA"
+   ],
+   "solo_arg": true,
+   "texto": "Registrar el viaje en la app ruID (recomendado / exigido por la Embajada argentina). Completar al menos 72 horas antes del ingreso.",
+   "dedup": {
+    "__regex": "ru.?id",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "MMR"
+   ],
+   "iatas": [],
+   "nombres": [
+    "MYANMAR",
+    "BIRMANIA"
+   ],
+   "solo_arg": false,
+   "texto": "Myanmar: guerra civil activa. Alerta Nivel 4 de EEUU y alerta enfática de la Cancillería argentina: NO se recomienda ofrecerlo turísticamente.",
+   "dedup": {
+    "__regex": "myanmar\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "LBN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "LIBANO",
+    "LÍBANO"
+   ],
+   "solo_arg": false,
+   "texto": "Líbano: alerta de seguridad Nivel 3-4 (dos cancillerías) con escalada reciente (ataques 15-16/8). Niega el ingreso a cualquier pasaporte con sellos de Israel.",
+   "dedup": {
+    "__regex": "l[ií]bano\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "ISR"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ISRAEL"
+   ],
+   "solo_arg": false,
+   "texto": "Israel: alerta de seguridad Nivel 3-4 de al menos dos cancillerías. Verificar la situación antes de vender.",
+   "dedup": {
+    "__regex": "israel\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "IRQ"
+   ],
+   "iatas": [],
+   "nombres": [
+    "IRAK"
+   ],
+   "solo_arg": false,
+   "texto": "Irak (Bagdad): alerta Nivel 3-4. Kurdistán (Erbil) es excepción parcial con oferta turística activa: evaluar caso por caso.",
+   "dedup": {
+    "__regex": "irak\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "IRN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "IRAN"
+   ],
+   "solo_arg": false,
+   "texto": "Irán: alerta argentina más reciente y taxativa (2/1/2026), Nivel 3-4 en dos cancillerías. Verificar antes de operar.",
+   "dedup": {
+    "__regex": "ir[aá]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "SYR"
+   ],
+   "iatas": [],
+   "nombres": [
+    "SIRIA"
+   ],
+   "solo_arg": false,
+   "texto": "Siria: alerta de seguridad Nivel 3-4 de al menos dos cancillerías. No se recomienda ofrecerlo turísticamente.",
+   "dedup": {
+    "__regex": "siria\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "YEM"
+   ],
+   "iatas": [],
+   "nombres": [
+    "YEMEN"
+   ],
+   "solo_arg": false,
+   "texto": "Yemen: alerta de seguridad Nivel 3-4 de al menos dos cancillerías. No se recomienda ofrecerlo turísticamente.",
+   "dedup": {
+    "__regex": "yemen\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "JOR"
+   ],
+   "iatas": [],
+   "nombres": [
+    "JORDANIA"
+   ],
+   "solo_arg": false,
+   "texto": "Jordania: verificar con URGENCIA antes de vender: España ya desaconseja el viaje y hay indicios de que la Cancillería argentina también. Llamar antes de confirmar cualquier venta.",
+   "dedup": {
+    "__regex": "jordania\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "TJK"
+   ],
+   "iatas": [],
+   "nombres": [
+    "TAYIKISTAN"
+   ],
+   "solo_arg": false,
+   "texto": "Tayikistán: zonas de riesgo en frontera con Kirguistán y Afganistán y región GBAO/Pamir (campos minados, disturbios recientes). Los circuitos estándar no se ven afectados: solo excursiones al Pamir Highway.",
+   "dedup": {
+    "__regex": "tayikist[aá]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "ARM"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ARMENIA"
+   ],
+   "solo_arg": false,
+   "texto": "Armenia: zonas de riesgo en provincias de Syunik, Vayots Dzor y Gegharkunik (frontera con Azerbaiyán), que incluyen el monasterio de Tatev y la región vitivinícola de Areni. Verificar vigencia antes de incluirlos en paquetes.",
+   "dedup": {
+    "__regex": "armenia\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "AZE"
+   ],
+   "iatas": [],
+   "nombres": [
+    "AZERBAIYAN",
+    "AZERBAIJAN"
+   ],
+   "solo_arg": false,
+   "texto": "Azerbaiyán: Nivel 3 de EEUU (Reconsiderar viaje) por minas terrestres en 12 regiones de la ex zona de conflicto de Nagorno Karabaj. Bakú y la costa del Caspio no se ven afectadas.",
+   "dedup": {
+    "__regex": "azerbaiy[aá]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "PNG"
+   ],
+   "iatas": [
+    "POM"
+   ],
+   "nombres": [
+    "PAPUA NUEVA GUINEA"
+   ],
+   "solo_arg": false,
+   "texto": "Papúa Nueva Guinea: alertas de seguridad serias y consistentes (EEUU Nivel 3 con zonas en Nivel 4, España advierte malas condiciones, Canadá recomienda evitar viajes no esenciales). Sin ficha específica de la Cancillería argentina: confirmar antes de comercializar.",
+   "dedup": {
+    "__regex": "pap[uú]a nueva guinea\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "LBY"
+   ],
+   "iatas": [],
+   "nombres": [
+    "LIBIA"
+   ],
+   "solo_arg": false,
+   "texto": "Libia: alerta roja, NO ofrecer. Dos gobiernos rivales, ninguna vía turística independiente confirmada, nivel máximo de EEUU/Canadá/España. Cualquier venta debe canalizarse exclusivamente a través de un tour operator libio registrado.",
+   "dedup": {
+    "__regex": "libia\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "MLI"
+   ],
+   "iatas": [],
+   "nombres": [
+    "MALI"
+   ],
+   "solo_arg": false,
+   "texto": "Mali: alerta roja, NO ofrecer. Nivel 4 unánime (conflicto del Sahel/yihadismo). Además suspendió visas a ciudadanos de EEUU desde fines de 2025.",
+   "dedup": {
+    "__regex": "mali\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "BFA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "BURKINA FASO"
+   ],
+   "solo_arg": false,
+   "texto": "Burkina Faso: alerta roja, NO ofrecer. Nivel 4 unánime (conflicto del Sahel/yihadismo). Además suspendió visas a ciudadanos de EEUU desde fines de 2025.",
+   "dedup": {
+    "__regex": "burkina\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "NER"
+   ],
+   "iatas": [],
+   "nombres": [
+    "NIGER"
+   ],
+   "solo_arg": false,
+   "texto": "Níger: alerta roja, NO ofrecer. Nivel 4 unánime (conflicto del Sahel/yihadismo). Además bloqueó visas a ciudadanos de EEUU desde fines de 2025.",
+   "dedup": {
+    "__regex": "n[ií]ger\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "GNB"
+   ],
+   "iatas": [],
+   "nombres": [
+    "GUINEA-BISAU"
+   ],
+   "solo_arg": false,
+   "texto": "Guinea-Bisáu: alerta roja, NO ofrecer. Golpe de estado del 26/11/2025 y sistema de e-visa reportado como no funcional.",
+   "dedup": {
+    "__regex": "guinea-bisau\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "COD"
+   ],
+   "iatas": [],
+   "nombres": [
+    "REPÚBLICA DEMOCRÁTICA DEL CONGO",
+    "RD CONGO"
+   ],
+   "solo_arg": false,
+   "texto": "RD Congo (Kinshasa): alerta roja, NO ofrecer salvo consulta muy detallada. EEUU Nivel 4 \"Do Not Travel\" en todo el país (15/07/2026), M23 controla Goma y Bukavu, Reino Unido desaconseja varias provincias del este y hay brote de Ébola activo en Haut-Uélé/Tshopo.",
+   "dedup": {
+    "__regex": "(rep[uú]blica democr[aá]tica del congo|rd congo)\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "SDN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "SUDÁN"
+   ],
+   "solo_arg": false,
+   "texto": "Sudán: alerta roja, NO ofrecer salvo consulta muy detallada. Guerra civil activa desde 2023, asedio de El Fasher en curso.",
+   "dedup": {
+    "__regex": "sud[aá]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "SSD"
+   ],
+   "iatas": [],
+   "nombres": [
+    "SUDÁN DEL SUR"
+   ],
+   "solo_arg": false,
+   "texto": "Sudán del Sur: alerta roja, NO ofrecer salvo consulta muy detallada. Ofensiva armada materializada desde diciembre de 2025, 280.000+ desplazados.",
+   "dedup": {
+    "__regex": "sud[aá]n del sur\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "SOM"
+   ],
+   "iatas": [],
+   "nombres": [
+    "SOMALIA"
+   ],
+   "solo_arg": false,
+   "texto": "Somalia: alerta roja, NO ofrecer salvo consulta muy detallada. Presencia activa de Al-Shabaab.",
+   "dedup": {
+    "__regex": "somalia\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "UGA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "UGANDA"
+   ],
+   "solo_arg": false,
+   "texto": "Uganda: alerta roja, NO ofrecer salvo consulta muy detallada. Emergencia Sanitaria Internacional por Ébola desde mayo de 2026; EEUU subió a Nivel 4 el 4/6/2026.",
+   "dedup": {
+    "__regex": "uganda\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "DZA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ARGELIA"
+   ],
+   "solo_arg": false,
+   "texto": "Argelia: zonas de riesgo específicas (franjas fronterizas puntuales con Nivel 4 de EEUU), no todo el país. Exige visa tradicional a las 21 nacionalidades sin excepción.",
+   "dedup": {
+    "__regex": "argelia\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "TUN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "TÚNEZ"
+   ],
+   "solo_arg": false,
+   "texto": "Túnez: zonas de riesgo específicas (franjas fronterizas puntuales con Nivel 4 de EEUU), no todo el país. Su sistema de e-visa NO está operativo: todo trámite es consular.",
+   "dedup": {
+    "__regex": "t[uú]nez\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "MRT"
+   ],
+   "iatas": [],
+   "nombres": [
+    "MAURITANIA"
+   ],
+   "solo_arg": false,
+   "texto": "Mauritania: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "mauritania\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "SEN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "SENEGAL"
+   ],
+   "solo_arg": false,
+   "texto": "Senegal: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "senegal\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "NGA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "NIGERIA"
+   ],
+   "solo_arg": false,
+   "texto": "Nigeria: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "nigeria\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "CIV"
+   ],
+   "iatas": [],
+   "nombres": [
+    "COSTA DE MARFIL"
+   ],
+   "solo_arg": false,
+   "texto": "Costa de Marfil: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "costa de marfil\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "TGO"
+   ],
+   "iatas": [],
+   "nombres": [
+    "TOGO"
+   ],
+   "solo_arg": false,
+   "texto": "Togo: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "togo\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "BEN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "BENÍN"
+   ],
+   "solo_arg": false,
+   "texto": "Benín: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "ben[ií]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "GIN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "GUINEA"
+   ],
+   "solo_arg": false,
+   "texto": "Guinea (Conakry): zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "guinea(?![- ]bisau)\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "LBR"
+   ],
+   "iatas": [],
+   "nombres": [
+    "LIBERIA"
+   ],
+   "solo_arg": false,
+   "texto": "Liberia: zonas de riesgo específicas (fronteras del Sahel). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "liberia\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "CMR"
+   ],
+   "iatas": [],
+   "nombres": [
+    "CAMERÚN"
+   ],
+   "solo_arg": false,
+   "texto": "Camerún: zonas de riesgo específicas (Boko Haram en el extremo norte, crisis separatista anglófona). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "camer[uú]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "TCD"
+   ],
+   "iatas": [],
+   "nombres": [
+    "CHAD"
+   ],
+   "solo_arg": false,
+   "texto": "Chad: zonas de riesgo específicas (fronteras con Sudán/RCA/Libia, Lago Chad). Además suspendió visas a ciudadanos de EEUU: verificar siempre antes de cotizar con ese pasaporte.",
+   "dedup": {
+    "__regex": "chad\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "CAF"
+   ],
+   "iatas": [],
+   "nombres": [
+    "REPÚBLICA CENTROAFRICANA"
+   ],
+   "solo_arg": false,
+   "texto": "República Centroafricana: zonas de riesgo específicas (conflicto armado documentado por la ONU; la embajada de EEUU en Bangui sin servicios consulares). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "centroafricana\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "GAB"
+   ],
+   "iatas": [],
+   "nombres": [
+    "GABÓN"
+   ],
+   "solo_arg": false,
+   "texto": "Gabón: zonas de riesgo específicas (régimen migratorio muy inestable, alerta de Irlanda por protestas post-golpe). Además suspendió visas a ciudadanos de EEUU: verificar siempre antes de cotizar con ese pasaporte.",
+   "dedup": {
+    "__regex": "gab[oó]n\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "ETH"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ETIOPÍA"
+   ],
+   "solo_arg": false,
+   "texto": "Etiopía: zonas de riesgo específicas (tensión fronteriza con Eritrea escalando en agosto 2026). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "etiop[ií]a\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "ERI"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ERITREA"
+   ],
+   "solo_arg": false,
+   "texto": "Eritrea: zonas de riesgo específicas (tensión fronteriza con Etiopía escalando en agosto 2026). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "eritrea\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "KEN"
+   ],
+   "iatas": [],
+   "nombres": [
+    "KENIA"
+   ],
+   "solo_arg": false,
+   "texto": "Kenia: zonas de riesgo específicas (condados fronterizos con Somalia). El circuito de safari clásico NO se ve afectado. Ojo: las escalas en Nairobi activan el requisito de fiebre amarilla de Tanzania para cualquier nacionalidad.",
+   "dedup": {
+    "__regex": "kenia\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "TZA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "TANZANIA"
+   ],
+   "solo_arg": false,
+   "texto": "Tanzania: zonas de riesgo específicas (disturbios post-electorales). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "tanzania\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "DJI"
+   ],
+   "iatas": [],
+   "nombres": [
+    "YIBUTI"
+   ],
+   "solo_arg": false,
+   "texto": "Yibuti: zonas de riesgo específicas (cercanía a la crisis del Mar Rojo). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "yibuti\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "RWA"
+   ],
+   "iatas": [],
+   "nombres": [
+    "RUANDA"
+   ],
+   "solo_arg": false,
+   "texto": "Ruanda: zonas de riesgo específicas (frontera con RD Congo, restricciones por Ébola). Exige fiebre amarilla por nombre explícito a 9 de las 21 nacionalidades, incluida Argentina. Verificar antes de vender.",
+   "dedup": {
+    "__regex": "ruanda\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "BDI"
+   ],
+   "iatas": [],
+   "nombres": [
+    "BURUNDI"
+   ],
+   "solo_arg": false,
+   "texto": "Burundi: zonas de riesgo específicas (frontera con RD Congo, restricciones por Ébola). Verificar antes de vender.",
+   "dedup": {
+    "__regex": "burundi\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "MOZ"
+   ],
+   "iatas": [],
+   "nombres": [
+    "MOZAMBIQUE"
+   ],
+   "solo_arg": false,
+   "texto": "Mozambique: zonas de riesgo específicas (Cabo Delgado, Reserva de Niassa, norte de Nampula — terrorismo activo). El resto del país está sin restricción.",
+   "dedup": {
+    "__regex": "mozambique\\s*:",
+    "__flags": "i"
+   }
+  },
+  {
+   "iso3": [
+    "AGO"
+   ],
+   "iatas": [],
+   "nombres": [
+    "ANGOLA"
+   ],
+   "solo_arg": false,
+   "texto": "Angola: zonas de riesgo específicas (área metropolitana de Luanda — robo armado). El resto del país está sin restricción.",
+   "dedup": {
+    "__regex": "angola\\s*:",
+    "__flags": "i"
+   }
+  }
+ ]
+}

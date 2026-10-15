@@ -1,0 +1,252 @@
+import { readFileSync } from 'node:fs';
+import { describe, it, before, after } from 'node:test';
+import {
+  initializeTestEnvironment,
+  assertSucceeds,
+  assertFails,
+} from '@firebase/rules-unit-testing';
+
+const PROJECT_ID = 'doctravel-rules-test';
+const RULES = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
+const HAS_EMULATOR = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
+
+const AGENCY_A = 'trading-travel';
+const AGENCY_B = 'agencia-piloto';
+const UID_A = 'user-a-uid';
+const UID_B = 'user-b-uid';
+
+let testEnv;
+
+if (!HAS_EMULATOR) {
+  describe('Firestore rules — aislamiento multi-tenant', () => {
+    it('requiere emulador (npm run test:rules:emulator)', { skip: 'Firestore emulator no configurado' }, () => {});
+  });
+} else {
+  before(async () => {
+    const [host, portStr] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
+    testEnv = await initializeTestEnvironment({
+      projectId: PROJECT_ID,
+      firestore: {
+        rules: RULES,
+        host,
+        port: Number(portStr),
+      },
+    });
+
+    await testEnv.withSecurityRulesDisabled(async context => {
+      const db = context.firestore();
+
+      await db.collection('users').doc(UID_A).set({
+        agencyId: AGENCY_A,
+        email: 'a@test.com',
+        role: 'agent',
+        active: true,
+      });
+      await db.collection('users').doc(UID_B).set({
+        agencyId: AGENCY_B,
+        email: 'b@test.com',
+        role: 'agent',
+        active: true,
+      });
+
+      await db.collection('agencies').doc(AGENCY_A).set({ name: 'A', slug: AGENCY_A });
+      await db.collection('agencies').doc(AGENCY_B).set({ name: 'B', slug: AGENCY_B });
+
+      await db.collection('agencies').doc(AGENCY_A).collection('passengers').doc('p1').set({
+        lastname: 'GARCIA',
+        firstname: 'JUAN',
+      });
+      await db.collection('agencies').doc(AGENCY_B).collection('passengers').doc('p2').set({
+        lastname: 'LOPEZ',
+        firstname: 'ANA',
+      });
+
+      await db.collection('agencies').doc(AGENCY_A).collection('reservations').doc('r1').set({
+        pnr: 'ABC123', compania: 'AR', fecha: '2026-08-01T13:00',
+      });
+      await db.collection('agencies').doc(AGENCY_B).collection('reservations').doc('r2').set({
+        pnr: 'XYZ999', compania: 'LA', fecha: '2026-08-01T13:00',
+      });
+    });
+  });
+
+  after(async () => {
+    if (testEnv) await testEnv.cleanup();
+  });
+
+  function authAs(uid, agencyId, role) {
+    return testEnv.authenticatedContext(uid, { agencyId, role });
+  }
+
+  describe('Firestore rules — aislamiento multi-tenant', () => {
+    it('usuario A lee pasajeros de su agencia', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(
+        db.collection('agencies').doc(AGENCY_A).collection('passengers').doc('p1').get()
+      );
+    });
+
+    it('usuario A NO lee pasajeros de agencia B', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_B).collection('passengers').doc('p2').get()
+      );
+    });
+
+    it('usuario B NO lee pasajeros de agencia A', async () => {
+      const db = authAs(UID_B, AGENCY_B, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_A).collection('passengers').doc('p1').get()
+      );
+    });
+
+    it('usuario A lee su propio doc users/{uid}', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(db.collection('users').doc(UID_A).get());
+    });
+
+    it('usuario A NO escribe users/{uid}', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('users').doc(UID_A).set({ agencyId: AGENCY_B })
+      );
+    });
+
+    it('usuario no autenticado no lee pasajeros', async () => {
+      const db = testEnv.unauthenticatedContext().firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_A).collection('passengers').doc('p1').get()
+      );
+    });
+
+    it('usuario A lista solo pasajeros de su agencia', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(
+        db.collection('agencies').doc(AGENCY_A).collection('passengers').get()
+      );
+    });
+
+    it('usuario A NO lista pasajeros de agencia B', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_B).collection('passengers').get()
+      );
+    });
+
+    // ── Reservations: mismo aislamiento multi-tenant que passengers ──────
+    it('usuario A lee reservas de su agencia', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(
+        db.collection('agencies').doc(AGENCY_A).collection('reservations').doc('r1').get()
+      );
+    });
+
+    it('usuario A NO lee reservas de agencia B', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_B).collection('reservations').doc('r2').get()
+      );
+    });
+
+    it('usuario A NO lista reservas de agencia B', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_B).collection('reservations').get()
+      );
+    });
+
+    it('usuario A escribe notificación solo en su agencia', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(
+        db.collection('agencies').doc(AGENCY_A).collection('notifications').doc('k1').set({ sentAt: new Date() })
+      );
+    });
+
+    it('usuario A NO escribe notificación en agencia B', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_B).collection('notifications').doc('k2').set({ sentAt: new Date() })
+      );
+    });
+
+    it('usuario sin claims de tenant no lee pasajeros', async () => {
+      const db = testEnv.authenticatedContext(UID_A).firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_A).collection('passengers').doc('p1').get()
+      );
+    });
+
+    // ── Regresión: colecciones raíz legacy eliminadas (default deny) ──────
+    // Antes los match raíz /passengers, /notifications, /config permitían read
+    // a cualquier usuario autenticado (sin scope de agencia). Ahora no existen
+    // → el default es deny, sin importar la agencia del lector.
+    it('usuario autenticado NO lee colección raíz /passengers (legacy eliminada)', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(db.collection('passengers').doc('anything').get());
+    });
+
+    it('usuario autenticado NO lee colección raíz /notifications (legacy eliminada)', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(db.collection('notifications').doc('anything').get());
+    });
+
+    it('usuario autenticado NO lee colección raíz /config (legacy eliminada)', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(db.collection('config').doc('anything').get());
+    });
+
+    // ── Regresión: medición de uso no legible por el cliente ─────────────
+    // El contador /agencies/{id}/usage/{day} lo escriben las Functions vía
+    // Admin SDK (service account). Un cliente (incluso miembro de la agencia)
+    // no debe poder leerlo: el reporte se sirve por la ruta super-admin.
+    it('miembro de la agencia NO lee /agencies/{id}/usage/{day}', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(
+        db.collection('agencies').doc(AGENCY_A).collection('usage').doc('2026-01-01').get()
+      );
+    });
+
+    // ── Regresión: cache de gemini-travel no accesible por el cliente ────
+    // La colección raíz /travelCache (resultados de requisitos reutilizados
+    // entre agencias) la escriben/leen las Functions vía Admin SDK.
+    it('miembro de la agencia NO lee ni escribe /travelCache', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(db.collection('travelCache').doc('v1_XX123_EZE_MIA_ARG').get());
+      await assertFails(
+        db.collection('travelCache').doc('v1_XX123_EZE_MIA_ARG').set({ data: {} })
+      );
+    });
+
+    // ── settings/gdsCities: agentes de la misma agencia pueden guardar ──
+    function settingsDoc(db, agencyId, docId) {
+      return db.collection('agencies').doc(agencyId).collection('settings').doc(docId);
+    }
+
+    it('agent de A escribe y lee settings/gdsCities de su agencia', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(settingsDoc(db, AGENCY_A, 'gdsCities').set({ items: [] }));
+      await assertSucceeds(settingsDoc(db, AGENCY_A, 'gdsCities').get());
+    });
+
+    it('agent de A NO escribe ni lee settings/gdsCities de agencia B', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(settingsDoc(db, AGENCY_B, 'gdsCities').set({ items: [] }));
+      await assertFails(settingsDoc(db, AGENCY_B, 'gdsCities').get());
+    });
+
+    it('agent de A NO escribe otro doc de settings (solo gdsCities)', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
+      await assertFails(settingsDoc(db, AGENCY_A, 'alerts').set({ email: 'x@y.com' }));
+    });
+
+    it('admin de A escribe otros docs de settings', async () => {
+      const db = authAs(UID_A, AGENCY_A, 'admin').firestore();
+      await assertSucceeds(settingsDoc(db, AGENCY_A, 'alerts').set({ email: 'x@y.com' }));
+    });
+
+    it('usuario no autenticado NO escribe settings/gdsCities', async () => {
+      const db = testEnv.unauthenticatedContext().firestore();
+      await assertFails(settingsDoc(db, AGENCY_A, 'gdsCities').set({ items: [] }));
+    });
+  });
+}

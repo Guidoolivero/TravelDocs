@@ -1,0 +1,33 @@
+[build]
+  # Solo public/ se sirve: docs/, tests/ y scripts/ tienen datos personales.
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Misma apiKey que public/js/config.js — usada por netlify/functions/_auth.js
+  FIREBASE_API_KEY = "AIzaSyBBqUsxjkLx2RMNQ7ivIINX0kAznlICyHc"
+
+[functions]
+  node_bundler = "esbuild"
+  # netlify dev y los previews: el esbuild de Netlify no empaqueta @sentry/node.
+  external_node_modules = ["@sentry/node"]
+
+# Produccion: scripts/bundle-functions.mjs empaqueta e inlinea @sentry/node,
+# sube los source maps y deja el zip sin re-bundlear (asi el debug id coincide).
+# El deploy tiene que ser `netlify deploy --prod`, sin --no-build.
+[context.production.build]
+  command = "node scripts/bundle-functions.mjs"
+  functions = "netlify/functions-dist"
+
+[context.production.functions]
+  node_bundler = "none"
+# Alertas unificadas (vencimientos + check-ins + cumpleaños): corre una vez
+# por día a las 9:00 AM de Argentina (12:00 UTC; ART es UTC-3 fijo sin DST)
+# aunque nadie tenga la app abierta. Si una agencia abre la app antes, el
+# fallback del cliente manda sus pendientes en ese momento y esta corrida
+# solo envía lo que falte (dedup por flags). Solo se ejecuta en deploys
+# publicados. Si hay dos sites publicados contra el mismo Firestore, setear
+# ALERTS_CRON_OFF=1 como env var en el otro site para no duplicar envíos.
+[functions."send-alerts"]
+  schedule = "0 12 * * *"

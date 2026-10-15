@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+.opencode/node_modules/
+
+# Netlify local build/cache
+.netlify/
+
+# Bundles de produccion (los genera scripts/bundle-functions.mjs)
+netlify/functions-dist/
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*-service-account.json
+service-account*.json
+
+# OS & editor
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs & debug
+*.log
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+
+# Firebase emulator
+.firebase/
+
+# Local credentials (keep keys outside repo)
+keys/
+
+# OCR regression fixtures — contienen PII de documentos reales (no commitear)
+tests/ocr-fixtures/*
+!tests/ocr-fixtures/README.md
+
+# Documentos con datos personales (pasaportes, e-tickets, nominas) y backups
+docs/ejemplos/
+docs/backups/
+*.pdf
+*.xlsx
+*.bak
+firestore-debug.log
+# Itinerario sintetico (PAX UNO) que usa tests/itinerario-pdf.e2e.ts
+!tests/fixtures/*.pdf
+.e2e/artifacts/
+.e2e/cache/
+.e2e/sessions/
+.e2e/report.json
+.e2e/ai-trace.json
+.e2e/junit.xml
+.e2e/summary.md
+.e2e/failures/
+.e2e/logs/
+.e2e/videos/
+docs/*.docx
+docs/*.csv
+docs/*.png
+docs/*.rtf
+
+# Fotos, capturas y documentos comerciales con datos de clientes
+docs/imagenes/
+docs/*.jpeg
+docs/*.jpg
+docs/propuesta-*.html
+docs/TravelDocs-Documento-Cliente.html
+docs/DEPLOY AYER*
+
+# Python
+__pycache__/

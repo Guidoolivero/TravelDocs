@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) — la config vive en js/analytics.js (script externo:
+     el CSP enforced bloquea los scripts inline, la config inline no se ejecutaba) -->
+<script src="https://browser.sentry-cdn.com/11.7.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+<script src="/js/sentry.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JTG1QQCTXC"></script>
+<script src="/js/analytics.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TravelDocs — Documentos de pasajeros, listos para el GDS</title>
+<meta name="description" content="La plataforma que usan las agencias de viajes para gestionar DNI, pasaportes y visas, generar los strings SSR/FOID de Amadeus y Sabre, y armar check-ins desde el PNR.">
+
+<!-- Favicon -->
+
+<!-- Open Graph / WhatsApp / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:url" content="https://traveldocs.com.ar/">
+<meta property="og:title" content="TravelDocs — Documentos de pasajeros, listos para el GDS">
+<meta property="og:description" content="Gestioná DNI, pasaportes y visas, generá los strings SSR/FOID de Amadeus y Sabre, y armá check-ins desde el PNR. Con alertas de vencimiento.">
+<meta property="og:image" content="https://traveldocs.com.ar/assets/logo.jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TravelDocs — Documentos de pasajeros, listos para el GDS">
+<meta name="twitter:description" content="Gestioná DNI, pasaportes y visas, generá los strings SSR/FOID de Amadeus y Sabre, y armá check-ins desde el PNR.">
+<meta name="twitter:image" content="https://traveldocs.com.ar/assets/logo.jpeg">
+
+<!-- SEO: la home se sirve en / (rewrite), /landing.html hace 301 a / -->
+<link rel="canonical" href="https://traveldocs.com.ar/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "TravelDocs",
+  "url": "https://traveldocs.com.ar/",
+  "logo": "https://traveldocs.com.ar/assets/logo.jpeg",
+  "email": "guido@traveldocs.com.ar"
+}
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+
+<!-- ===== NAV / HEADER ===== -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#top" aria-label="TravelDocs — inicio">
+      <span class="nav-name">TravelDocs</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#funciones">Funciones</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="btn btn-outline" href="login.html">Iniciar sesión</a>
+      <a class="btn btn-primary" href="#cta">Solicitar demo</a>
+      <button class="nav-burger" id="nav-burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-mobile">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menú móvil -->
+  <div class="nav-mobile" id="nav-mobile" hidden>
+    <a href="#funciones">Funciones</a>
+    <a href="#como-funciona">Cómo funciona</a>
+    <a href="#faq">FAQ</a>
+    <a class="btn btn-outline" href="login.html">Iniciar sesión</a>
+    <a class="btn btn-primary" href="#cta">Solicitar demo</a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ===== HERO BENTO ===== -->
+<section class="section hero-section">
+  <div class="bento bento-hero-grid">
+
+    <!-- Tarjeta oscura principal (rompe el crema) -->
+    <article class="bento-card bento-hero-dark reveal">
+      <span class="eyebrow eyebrow-light">Para agencias de viajes</span>
+      <h1 class="display">Sistema de gestión de documentos de <span class="accent-soft">pasajeros</span>.</h1>
+      <p class="lead">Gestioná DNI, pasaportes, visas, y generá los strings <strong>SSR/FOID</strong> de Amadeus y Sabre con un clic. Con alertas de vencimiento y check-ins solo pegando el PNR.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary btn-lg" href="#cta">Solicitar demo</a>
+        <a class="btn btn-ghost-light btn-lg" href="#como-funciona">Ver cómo funciona</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>IATA</strong><span>SSR · FOID · DOCS</span></div>
+        <div><strong>2 GDS</strong><span>Amadeus · Sabre</span></div>
+        <div><strong>Check-in</strong><span>Amadeus · Sabre</span></div>
+      </div>
+    </article>
+
+    <!-- Mock: string SSR en DM Mono (formatos reales Amadeus) -->
+    <article class="bento-card bento-mock-ssr reveal" data-reveal-delay="1">
+      <div class="mock-head">
+        <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+        <span class="mock-label">string SSR · Amadeus</span>
+      </div>
+      <pre class="mock-code" id="ssr-code">SRDOCSYYHK1-P-ARG-M1234567-ARG-12JUL85-M-02DEC29-RODRIGUEZ-CARLOS/P1
+SRFOIDYYHK1-NIAR39171901/P1
+NM1RODRIGUEZ/CARLOS</pre>
+      <button class="btn btn-secondary btn-sm mock-copy" id="ssr-copy" type="button">Copiar todo</button>
+    </article>
+
+    <!-- Mock: alertas semáforo -->
+    <article class="bento-card bento-mock-alerts reveal" data-reveal-delay="2">
+      <div class="mock-head"><span class="mock-label">Alertas de vencimiento</span></div>
+      <ul class="alert-list">
+        <li class="alert-row alert-red">
+          <span class="dot"></span>
+          <div><strong>Pasaporte — Pérez</strong><small>vence en 12 días</small></div>
+        </li>
+        <li class="alert-row alert-amber">
+          <span class="dot"></span>
+          <div><strong>Visa — González</strong><small>vence en 74 días</small></div>
+        </li>
+        <li class="alert-row alert-green">
+          <span class="dot"></span>
+          <div><strong>DNI — Ramírez</strong><small>vigente</small></div>
+        </li>
+      </ul>
+    </article>
+
+    <!-- Mock: check-in desde PNR -->
+    <article class="bento-card bento-mock-ia reveal" data-reveal-delay="3">
+      <div class="mock-head"><span class="mock-label">Check-in desde PNR</span></div>
+      <div class="ia-flow">
+        <code style="font-family:var(--mono);font-size:10px;background:var(--surface2);padding:8px 10px;border-radius:6px;color:var(--text2);display:block;line-height:1.6;white-space:pre-wrap;">7 IB 105 I 29JUL 3 MADEZE HK5
+0845 1605 29JUL E IB/KRBJJ</code>
+        <span class="ia-arrow" aria-hidden="true">→</span>
+        <div class="ia-form">
+          <div class="ia-field"><label>Vuelo</label><span>IB105 · MAD→EZE</span></div>
+          <div class="ia-field"><label>Salida</label><span>29 jul 09:20hs</span></div>
+          <div class="ia-field"><label>Reserva</label><span>KRBJJ</span></div>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ===== BANDA GDS ===== -->
+<section class="gds-band reveal" aria-label="GDS compatibles">
+  <span class="gds-label">Compatible con los principales GDS</span>
+  <div class="gds-list">
+    <span class="gds-name">Amadeus</span>
+    <span class="gds-sep" aria-hidden="true">·</span>
+    <span class="gds-name">Sabre</span>
+  </div>
+</section>
+
+<!-- ===== PROBLEMA / SOLUCIÓN ===== -->
+<section class="section" id="problema">
+  <header class="section-head reveal">
+    <span class="eyebrow">El problema</span>
+    <h2 class="section-title">Cargar documentos a mano es lento y con posibles errores.</h2>
+  </header>
+  <div class="bento bento-3">
+    <article class="bento-card reveal">
+      <div class="card-icon">⌨</div>
+      <h3>Tipeo manual de strings</h3>
+      <p>Armar SRDOCS y SRFOID a mano en el GDS consume minutos por pasajero y puede provocar errores</p>
+    </article>
+    <article class="bento-card reveal" data-reveal-delay="1">
+      <div class="card-icon">⚠</div>
+      <h3>Vencimientos sin visibilidad</h3>
+      <p>Nadie se entera de que un pasaporte vence hasta que es muy tarde.</p>
+    </article>
+    <article class="bento-card bento-card-dark reveal" data-reveal-delay="2">
+      <div class="card-icon">✓</div>
+      <h3>TravelDocs lo resuelve</h3>
+      <p>Cargás los documentos, generás el string correcto para el GDS y te avisa antes de que venza.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ===== FUNCIONES (bento estrella) ===== -->
+<section class="section" id="funciones">
+  <header class="section-head reveal">
+    <span class="eyebrow">Funciones</span>
+    <h2 class="section-title">Todo lo que la agencia necesita, en un lugar.</h2>
+  </header>
+
+  <div class="bento bento-features">
+    <!-- Feature grande: Check-ins -->
+    <article class="bento-card feature-lg reveal">
+      <span class="tag">Nuevo</span>
+      <h3>Check-ins</h3>
+      <p>Solo copiando el PNR (Amadeus o Sabre) armás el check-in: fecha del vuelo en horario Argentina, pasajeros asociados automáticamente, reserva de la aerolínea y compañía. Te avisa el día anterior para que no se te pase.</p>
+      <div class="feature-pills">
+        <span>Decodificación PNR</span><span>Pasajeros auto</span><span>Recordatorio previo</span><span>Ida y vuelta</span><span>Multi Destinos</span>
+      </div>
+    </article>
+
+    <!-- Generador SSR -->
+    <article class="bento-card reveal" data-reveal-delay="1">
+      <span class="tag tag-mono">SSR / FOID</span>
+      <h3>Generador de strings IATA</h3>
+      <p>SRDOCS, SRFOID, SRDOCO, NM de infante, CUIT y FFN, configurable por GDS, pasajero y segmento. Botón "Copiar" individual y "Copiar todo".</p>
+    </article>
+
+    <!-- Gestión de documentos -->
+    <article class="bento-card reveal" data-reveal-delay="2">
+      <span class="tag">Documentos</span>
+      <h3>Gestión de pasajeros</h3>
+      <p>DNI, pasaporte argentino y extranjero, visas, asistencia médica e infantes. Todo centralizado por pasajero, con vencimientos a la vista.</p>
+    </article>
+
+    <!-- Alertas semáforo -->
+    <article class="bento-card reveal" data-reveal-delay="1">
+      <span class="tag tag-amber">Vencimientos</span>
+      <h3>Alertas con semáforo</h3>
+      <p>Rojo 0–30 días, ámbar 31–90, verde vigente. Dashboard de urgentes, badge en el menú y avisos por email. Configurable por agencia.</p>
+    </article>
+
+    <!-- Requisitos por país -->
+    <article class="bento-card reveal" data-reveal-delay="2">
+      <span class="tag">Destinos</span>
+      <h3>Requisitos de vuelo por país</h3>
+      <p>Análisis de requisitos migratorios por destino solo pegando el PNR.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ===== CÓMO FUNCIONA ===== -->
+<section class="section" id="como-funciona">
+  <header class="section-head reveal">
+    <span class="eyebrow">Cómo funciona</span>
+    <h2 class="section-title">Cada flujo, en cuatro pasos.</h2>
+  </header>
+
+  <h3 class="steps-group-title reveal">Documentos al GDS</h3>
+  <ol class="steps">
+    <li class="step reveal">
+      <span class="step-num">01</span>
+      <h3>Cargás el pasajero</h3>
+      <p>DNI, pasaporte, visa y asistencia médica, todo en un solo lugar.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="1">
+      <span class="step-num">02</span>
+      <h3>Generás el string</h3>
+      <p>SSR/FOID listo para el GDS que uses, con un clic y sin tipear.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="2">
+      <span class="step-num">03</span>
+      <h3>Lo pegás en el GDS</h3>
+      <p>Amadeus o Sabre. Copiar y listo.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="3">
+      <span class="step-num">04</span>
+      <h3>Te avisa antes</h3>
+      <p>Recordatorio de vencimientos antes de que sea tarde.</p>
+    </li>
+  </ol>
+
+  <h3 class="steps-group-title reveal">Requisitos de vuelo</h3>
+  <ol class="steps">
+    <li class="step reveal">
+      <span class="step-num">01</span>
+      <h3>Pegás el PNR</h3>
+      <p>Copiás la reserva completa desde Amadeus o Sabre, sin tipear nada.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="1">
+      <span class="step-num">02</span>
+      <h3>Se detectan los destinos</h3>
+      <p>Los segmentos del vuelo se decodifican solos, incluyendo escalas.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="2">
+      <span class="step-num">03</span>
+      <h3>Analizamos los requisitos</h3>
+      <p>Visas, pasaporte y migración según el destino y la nacionalidad.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="3">
+      <span class="step-num">04</span>
+      <h3>Vés el informe listo</h3>
+      <p>Requisitos por pasajero y por país, para avisar antes de emitir.</p>
+    </li>
+  </ol>
+
+  <h3 class="steps-group-title reveal">Check-in</h3>
+  <ol class="steps">
+    <li class="step reveal">
+      <span class="step-num">01</span>
+      <h3>Pegás el PNR</h3>
+      <p>La reserva de Amadeus o Sabre, igual que en el analizador de requisitos.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="1">
+      <span class="step-num">02</span>
+      <h3>Se arma el check-in</h3>
+      <p>Fecha del vuelo en horario Argentina y pasajeros asociados automáticamente.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="2">
+      <span class="step-num">03</span>
+      <h3>Lo seguís en la lista</h3>
+      <p>Ida y vuelta, multi destino y reserva de la aerolínea, en un solo panel.</p>
+    </li>
+    <li class="step reveal" data-reveal-delay="3">
+      <span class="step-num">04</span>
+      <h3>Te avisa el día anterior</h3>
+      <p>Recordatorio antes de cada vuelo para que no se te pase ninguno.</p>
+    </li>
+  </ol>
+</section>
+
+<!-- ===== GALERÍA (mocks del sistema, datos de ejemplo) ===== -->
+<section class="section" id="galeria">
+  <header class="section-head reveal">
+    <span class="eyebrow">Así se ve</span>
+    <h2 class="section-title">El sistema, con datos de ejemplo.</h2>
+  </header>
+  <div class="bento bento-3">
+
+    <!-- Screenshot: Check-ins -->
+    <article class="bento-card reveal" style="padding:0;overflow:hidden;background:#f4f3ef;">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#1a3a5c;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;">
+        <span>Check ins</span>
+        <span style="background:#e8eef5;color:#1a3a5c;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;">2 pronto</span>
+      </div>
+      <div style="padding:10px;">
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:13px;">
+          <div style="font-weight:600;">GARCÍA, PÉREZ <span style="color:#7a7870;font-weight:400;font-family:'DM Mono',monospace;font-size:11px;">· ABC123 · IB · KRBJJ</span></div>
+          <div style="color:#7a7870;font-size:11px;margin-top:3px;">Ida 25 oct 09:20hs · Vuelta 02 nov 21:15hs · 2 pasajero(s)</div>
+          <div style="margin-top:6px;display:flex;gap:6px;">
+            <span style="background:#fef0f0;color:#9b1c1c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Ida pronto</span>
+            <span style="background:#fef7e6;color:#8a5a00;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Vuelta</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:12px 14px;font-size:13px;">
+          <div style="font-weight:600;">LÓPEZ <span style="color:#7a7870;font-weight:400;font-family:'DM Mono',monospace;font-size:11px;">· XYZ789 · AR</span></div>
+          <div style="color:#7a7870;font-size:11px;margin-top:3px;">Ida 12 nov 14:30hs · 1 pasajero(s)</div>
+          <div style="margin-top:6px;display:flex;gap:6px;">
+            <span style="background:#e8f5ee;color:#1e6b3c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Ida ✓</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Screenshot: Generador SSR -->
+    <article class="bento-card reveal" data-reveal-delay="1" style="padding:0;overflow:hidden;background:#f4f3ef;">
+      <div style="background:#1a3a5c;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;">Generador SSR / FOID</div>
+      <div style="padding:12px 14px;">
+        <div style="font-size:12px;color:#7a7870;margin-bottom:8px;">GARCÍA, JUAN · Pasaporte ARG · Amadeus</div>
+        <code style="display:block;font-family:'DM Mono',monospace;font-size:11px;background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:8px 10px;color:#1a3a5c;margin-bottom:6px;word-break:break-all;">SRDOCSYYHK1-P-ARG-M1234567-ARG-12JUL85-M-02DEC29-GARCIA-JUAN/P1</code>
+        <code style="display:block;font-family:'DM Mono',monospace;font-size:11px;background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:8px 10px;color:#1a3a5c;margin-bottom:6px;word-break:break-all;">SRFOIDYYHK1-NIAR39171901/P1</code>
+        <code style="display:block;font-family:'DM Mono',monospace;font-size:11px;background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:8px 10px;color:#1a3a5c;word-break:break-all;">NM1GARCIA/JUAN</code>
+      </div>
+    </article>
+
+    <!-- Screenshot: Alertas semáforo -->
+    <article class="bento-card reveal" data-reveal-delay="2" style="padding:0;overflow:hidden;background:#f4f3ef;">
+      <div style="background:#1a3a5c;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;">Alertas</div>
+      <div style="padding:10px;">
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#9b1c1c;flex-shrink:0;"></span>
+          <div style="font-size:12px;"><strong>Pasaporte — Pérez</strong><div style="color:#7a7870;font-size:11px;">vence en 12 días</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#8a5a00;flex-shrink:0;"></span>
+          <div style="font-size:12px;"><strong>Visa — González</strong><div style="color:#7a7870;font-size:11px;">vence en 74 días</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#1e6b3c;flex-shrink:0;"></span>
+          <div style="font-size:12px;"><strong>DNI — Ramírez</strong><div style="color:#7a7870;font-size:11px;">vigente</div></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Screenshot: Perfil del cliente -->
+    <article class="bento-card reveal" style="padding:0;overflow:hidden;background:#f4f3ef;">
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#1a3a5c;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;">
+        <span>GARCÍA, JUAN</span>
+        <span style="font-size:11px;font-weight:400;opacity:.8;">ARG · M · 12/07/1985</span>
+      </div>
+      <div style="padding:10px;">
+        <div style="font-size:10px;color:#7a7870;text-transform:uppercase;letter-spacing:.05em;margin:2px 2px 6px;">Documentos</div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;">DNI <span style="color:#7a7870;font-family:'DM Mono',monospace;font-size:11px;">39.171.901</span></div>
+          <span style="background:#e8f5ee;color:#1e6b3c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Vigente</span>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;">Pasaporte ARG <span style="color:#7a7870;font-family:'DM Mono',monospace;font-size:11px;">M1234567</span></div>
+          <span style="background:#e8f5ee;color:#1e6b3c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Vence 02 dic 29</span>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;">Visa USA <span style="color:#7a7870;font-family:'DM Mono',monospace;font-size:11px;">B12345678</span></div>
+          <span style="background:#fef7e6;color:#8a5a00;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Por vencer</span>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;">Asistencia médica <span style="color:#7a7870;font-family:'DM Mono',monospace;font-size:11px;">ASS-9981</span></div>
+          <span style="background:#fef0f0;color:#9b1c1c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Crítico</span>
+        </div>
+        <button style="margin-top:10px;width:100%;background:#1a3a5c;color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;">Generar strings SSR/FOID</button>
+      </div>
+    </article>
+
+    <!-- Screenshot: Editar cliente -->
+    <article class="bento-card reveal" data-reveal-delay="1" style="padding:0;overflow:hidden;background:#f4f3ef;">
+      <div style="background:#1a3a5c;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;">Editar pasajero</div>
+      <div style="padding:12px 14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label style="font-size:10px;color:#7a7870;text-transform:uppercase;display:block;margin-bottom:3px;">Apellido</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;">GARCÍA</div>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#7a7870;text-transform:uppercase;display:block;margin-bottom:3px;">Nombre</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;">JUAN</div>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#7a7870;text-transform:uppercase;display:block;margin-bottom:3px;">Nacimiento</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:12px;">12/07/1985</div>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#7a7870;text-transform:uppercase;display:block;margin-bottom:3px;">Sexo</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:12px;">M</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#7a7870;text-transform:uppercase;letter-spacing:.05em;margin:10px 2px 6px;">Pasaporte ARG</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div>
+            <label style="font-size:10px;color:#7a7870;display:block;margin-bottom:3px;">Número</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'DM Mono',monospace;">M1234567</div>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#7a7870;display:block;margin-bottom:3px;">Emisión</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:11px;">03/12/19</div>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#7a7870;display:block;margin-bottom:3px;">Vence</label>
+            <div style="background:#fff;border:1px solid #e2e0d8;border-radius:6px;padding:6px 8px;font-size:11px;">02/12/29</div>
+          </div>
+        </div>
+        <button style="margin-top:12px;width:100%;background:#1e6b3c;color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;">Guardar pasajero</button>
+      </div>
+    </article>
+
+    <!-- Screenshot: Requisitos de vuelo -->
+    <article class="bento-card reveal" data-reveal-delay="2" style="padding:0;overflow:hidden;background:#f4f3ef;">
+      <div style="background:#1a3a5c;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;">Requisitos de vuelo</div>
+      <div style="padding:10px;">
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;gap:16px;font-size:11px;">
+          <div><div style="color:#7a7870;text-transform:uppercase;letter-spacing:.05em;font-size:9px;">Vuelo</div><strong style="font-family:'DM Mono',monospace;">IB6846</strong></div>
+          <div><div style="color:#7a7870;text-transform:uppercase;letter-spacing:.05em;font-size:9px;">Ruta</div><strong style="font-family:'DM Mono',monospace;">EZE → MAD → LHR</strong></div>
+          <div><div style="color:#7a7870;text-transform:uppercase;letter-spacing:.05em;font-size:9px;">Nacionalidad</div><strong>ARG</strong></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;"><strong>EZE · Buenos Aires</strong><div style="color:#7a7870;font-size:11px;">Origen de salida</div></div>
+          <span style="background:#e8eef5;color:#1a3a5c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Origen</span>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;"><strong>MAD · España</strong><div style="color:#7a7870;font-size:11px;">Visa exenta — Schengen, hasta 90 días</div></div>
+          <span style="background:#e8f5ee;color:#1e6b3c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Exenta</span>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e0d8;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;"><strong>LHR · Reino Unido</strong><div style="color:#7a7870;font-size:11px;">Visa exenta — hasta 6 meses de estadia</div></div>
+          <span style="background:#e8f5ee;color:#1e6b3c;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;">Exenta</span>
+        </div>
+        <div style="background:#fef7e6;border:1px solid #f0dfb6;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:11px;color:#8a5a00;">⚠ Pasaporte con validez mínima de 6 meses al ingreso a Reino Unido.</div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ===== CONFIANZA / SEGURIDAD ===== -->
+<section class="trust reveal" aria-label="Seguridad y privacidad">
+  <div class="trust-item">
+    <div class="trust-icon" aria-hidden="true">🔒</div>
+    <div>
+      <strong>Datos cifrados</strong>
+      <span>En tránsito y reposo.</span>
+    </div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon" aria-hidden="true">🛡</div>
+    <div>
+      <strong>2FA</strong>
+      <span>Google Authenticator en cada cuenta.</span>
+    </div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon" aria-hidden="true">🗄</div>
+    <div>
+      <strong>Base de datos</strong>
+      <span>Copias de seguridad diarias.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="section" id="faq">
+  <header class="section-head reveal">
+    <span class="eyebrow">FAQ</span>
+    <h2 class="section-title">Preguntas frecuentes</h2>
+  </header>
+  <div class="bento" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <article class="bento-card reveal">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;color:#1a1916;">¿Necesito instalar algo?</h3>
+      <p style="font-size:13px;color:#555049;line-height:1.5;">No, es web. Entrás desde el navegador con tu email y contraseña, sin instalar nada.</p>
+    </article>
+    <article class="bento-card reveal" data-reveal-delay="1">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;color:#1a1916;">¿Funciona con mi GDS?</h3>
+      <p style="font-size:13px;color:#555049;line-height:1.5;">Sí: Amadeus y Sabre. Generás los strings y los pegás en el GDS que uses.</p>
+    </article>
+    <article class="bento-card reveal" data-reveal-delay="2">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;color:#1a1916;">¿Es seguro?</h3>
+      <p style="font-size:13px;color:#555049;line-height:1.5;">Datos cifrados en tránsito y reposo, autenticación en dos pasos (2FA) y copias de seguridad diarias.</p>
+    </article>
+    <article class="bento-card reveal" data-reveal-delay="3">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;color:#1a1916;">¿Cómo empiezo?</h3>
+      <p style="font-size:13px;color:#555049;line-height:1.5;">Pedís la demo, te damos de alta tu agencia y empezás a cargar pasajeros. Sin instalaciones ni configuración compleja.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ===== CTA FINAL ===== -->
+<section class="section cta-section" id="cta">
+  <div class="cta-band reveal">
+    <h2 class="display">Gestioná documentos de pasajeros sin fricción ni errores.</h2>
+    <div class="cta-actions">
+      <a class="btn btn-primary btn-lg" target="_blank" rel="noopener" href="https://wa.me/5491153432752?text=Hola%2C%20quiero%20una%20demo%20de%20TravelDocs">
+        <svg class="btn-wa-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Solicitar demo
+      </a>
+      <a class="btn btn-outline btn-lg" href="login.html">Iniciar sesión</a>
+    </div>
+    <p class="cta-email">¿Preferís email? Escribinos a <a href="mailto:guido@traveldocs.com.ar">guido@traveldocs.com.ar</a></p>
+  </div>
+</section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span>TravelDocs</span>
+      <a class="footer-social" href="https://www.instagram.com/tradingtravel.arg/" target="_blank" rel="noopener" aria-label="Instagram de TradingTravel">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </a>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="#funciones">Funciones</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#faq">FAQ</a>
+      <a href="login.html">Iniciar sesión</a>
+    </nav>
+    <p class="footer-note">Hecho para agencias de viajes argentinas. © <span id="year"></span> TravelDocs.</p>
+  </div>
+</footer>
+
+<!-- Aviso de responsabilidad -->
+<p class="footer-legal">Aviso de Responsabilidad: TravelDocs provee exclusivamente el sistema de gestión bajo estándares internacionales de seguridad —incluyendo doble factor de autenticación (2FA)—, siendo responsabilidad exclusiva de la Agencia de Viajes el cumplimiento de la Ley de Protección de Datos Personales Nº 25.326 y la inscripción de sus bases de datos.</p>
+
+<!-- Botón flotante de WhatsApp -->
+<a class="wa-float" target="_blank" rel="noopener" href="https://wa.me/5491153432752?text=Hola%2C%20quiero%20una%20demo%20de%20TravelDocs" aria-label="Contactar por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+</a>
+
+<script type="module" src="./js/landing.js"></script>
+</body>
+</html>

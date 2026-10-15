@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TravelDocs - Preview pantalla de carga (pasaporte - pagina de datos)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Tokens de brand (replica de css/main.css :root) */
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface2: #f6f5f1;
+    --border: #e2e0d8;
+    --border2: #cccabf;
+    --text: #1a1916;
+    --text2: #555049;
+    --text3: #7a7870;
+    --accent: #1a3a5c;
+    --accent-soft: #2f5d8a;
+    --accent-light: #e8eef5;
+    --gold: #c2a25a;
+    --green: #1e6b3c;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,.07), 0 14px 40px rgba(26,58,92,.18);
+    --mono: 'DM Mono', monospace;
+    --ease-out: cubic-bezier(.2,.8,.2,1);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* Controles del preview (no van al loader real) */
+  .preview-controls {
+    position: fixed; top: 14px; right: 14px; z-index: 1000;
+    display: flex; gap: 8px;
+  }
+  .preview-controls button {
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 8px 14px; border: 1px solid var(--border2); border-radius: 8px;
+    background: var(--surface); color: var(--text2); cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .preview-controls button:hover { color: var(--accent); border-color: var(--accent); }
+  .preview-hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: var(--text3); z-index: 1000; text-align: center;
+  }
+
+  /* ===== LOADER (lo que se integra) ===== */
+  #app-loading {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 22px;
+    background:
+      radial-gradient(120% 90% at 50% 38%, var(--accent-light) 0%, transparent 60%),
+      var(--bg);
+    transition: opacity .42s var(--ease-out), transform .42s var(--ease-out);
+  }
+  #app-loading.is-hidden { opacity: 0; transform: scale(1.03); pointer-events: none; }
+
+  .scan-stage {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    animation: stage-in .5s var(--ease-out) both;
+  }
+  @keyframes stage-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* Wordmark TravelDocs (encabezado del loader) */
+  .loader-brand {
+    display: flex; align-items: center; gap: 9px; color: var(--accent);
+  }
+  .loader-brand svg { width: 22px; height: 22px; }
+  .loader-brand span { font-weight: 700; font-size: 18px; letter-spacing: .04em; color: var(--text); }
+
+  /* Marco viewfinder con esquinas */
+  .scan-frame { position: relative; padding: 14px; }
+  .scan-frame .corner {
+    position: absolute; width: 20px; height: 20px;
+    border: 2px solid var(--accent); pointer-events: none;
+  }
+  .scan-frame .corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 6px 0 0 0; }
+  .scan-frame .corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 6px 0 0; }
+  .scan-frame .corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 6px; }
+  .scan-frame .corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 6px 0; }
+
+  /* Pagina de datos del pasaporte */
+  .passport {
+    position: relative;
+    width: 440px; max-width: 82vw;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: var(--surface);
+  }
+  .pass-page { position: relative; z-index: 1; padding: 18px 20px 0; }
+
+  /* Marca de agua (emblema tenue, tipo papel de seguridad) */
+  .pass-watermark {
+    position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 0;
+  }
+  .pass-watermark svg { width: 280px; height: 280px; color: var(--accent); opacity: .045; }
+
+  .pass-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .pass-emblem { width: 30px; height: 30px; color: var(--accent); flex: none; }
+  .pass-top-txt { line-height: 1.25; }
+  .pass-country { font-size: 11px; font-weight: 700; letter-spacing: .22em; color: var(--text); }
+  .pass-type { font-size: 9px; letter-spacing: .26em; color: var(--text3); }
+
+  .pass-body { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+
+  /* Foto del pasajero (silueta) */
+  .pass-photo {
+    width: 92px; height: 118px; flex: none;
+    background: linear-gradient(160deg, var(--surface2), var(--border));
+    border: 1px solid var(--border2); border-radius: 4px;
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .pass-photo svg { width: 70px; height: 90px; color: color-mix(in srgb, var(--text3) 55%, transparent); }
+
+  /* Campos de datos */
+  .pass-fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 9px 14px; }
+  .field { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .field.full { grid-column: 1 / -1; }
+  .field .lbl { font-size: 8px; letter-spacing: .16em; color: var(--text3); text-transform: uppercase; }
+  .field .val {
+    font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text);
+    letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Tilde de verificacion (aparece tras el escaneo) */
+  .field .ok {
+    position: absolute; top: 0; right: 0; width: 11px; height: 11px;
+    opacity: 0; transform: scale(.4);
+    animation: ok-in .35s var(--ease-out) forwards;
+  }
+  .field .ok::after {
+    content: ''; display: block; width: 5px; height: 9px; margin-top: -1px;
+    border: solid var(--green); border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  @keyframes ok-in { to { opacity: 1; transform: scale(1); } }
+  .pass-fields .field:nth-child(1) .ok { animation-delay: 1.10s; }
+  .pass-fields .field:nth-child(2) .ok { animation-delay: 1.18s; }
+  .pass-fields .field:nth-child(3) .ok { animation-delay: 1.26s; }
+  .pass-fields .field:nth-child(4) .ok { animation-delay: 1.34s; }
+  .pass-fields .field:nth-child(5) .ok { animation-delay: 1.42s; }
+  .pass-fields .field:nth-child(6) .ok { animation-delay: 1.50s; }
+  .pass-fields .field:nth-child(7) .ok { animation-delay: 1.58s; }
+  .pass-fields .field:nth-child(8) .ok { animation-delay: 1.66s; }
+
+  /* Patron guilloche (lineas de seguridad) */
+  .guilloche { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .guilloche svg { width: 100%; height: 100%; opacity: .04; }
+
+  /* Sello VERIFICADO */
+  .stamp {
+    position: absolute; right: 16px; bottom: 74px; z-index: 6;
+    padding: 6px 11px; border: 2px solid var(--green); border-radius: 5px;
+    color: var(--green); font-weight: 700; font-size: 12px; letter-spacing: .18em;
+    text-align: center; line-height: 1.15;
+    box-shadow: inset 0 0 0 1px rgba(30,107,60,.35);
+    transform: rotate(-13deg) scale(1.5); opacity: 0;
+    animation: stamp-in .35s var(--ease-out) 1.85s forwards;
+  }
+  .stamp small { display: block; font-size: 7px; letter-spacing: .14em; font-weight: 500; opacity: .8; margin-top: 1px; }
+  @keyframes stamp-in { to { opacity: .82; transform: rotate(-13deg) scale(1); } }
+
+  /* Zona MRZ al pie de la pagina */
+  .pass-mrz {
+    margin: 0 -20px; padding: 10px 20px 12px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+  .mrz {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--text2);
+    white-space: nowrap; overflow: hidden;
+    padding-left: 18px;
+    clip-path: inset(0 100% 0 0);
+    animation: mrz-reveal 1.5s var(--ease-out) .4s forwards;
+  }
+  .mrz.l2 { animation-delay: .7s; }
+  @keyframes mrz-reveal { to { clip-path: inset(0 0 0 0); } }
+
+  /* Haz de escaneo que barre la pagina */
+  .scan-beam {
+    position: absolute; left: 0; right: 0; height: 3px; top: -6%;
+    background: linear-gradient(90deg, transparent, var(--accent) 45%, var(--accent) 55%, transparent);
+    box-shadow: 0 0 22px 5px rgba(26,58,92,.35);
+    animation: beam 1.9s linear infinite;
+    z-index: 5;
+  }
+  /* Banda de luz ancha y suave que acompana el haz */
+  .scan-glow {
+    position: absolute; left: 0; right: 0; height: 64px; top: -6%; z-index: 4;
+    background: linear-gradient(180deg, transparent, rgba(26,58,92,.12) 45%, rgba(26,58,92,.12) 55%, transparent);
+    filter: blur(4px); pointer-events: none;
+    animation: beam 1.9s linear infinite;
+  }
+  @keyframes beam { 0% { top: -6%; } 100% { top: 106%; } }
+
+  /* Progreso */
+  .pass-progress { display: flex; align-items: center; gap: 14px; width: 440px; max-width: 82vw; }
+  .pass-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+  .pass-bar-fill {
+    height: 100%; width: 0; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+    animation: pass-fill 1.8s var(--ease-out) .3s forwards;
+  }
+  @keyframes pass-fill { to { width: 90%; } }
+  .pass-pct { font-family: var(--mono); font-size: 13px; color: var(--accent); min-width: 38px; text-align: right; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scan-stage { animation: none; }
+    .scan-beam { animation: none; top: 50%; }
+    .mrz { animation: none; clip-path: inset(0 0 0 0); }
+    .pass-bar-fill { animation: none; width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="preview-controls">
+    <button id="btn-replay">Reiniciar</button>
+    <button id="btn-hide">Probar salida (fade)</button>
+  </div>
+  <div class="preview-hint">Pagina de datos del pasaporte siendo escaneada. Reiniciar = otro pasajero ficticio.</div>
+
+  <!-- ===== LOADER (markup que se integraria en index.html) ===== -->
+  <div id="app-loading" role="status" aria-live="polite">
+    <div class="scan-stage" id="scan-stage">
+      <div class="loader-brand" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+        </svg>
+        <span>TravelDocs</span>
+      </div>
+      <div class="scan-frame">
+        <span class="corner tl" aria-hidden="true"></span>
+        <span class="corner tr" aria-hidden="true"></span>
+        <span class="corner bl" aria-hidden="true"></span>
+        <span class="corner br" aria-hidden="true"></span>
+        <div class="passport">
+          <div class="guilloche" aria-hidden="true"><svg id="guilloche" viewBox="0 0 440 320" preserveAspectRatio="xMidYMid slice"></svg></div>
+          <div class="pass-watermark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+              <circle cx="32" cy="32" r="27" />
+              <circle cx="32" cy="32" r="20" stroke-width="1" />
+              <circle cx="32" cy="32" r="6" fill="currentColor" stroke="none" />
+              <g stroke-width="1.4">
+                <line x1="32" y1="4" x2="32" y2="11" /><line x1="32" y1="53" x2="32" y2="60" />
+                <line x1="4" y1="32" x2="11" y2="32" /><line x1="53" y1="32" x2="60" y2="32" />
+                <line x1="12" y1="12" x2="17" y2="17" /><line x1="47" y1="47" x2="52" y2="52" />
+                <line x1="52" y1="12" x2="47" y2="17" /><line x1="17" y1="47" x2="12" y2="52" />
+              </g>
+            </svg>
+          </div>
+          <div class="pass-page">
+            <div class="pass-top">
+              <svg class="pass-emblem" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="32" cy="32" r="26" />
+                <circle cx="32" cy="32" r="6" fill="currentColor" stroke="none" />
+              </svg>
+              <div class="pass-top-txt">
+                <div class="pass-country">REPUBLICA ARGENTINA</div>
+                <div class="pass-type">PASAPORTE / PASSPORT</div>
+              </div>
+            </div>
+            <div class="pass-body">
+              <div class="pass-photo" aria-hidden="true">
+                <svg viewBox="0 0 64 80" fill="currentColor" aria-hidden="true">
+                  <circle cx="32" cy="26" r="13" />
+                  <path d="M10 78c0-13 10-21 22-21s22 8 22 21z" />
+                </svg>
+              </div>
+              <div class="pass-fields">
+                <div class="field full"><span class="lbl">APELLIDOS</span><span class="val" id="f-surname">-</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field full"><span class="lbl">NOMBRES</span><span class="val" id="f-given">-</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field"><span class="lbl">NACIONALIDAD</span><span class="val">ARGENTINA</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field"><span class="lbl">DOC Nº</span><span class="val" id="f-doc">-</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field"><span class="lbl">NACIMIENTO</span><span class="val" id="f-dob">-</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field"><span class="lbl">SEXO</span><span class="val" id="f-sex">-</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field"><span class="lbl">VENCIMIENTO</span><span class="val" id="f-exp">-</span><span class="ok" aria-hidden="true"></span></div>
+                <div class="field"><span class="lbl">LUGAR DE NAC.</span><span class="val" id="f-place">-</span><span class="ok" aria-hidden="true"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="pass-mrz">
+            <div class="mrz l1" id="mrz-line1"></div>
+            <div class="mrz l2" id="mrz-line2"></div>
+          </div>
+          <div class="scan-glow" aria-hidden="true"></div>
+          <div class="scan-beam" aria-hidden="true"></div>
+          <div class="stamp" aria-hidden="true">VERIFICADO<small>TRAVELDOCS · OK</small></div>
+        </div>
+      </div>
+
+      <div class="pass-progress">
+        <div class="pass-bar"><div class="pass-bar-fill"></div></div>
+        <span class="pass-pct" id="pass-pct">0%</span>
+      </div>
+    </div>
+  </div>
+
+<script src="/js/loading-preview.js"></script>
+</body>
+</html>

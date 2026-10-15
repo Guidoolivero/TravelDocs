@@ -1,0 +1,61 @@
+================================================================
+COMANDOS DE INSTALACIÓN POR PROYECTO (GROK + CLAUDE API)
+================================================================
+
+1. GROK.md - Ultra Efficient (para Grok 4.1 Fast + Continue.dev)
+
+   cat > GROK.md << 'EOL'
+# GROK.md - Extreme Efficiency Mode
+
+## Output
+- Código primero. Nada más si no es imprescindible.
+- Respuestas cortas. Máximo 12-15 líneas.
+- Sin introducciones, sin planes largos, sin explicaciones obvias.
+- Código listo para copiar y pegar.
+
+## Rules
+- Solución más simple posible.
+- Lee el archivo antes de modificarlo.
+- No over-engineering.
+- En fixes: bug + fix. Punto.
+- Sin comentarios innecesarios.
+- Regla de oro: Menos es más.
+EOL
+
+2. CLAUDE.md - Token Efficient (para Claude API / Claude Code)
+
+   # Versión recomendada (coding)
+   curl -o CLAUDE.md https://raw.githubusercontent.com/drona23/claude-token-efficient/main/profiles/CLAUDE.coding.md
+
+   # Versión ultra corta (lean) - recomendada si usás mucho Claude
+   curl -o CLAUDE.md https://raw.githubusercontent.com/drona23/claude-token-efficient/main/profiles/M-drona23-v8
+
+3. AutoSkills (midudev) - Skills automáticas
+
+   npx autoskills --dry-run          # Ver qué detecta
+   npx autoskills -y                 # Instalar automáticamente
+   npx autoskills -a -y              # Modo Claude Code
+
+4. Codeburn - Análisis de consumo (solo para Claude)
+
+   npx codeburn
+   npx codeburn today
+   npx codeburn status
+
+5. Netlifly
+
+   netlify link (Con un sitio ya creado)
+   netlify deploy (Para probar antes del deploy de produccion)
+   netlify deploy --prod
+
+================================================================
+NOTAS IMPORTANTES (2026):
+
+- Usa GROK.md cuando trabajes con Grok 4.1 Fast en Continue.dev
+- Usa CLAUDE.md cuando trabajes con Claude API en la terminal o Cursor
+- Podés tener ambos archivos en la misma carpeta (no se pelean)
+- AutoSkills funciona mejor con Claude, pero también descarga skills útiles para Grok
+- Para ahorrar tokens: mantén GROK.md y CLAUDE.md lo más cortos posible
+- Si usás ambos modelos, considera crear un archivo MASTER.md con reglas comunes
+
+================================================================
