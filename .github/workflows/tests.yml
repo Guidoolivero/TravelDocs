@@ -1,7 +1,15 @@
-# Corre los tests en cada push y PR a main.
+# Corre los tests en cada push y PR a main y, si pasan, publica en produccion.
 # - unit: npm test (logica de alertas, SSR, requisitos, etc.)
 # - firestore-rules: aislamiento multi-tenant contra el emulador de Firestore
-# No usa secrets: ninguno de los dos tests necesita credenciales.
+# - deploy: solo en push a main (o corrida manual sobre main) y solo si los
+#   dos jobs de tests pasaron. Publica traveldocs.com.ar con el mismo
+#   `netlify deploy --prod` del deploy manual.
+#
+# Secrets del repo que usa el deploy:
+# - NETLIFY_AUTH_TOKEN: token de Netlify con acceso al sitio
+# - NETLIFY_SITE_ID: id del sitio tradingdocs-staging
+# El resto (SENTRY_AUTH_TOKEN, keys de IA, etc.) vive en las env vars del
+# sitio en Netlify y el CLI las inyecta en el build.
 
 name: Tests
 
@@ -15,16 +23,15 @@ on:
 permissions:
   contents: read
 
-# Si hay dos pushes seguidos, cancela la corrida vieja.
-concurrency:
-  group: tests-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   unit:
     name: Tests unitarios
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Si hay dos pushes seguidos, cancela los tests viejos.
+    concurrency:
+      group: unit-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v5
 
@@ -41,6 +48,9 @@ jobs:
     name: Reglas de Firestore (emulador)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: rules-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v5
 
@@ -64,3 +74,33 @@ jobs:
       - run: npm ci
 
       - run: npm run test:rules:emulator
+
+  deploy:
+    name: Deploy a produccion (Netlify)
+    needs: [unit, firestore-rules]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Un deploy a la vez y nunca se corta a la mitad: si llega otro push,
+    # espera a que termine el que esta en curso.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      # scripts/bundle-functions.mjs usa COMMIT_REF como release de Sentry.
+      COMMIT_REF: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      # Incluye esbuild y el plugin de Sentry que usa el build de produccion.
+      - run: npm ci
+
+      # Corre el build de [context.production] (bundle-functions.mjs) y publica.
+      - run: npx --yes netlify-cli@27.12.1 deploy --prod --message "GitHub Actions ${{ github.sha }}"
