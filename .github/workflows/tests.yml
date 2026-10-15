@@ -1,0 +1,66 @@
+# Corre los tests en cada push y PR a main.
+# - unit: npm test (logica de alertas, SSR, requisitos, etc.)
+# - firestore-rules: aislamiento multi-tenant contra el emulador de Firestore
+# No usa secrets: ninguno de los dos tests necesita credenciales.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Si hay dos pushes seguidos, cancela la corrida vieja.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Tests unitarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+  firestore-rules:
+    name: Reglas de Firestore (emulador)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      # El emulador de Firestore es un .jar: necesita Java 21.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Evita bajar el .jar del emulador en cada corrida.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci
+
+      - run: npm run test:rules:emulator
