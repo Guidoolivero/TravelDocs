@@ -4,6 +4,8 @@
 // ponytail: si falta el anio, se usa el calendario de Argentina y el tramo anterior.
 // Un enero despues de un diciembre pasa al ano siguiente. No lee el anio del billete.
 // No toma un vuelo de menos de 3 digitos, ni un codigo de una letra (U2, 6E).
+// E-ticket AA/wkhtmltopdf: vuelo sin carrier + "codigo de reserva es AA......"
+// (el numero solo se toma si hay un mes cerca y no es avion/Boeing/Airbus).
 
 const MESES = {
   january: 'JAN', february: 'FEB', march: 'MAR', april: 'APR',
@@ -44,6 +46,7 @@ const IATA = new Set(`
 EZE AEP COR MDZ ROS BRC IGR NQN SLA TUC USH FTE CPC
 GRU GIG SCL LIM BOG UIO ASU MVD MEX CUN PTY SJO
 MIA JFK LAX ORD MCO FLL
+PDX DFW ATL BOS CLT DEN IAH LAS PHX SEA SFO IAD DTW MSP PHL SAN SLC
 MAD BCN FCO MXP CDG ORY LHR LGW AMS FRA LIS ZRH VCE
 AUA CUR PUJ NAS
 PVG HND NRT PEK HKG DOH DXB IST AUH
@@ -88,6 +91,15 @@ const ALIAS = [
 // Palabras que parecen un codigo de aerolinea y no lo son.
 const NO_VUELO = new Set(['OF', 'OR', 'TO', 'AT', 'IN', 'ON', 'BY', 'XT', 'YQ', 'YR']);
 
+// "Su codigo de reserva es AAJHRWDO" -> AA. ETK 001... -> AA (stock AA).
+function carrierDeReserva(texto) {
+  const pnr = String(texto || '').match(/c[oó]digo de reserva es\s*([A-Z]{2})([A-Z0-9]{6})\b/i);
+  if (pnr) return pnr[1].toUpperCase();
+  const etk = String(texto || '').match(/\bETK:\s*(\d{3})\d+/i);
+  if (etk && etk[1] === '001') return 'AA';
+  return '';
+}
+
 function parseEmitido(texto) {
   const partes = String(texto || '').split(/Flight\s+\d+/i).slice(1);
   const out = [];
@@ -128,6 +140,21 @@ function anclas(texto) {
     if (/operado\s+por/i.test(antes)) continue;
     if (out.some(a => m.index >= a.i && m.index < a.fin)) continue;
     out.push({ i: m.index, fin: m.index + m[0].length, vuelo: carrier + m[2] });
+  }
+  // E-ticket sin "AA 954": el carrier viene del PNR/ETK y el numero va junto al mes.
+  const carrierReserva = carrierDeReserva(texto);
+  if (carrierReserva) {
+    const reMes = new RegExp(`\\b(${NOMBRES_MES})\\b`, 'i');
+    for (const m of texto.matchAll(/\b(\d{3,4})\b/g)) {
+      const i = m.index;
+      if (out.some(a => i >= a.i && i < a.fin)) continue;
+      const ventana = texto.slice(Math.max(0, i - 48), i + m[0].length + 48);
+      if (!reMes.test(ventana)) continue;
+      const cerca = texto.slice(Math.max(0, i - 24), i + m[0].length + 12);
+      if (/boeing|airbus|\bavion\b/i.test(cerca)) continue;
+      if (/-\s*$/.test(texto.slice(Math.max(0, i - 4), i))) continue;
+      out.push({ i, fin: i + m[0].length, vuelo: carrierReserva + m[1] });
+    }
   }
   out.sort((a, b) => a.i - b.i);
   return out;

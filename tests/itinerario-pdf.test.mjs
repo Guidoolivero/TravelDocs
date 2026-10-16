@@ -273,4 +273,146 @@ JPY PD 8000 YR
     assert.equal(claseItinerario({ type: 'text/plain', name: 'nota.txt' }), '');
     assert.equal(claseItinerario({ type: 'image/svg+xml', name: 'dibujo.svg' }), '');
   });
+
+  // E-ticket AA/wkhtmltopdf: numero de vuelo sin carrier, mes arriba o abajo,
+  // hubs US (PDX/DFW) y carrier en "codigo de reserva es AA......".
+  it('lee el e-ticket AA con vuelos sin codigo de aerolinea y hubs US', () => {
+    const hoy = Date.parse('2026-06-24T15:00:00-03:00');
+    const texto = `
+¡Su reserva de vuelo
+a New York fue emitida!
+PASAJEROS
+Nombre Número de e-ticket
+1 PAX UNO ETK: 0014884091476
+ITINERARIO
+VUELO IDA
+DE BUENOS AIRES A NEW YORK
+954 
+SEPTIEMBRE
+9
+MIÉRCOLES
+EZE
+Buenos Aires
+JFK
+New York
+SALIDA DE
+Ministro Pistarini,
+Terminal P
+(EZE)
+SALIDA
+21:10 
+LLEGA
+06:55 
+ARRIVO A
+John F Kennedy,
+Terminal 8
+(JFK)
+CABINA MALETA
+2 maletas
+DURACION
+10h 45m
+AVION
+Boeing 777-
+200
+ESTADO
+Confirmado
+LOCALIZADOR
+JHRWDO
+VUELO DE REGRESO
+DE PORTLAND A BUENOS AIRES
+2383 
+SEPTIEMBRE
+30
+MIÉRCOLES
+PDX
+Portland
+DFW
+Dallas
+SALIDA DE
+Portland, Terminal
+(PDX)
+SALIDA
+08:00 
+LLEGA
+13:45 
+ARRIVO A
+*, Terminal 0
+(DFW)
+CABINA MALETA
+2 maletas
+DURACION
+03h 45m
+AVION
+Airbus A321
+ESTADO
+Confirmado
+LOCALIZADOR
+JHRWDO
+SEPTIEMBRE
+942 
+30
+MIÉRCOLES 
+DFW
+Dallas
+MIA
+Miami
+SALIDA DE
+*, Terminal 0
+(DFW)
+SALIDA
+15:40 
+LLEGA
+19:39 
+ARRIVO A
+*, Terminal
+(MIA)
+CABINA MALETA
+2 maletas
+DURACION
+02h 59m
+AVION
+Airbus A321
+ESTADO
+Confirmado
+LOCALIZADOR
+JHRWDO
+931 
+SEPTIEMBRE
+30
+MIÉRCOLES
+MIA
+Miami
+EZE
+Buenos Aires
+SALIDA DE
+*, Terminal
+(MIA)
+SALIDA
+21:20 
+LLEGA
+07:15 
+ARRIVO A
+Ministro Pistarini,
+Terminal IA
+(EZE)
+CABINA MALETA
+2 maletas
+DURACION
+08h 55m
+AVION
+Boeing 777-
+200
+ESTADO
+Confirmado
+LOCALIZADOR
+JHRWDO
+Su código de reserva es AAJHRWDO
+`;
+    assert.deepEqual(parseItinerarioTexto(texto, hoy), [
+      { vuelo: 'AA954', origen: 'EZE', destino: 'JFK', fecha: '09SEP26' },
+      { vuelo: 'AA2383', origen: 'PDX', destino: 'DFW', fecha: '30SEP26' },
+      { vuelo: 'AA942', origen: 'DFW', destino: 'MIA', fecha: '30SEP26' },
+      { vuelo: 'AA931', origen: 'MIA', destino: 'EZE', fecha: '30SEP26' },
+    ]);
+  });
 });
