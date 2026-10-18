@@ -104,7 +104,6 @@ async function completeLogin(user) {
   if (resolved.agencyId === 'trading-travel') {
     try { sessionStorage.setItem('td_internal', '1'); } catch { /* storage no disponible */ }
   }
-  localStorage.removeItem('td_lastClose');
   applyBranding(resolved.agency.branding);
   await user.getIdToken(true);
   window.location.href = './index.html';
@@ -130,7 +129,7 @@ if (params.get('error') === 'unauthorized') {
   window.history.replaceState({}, '', window.location.pathname);
 }
 if (params.get('reason') === 'expired') {
-  showError('Tu sesión expiró por inactividad. Volvé a ingresar.');
+  showError('Tu sesión venció (dura 3 horas). Volvé a ingresar con tu código 2FA.');
   window.history.replaceState({}, '', window.location.pathname);
 }
 if (params.get('reason') === 'need2fa') {

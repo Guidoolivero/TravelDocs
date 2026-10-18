@@ -28,6 +28,7 @@ import { opcionesPais } from './paises.mjs';
 import { alcanzaConDni } from './cabotaje.mjs';
 import { parseItinerarioTexto, fechaIso, textoDesdeItems, claseItinerario, normalizarOcr } from './itinerario-pdf.mjs';
 import { generarContrasena } from './contrasena.mjs';
+import { venceSesion } from './sesion.mjs';
 
 function llenarSelectPais(id, extra) {
   const el = document.getElementById(id);
@@ -51,20 +52,24 @@ const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 initDB(app);
 
-// Cierre de sesion tras 3h de tener la pagina cerrada (grace period).
-// Al cerrar/abandonar index.html se guarda el momento; al reabrir, si paso
-// mas de SESSION_GRACE_MS, se cierra la sesion y se pide login de nuevo.
-const SESSION_GRACE_MS = 3 * 60 * 60 * 1000; // 3 horas (con 2FA, cortar cada 1h es molesto)
-const LAST_CLOSE_KEY = 'td_lastClose';
+// Sesion de 3h desde el ultimo login (regla en sesion.mjs). Vence aunque la
+// pestana quede abierta: se chequea cada minuto y al volver a la pestana (con
+// la Mac dormida los timers se frenan). Despues hay que entrar con 2FA de nuevo.
+let _venceSesion = Infinity;
+let _cerrandoSesion = false;
 
-function sessionExpiredByClose() {
-  const last = Number(localStorage.getItem(LAST_CLOSE_KEY) || 0);
-  if (!last) return false;
-  return (Date.now() - last) > SESSION_GRACE_MS;
+async function cerrarSiVencio() {
+  if (_cerrandoSesion || Date.now() < _venceSesion) return false;
+  _cerrandoSesion = true;
+  clearStoredAgencyId();
+  await signOut(auth);
+  window.location.href = './login.html?reason=expired';
+  return true;
 }
 
-window.addEventListener('pagehide', () => {
-  localStorage.setItem(LAST_CLOSE_KEY, String(Date.now()));
+setInterval(cerrarSiVencio, 60 * 1000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) cerrarSiVencio();
 });
 
 window.addEventListener('unhandledrejection', event => {
@@ -264,20 +269,17 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  // Si la pagina estuvo cerrada mas de 3h, caduco la sesion (grace period).
-  if (sessionExpiredByClose()) {
-    localStorage.removeItem(LAST_CLOSE_KEY);
-    await signOut(auth);
-    window.location.href = './login.html?reason=expired';
-    return;
-  }
-
   // 2FA: si está habilitado y no tiene factor enrolado, no entra a la app.
   if (REQUIRE_2FA && multiFactor(user).enrolledFactors.length === 0) {
     await signOut(auth);
     window.location.href = './login.html?reason=need2fa';
     return;
   }
+
+  // Sesion de 3h: el token forzado trae iat del server (ver sesion.mjs).
+  const freshToken = await user.getIdTokenResult(true);
+  _venceSesion = venceSesion(freshToken.claims, Date.now());
+  if (await cerrarSiVencio()) return;
 
   let tenantId = getStoredAgencyId() || await getUserAgency(user.uid);
   if (!tenantId) {
@@ -309,8 +311,6 @@ onAuthStateChanged(auth, async user => {
   appName = agency.branding?.appName || 'TravelDocs';
   agencyName = (agency.name || '').trim();
   applyBranding(agency.branding);
-
-  await user.getIdToken(true);
 
   // Visibilidad de Administración según claim platformAdmin del JWT.
   try {
