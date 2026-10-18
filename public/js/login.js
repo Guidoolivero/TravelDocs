@@ -129,7 +129,7 @@ if (params.get('error') === 'unauthorized') {
   window.history.replaceState({}, '', window.location.pathname);
 }
 if (params.get('reason') === 'expired') {
-  showError('Tu sesión venció (dura 3 horas). Volvé a ingresar con tu código 2FA.');
+  showError('Tu sesión venció. Volvé a ingresar.');
   window.history.replaceState({}, '', window.location.pathname);
 }
 if (params.get('reason') === 'need2fa') {
