@@ -35,13 +35,13 @@
    "regimenes": "exenta | requiere_visa | evisa | eta | libre_circulacion | na | desconocido",
    "cobertura": "solo columna Argentina; otras nacionalidades quedan en texto crudo",
    "stats": {
-    "exenta": 99,
+    "exenta": 101,
     "sin_confirmar": 8,
     "requiere_visa": 8,
     "evisa": 13,
     "eta": 5,
     "visa_on_arrival": 11,
-    "matriz:exenta": 102,
+    "matriz:exenta": 104,
     "matriz:requiere_visa": 15,
     "matriz:evisa": 48,
     "matriz:eta": 7,
@@ -2385,7 +2385,7 @@
       "verificado": "Sí (Centro de Salud de Viajes Internacionales, Aduana General de China)",
       "confianza": "si"
      },
-     "notas": "Política de exención es 'a prueba' y se renueva periódicamente: reconfirmar cerca de la fecha de viaje. Hong Kong y Macao tienen régimen aparte (Macao confirmado 90 días sin visa; Hong Kong no se pudo verificar en vivo).",
+     "notas": "Política de exención es 'a prueba' y se renueva periódicamente: reconfirmar cerca de la fecha de viaje. Hong Kong y Macao tienen régimen aparte (ver filas propias).",
      "normalizado": {
       "regimen": "exenta",
       "sanidad": "fiebre_amarilla_obligatoria",
@@ -2734,6 +2734,52 @@
      "normalizado": {
       "regimen": "visa_on_arrival",
       "sanidad": "fiebre_amarilla_condicional",
+      "duracion_estadia": "30 dias"
+     }
+    },
+    {
+     "pais": "Hong Kong",
+     "alerta_viaje": false,
+     "iso3": "HKG",
+     "visa": {
+      "requisito": "No requiere visa. Exento hasta 90 días como visitante.",
+      "url_oficial": "https://www.immd.gov.hk/eng/services/visas/visit-transit/visit-visa-entry-permit.html",
+      "verificado": "Sí (Immigration Department de Hong Kong)",
+      "confianza": "si"
+     },
+     "sanidad": {
+      "requisito": "No hay vacunas obligatorias.",
+      "url_oficial": "https://www.port.gov.hk/en/useful_information/vaccination.html",
+      "verificado": "Sí (Port Health Office, Department of Health de Hong Kong)",
+      "confianza": "si"
+     },
+     "notas": "Régimen migratorio propio, separado de China continental.",
+     "normalizado": {
+      "regimen": "exenta",
+      "sanidad": "fiebre_amarilla_obligatoria",
+      "duracion_estadia": "90 dias"
+     }
+    },
+    {
+     "pais": "Macao",
+     "alerta_viaje": false,
+     "iso3": "MAC",
+     "visa": {
+      "requisito": "No requiere visa. Exento hasta 30 días como visitante (acuerdo bilateral Argentina-Macao).",
+      "url_oficial": "https://www.gov.mo/en/services/ps-1474/ps-1474b/",
+      "verificado": "Sí (Public Security Police Force de Macao, gov.mo)",
+      "confianza": "si"
+     },
+     "sanidad": {
+      "requisito": "No hay vacunas obligatorias.",
+      "url_oficial": "https://www.ssm.gov.mo/",
+      "verificado": "Sí (Servicios de Salud de Macao / OMS)",
+      "confianza": "si"
+     },
+     "notas": "Pasaporte con al menos 90 días de validez más allá de la estadía prevista.",
+     "normalizado": {
+      "regimen": "exenta",
+      "sanidad": "fiebre_amarilla_obligatoria",
       "duracion_estadia": "30 dias"
      }
     }
@@ -25639,6 +25685,426 @@
      "normalizado_arg": {
       "regimen": "visa_on_arrival",
       "sanidad": "fiebre_amarilla_condicional",
+      "duracion_estadia": "30 dias"
+     }
+    },
+    {
+     "pais": "Hong Kong",
+     "alerta_viaje": false,
+     "iso3": "HKG",
+     "fuente_visado": "Immigration Department de Hong Kong (immd.gov.hk)",
+     "verificado_visado": "Si",
+     "confianza_visado": "si",
+     "fuente_sanidad": "Port Health Office (port.gov.hk)",
+     "verificado_sanidad": "Si",
+     "confianza_sanidad": "si",
+     "notas": "Exencion de 90 dias para la mayoria de Sudamerica, Mexico, Belice, UE/EEE, EE.UU. y Canada; 30 dias para Bolivia, Paraguay, Peru y Centroamerica (salvo Belice). Sin requisito sanitario para ninguna nacionalidad.",
+     "por_nacionalidad": {
+      "Argentina": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "UE / EEE": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Brasil": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Chile": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Uruguay": {
+       "visa": "Exenta, 90 dias (excepto pasaporte uruguayo Decreto 289/90: requiere visa).",
+       "sanidad": "No exigido."
+      },
+      "Paraguay": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Bolivia": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Colombia": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Peru": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Venezuela": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Ecuador": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Mexico": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Guatemala": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Honduras": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "El Salvador": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Nicaragua": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Costa Rica": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Panama": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Belice": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Estados Unidos": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Canada": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      }
+     },
+     "normalizado": {
+      "Argentina": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "UE / EEE": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Brasil": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Chile": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Uruguay": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Paraguay": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Bolivia": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Colombia": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Peru": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Venezuela": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Ecuador": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Mexico": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Guatemala": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Honduras": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "El Salvador": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Nicaragua": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Costa Rica": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Panama": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Belice": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Estados Unidos": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Canada": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      }
+     },
+     "normalizado_arg": {
+      "regimen": "exenta",
+      "sanidad": "sin_requisitos",
+      "duracion_estadia": "90 dias"
+     }
+    },
+    {
+     "pais": "Macao",
+     "alerta_viaje": false,
+     "iso3": "MAC",
+     "fuente_visado": "Public Security Police Force de Macao (gov.mo/en/services/ps-1474/ps-1474b/)",
+     "verificado_visado": "Si",
+     "confianza_visado": "si",
+     "fuente_sanidad": "Servicios de Salud de Macao (ssm.gov.mo) / OMS",
+     "verificado_sanidad": "Si",
+     "confianza_sanidad": "si",
+     "notas": "Exentos 90 dias: UE/EEE (Chipre 3 meses), Brasil, Uruguay y Mexico. Exentos 30 dias: Argentina, Chile, Ecuador, EE.UU. y Canada. El resto de Latinoamerica tramita visa a la llegada (MOP 200, hasta 30 dias). Pasaporte con 90 dias de validez post-estadia. Sin requisito sanitario.",
+     "por_nacionalidad": {
+      "Argentina": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "UE / EEE": {
+       "visa": "Exenta, 90 dias (Chipre: 3 meses).",
+       "sanidad": "No exigido."
+      },
+      "Brasil": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Chile": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Uruguay": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Paraguay": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Bolivia": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Colombia": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Peru": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Venezuela": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Ecuador": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Mexico": {
+       "visa": "Exenta, 90 dias.",
+       "sanidad": "No exigido."
+      },
+      "Guatemala": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Honduras": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "El Salvador": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Nicaragua": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Costa Rica": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Panama": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Belice": {
+       "visa": "Visa a la llegada (Authorization to Enter and Stay), hasta 30 dias, MOP 200.",
+       "sanidad": "No exigido."
+      },
+      "Estados Unidos": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      },
+      "Canada": {
+       "visa": "Exenta, 30 dias.",
+       "sanidad": "No exigido."
+      }
+     },
+     "normalizado": {
+      "Argentina": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "UE / EEE": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Brasil": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Chile": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Uruguay": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Paraguay": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Bolivia": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Colombia": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Peru": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Venezuela": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Ecuador": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Mexico": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "90 dias"
+      },
+      "Guatemala": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Honduras": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "El Salvador": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Nicaragua": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Costa Rica": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Panama": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Belice": {
+       "regimen": "visa_on_arrival",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Estados Unidos": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      },
+      "Canada": {
+       "regimen": "exenta",
+       "sanidad": "sin_requisitos",
+       "duracion_estadia": "30 dias"
+      }
+     },
+     "normalizado_arg": {
+      "regimen": "exenta",
+      "sanidad": "sin_requisitos",
       "duracion_estadia": "30 dias"
      }
     }

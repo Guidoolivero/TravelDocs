@@ -52,7 +52,7 @@ test('travel-db: regionales — pais, iso3 y campos visa/sanidad extraidos', () 
       assert.ok(p.visa.url_oficial === '' || /^https?:\/\//.test(p.visa.url_oficial), `pais ${p.pais}: url visa invalida`);
     }
   }
-  assert.equal(total, 144, `se esperaban 144 paises regionales, hay ${total}`);
+  assert.equal(total, 146, `se esperaban 146 paises regionales, hay ${total}`);
 });
 
 test('travel-db: TODAS las nacionalidades x TODOS los destinos de las matrices', () => {

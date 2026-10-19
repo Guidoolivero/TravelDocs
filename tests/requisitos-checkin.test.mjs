@@ -552,3 +552,51 @@ test('escapa el nombre del pasajero', () => {
   assert.equal(html.includes('<b>'), false);
   assert.match(html, /EVIL &lt;b&gt;/);
 });
+
+test('KIX -> HKG con pasaporte argentino: no requiere visa y sanidad dice No hay vacunas obligatorias', () => {
+  const cicero = { id: 'p1', lastname: 'CICERO', firstname: 'SILVANA NORMA', gender: 'F', parg: { num: 'AAA1' } };
+  const trapani = { id: 'p2', lastname: 'TRAPANI', firstname: 'SERGIO ISIDORO', gender: 'M', parg: { num: 'AAA2' } };
+  const { html } = buildRequisitosEmail({
+    appName: 'Trading Travel',
+    reserva: reserva('2026-10-22T21:45', {
+      piernas: [{ fecha: '2026-10-22T21:45', vuelo: 'CX503', origen: 'KIX', destino: 'HKG', escalas: [], reservaVuelo: 'D2TF5A' }],
+      pasajeros: ['p1', 'p2'],
+    }),
+    pasajeros: [cicero, trapani],
+    alCrear: true,
+    now: Date.UTC(2026, 9, 19, 13, 0, 0),
+  });
+  assert.match(html, /Destino RAE de Hong Kong \(China\) \(HKG\)/);
+  assert.match(html, /Pasaporte argentino\. Lo tienen los dos\./);
+  assert.match(html, /No requiere visa\. Exenta, 90 dias\./);
+  assert.match(html, /<p[^>]*>Sanidad<\/p>\s*<p[^>]*>No hay vacunas obligatorias\.<\/p>/);
+  assert.equal(/Sale de Jap/.test(html), false);
+});
+
+test('Macao (MFM): argentino exento 30 dias y boliviano visa a la llegada', () => {
+  const arg = { id: 'a', lastname: 'GARCIA', firstname: 'JUAN', parg: { num: 'A1' } };
+  const bol = { id: 'b', lastname: 'MAMANI', firstname: 'LUIS', pext: { country: 'BOL', num: 'B1' } };
+  const { html } = buildRequisitosEmail({
+    reserva: reserva('2026-11-10T10:00', {
+      piernas: [{ fecha: '2026-11-10T10:00', vuelo: 'NX101', origen: 'HKG', destino: 'MFM', escalas: [], reservaVuelo: 'ABCDE' }],
+    }),
+    pasajeros: [arg, bol],
+  });
+  assert.match(html, /Destino RAE de Macao \(China\) \(MFM\)/);
+  assert.match(html, /No requiere visa\. Exenta, 30 dias\./);
+  assert.match(html, /Visa a la llegada \(on arrival\)/);
+  assert.match(html, /<p[^>]*>Sanidad[^<]*<\/p>\s*<p[^>]*>No hay vacunas obligatorias\.<\/p>/);
+});
+
+test('destino que no esta en la matriz no queda en silencio: avisa que no hay datos', () => {
+  const arg = { id: 'a', lastname: 'GARCIA', firstname: 'JUAN', parg: { num: 'A1' } };
+  // Groenlandia (GOH -> GL -> GRL) tiene IATA e ISO3 pero no fila en la matriz.
+  const { html } = buildRequisitosEmail({
+    reserva: reserva('2026-11-10T10:00', {
+      piernas: [{ fecha: '2026-11-10T10:00', vuelo: 'GL781', origen: 'CPH', destino: 'GOH', escalas: [], reservaVuelo: 'ABCDE' }],
+    }),
+    pasajeros: [arg],
+  });
+  assert.match(html, /Destino Groenlandia \(GOH\)/);
+  assert.match(html, /No tenemos datos de este destino en la base\. Verific[aá] los requisitos antes de emitir\./);
+});
