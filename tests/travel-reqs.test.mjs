@@ -820,6 +820,57 @@ describe('pantalla Requisitos de vuelo', () => {
     assert.match(nld.descripcion, /Sale de España/);
   });
 
+  it('transito por EE.UU. el mismo dia no saca la fiebre amarilla de Bahamas', () => {
+    const data = pantalla({
+      ruta: [
+        { pais: 'Argentina', pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', requisitos: [] },
+        { pais: 'Estados Unidos', pais_codigo: 'USA', aeropuerto_iata: 'MIA', tipo: 'destino', requisitos: [] },
+        { pais: 'Bahamas', pais_codigo: 'BHS', aeropuerto_iata: 'NAS', tipo: 'destino', requisitos: [] }
+      ]
+    }, 'Argentina (ARG)', [
+      { origen: 'EZE', destino: 'MIA', fecha: '01SEP26' },
+      { origen: 'MIA', destino: 'NAS', fecha: '01SEP26' }
+    ]);
+    const fa = data.ruta[2].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
+    assert.equal(fa.obligatorio, true);
+    assert.match(fa.descripcion, /Argentina/);
+    assert.doesNotMatch(fa.descripcion, /6 dias/);
+  });
+
+  it('reentrada a Aruba desde Paraguay exige el certificado en esa entrada', () => {
+    const data = pantalla({
+      ruta: [
+        { pais: 'Argentina', pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', requisitos: [] },
+        { pais: 'Aruba', pais_codigo: 'ABW', aeropuerto_iata: 'AUA', tipo: 'destino', requisitos: [] },
+        { pais: 'Paraguay', pais_codigo: 'PRY', aeropuerto_iata: 'ASU', tipo: 'destino', requisitos: [] },
+        { pais: 'Aruba', pais_codigo: 'ABW', aeropuerto_iata: 'AUA', tipo: 'destino', requisitos: [] }
+      ]
+    }, 'Argentina (ARG)');
+    const primera = data.ruta[1].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
+    const segunda = data.ruta[3].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
+    assert.equal(primera.obligatorio, false);
+    assert.match(primera.descripcion, /Sale de Argentina/);
+    assert.equal(segunda.obligatorio, true);
+    assert.match(segunda.descripcion, /Sale de Paraguay/);
+  });
+
+  it('estadia de 7 dias en Miami deja la fiebre amarilla de Bahamas y avisa la ventana de 6 dias', () => {
+    const data = pantalla({
+      ruta: [
+        { pais: 'Argentina', pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', requisitos: [] },
+        { pais: 'Estados Unidos', pais_codigo: 'USA', aeropuerto_iata: 'MIA', tipo: 'destino', requisitos: [] },
+        { pais: 'Bahamas', pais_codigo: 'BHS', aeropuerto_iata: 'NAS', tipo: 'destino', requisitos: [] }
+      ]
+    }, 'Argentina (ARG)', [
+      { origen: 'EZE', destino: 'MIA', fecha: '01SEP26' },
+      { origen: 'MIA', destino: 'NAS', fecha: '08SEP26' }
+    ]);
+    const fa = data.ruta[2].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
+    assert.equal(fa.obligatorio, true);
+    assert.match(fa.descripcion, /Argentina/);
+    assert.match(fa.descripcion, /6 dias/);
+  });
+
   it('estadounidense SCL-GUA: sanidad de Chile, no la de su pasaporte', () => {
     const data = pantalla({
       ruta: [

@@ -588,6 +588,23 @@ test('Macao (MFM): argentino exento 30 dias y boliviano visa a la llegada', () =
   assert.match(html, /<p[^>]*>Sanidad[^<]*<\/p>\s*<p[^>]*>No hay vacunas obligatorias\.<\/p>/);
 });
 
+test('reentrada a Aruba despues de Paraguay usa la sanidad mas estricta', () => {
+  const arg = { id: 'a', lastname: 'GARCIA', firstname: 'JUAN', parg: { num: 'AAA111' } };
+  const { html } = buildRequisitosEmail({
+    reserva: reserva('2026-10-01T08:00', {
+      piernas: [
+        { fecha: '2026-10-01T08:00', vuelo: 'AR1400', origen: 'EZE', destino: 'AUA', escalas: [], reservaVuelo: 'ABCDE' },
+        { fecha: '2026-10-05T10:00', vuelo: 'AR1401', origen: 'AUA', destino: 'ASU', escalas: [], reservaVuelo: 'ABCDE' },
+        { fecha: '2026-10-10T12:00', vuelo: 'AR1402', origen: 'ASU', destino: 'AUA', escalas: [], reservaVuelo: 'ABCDE' },
+      ],
+    }),
+    pasajeros: [arg],
+  });
+  const aruba = html.slice(html.indexOf('Aruba'));
+  assert.match(aruba, /Sale de Paraguay/);
+  assert.match(aruba, /EXIGIDO|Certificado EXIGIDO/i);
+});
+
 test('destino que no esta en la matriz no queda en silencio: avisa que no hay datos', () => {
   const arg = { id: 'a', lastname: 'GARCIA', firstname: 'JUAN', parg: { num: 'A1' } };
   // Groenlandia (GOH -> GL -> GRL) tiene IATA e ISO3 pero no fila en la matriz.
