@@ -73,7 +73,12 @@ function reqScore(r) {
 }
 
 function pickRicherReq(a, b) {
-  const [primary, other] = reqScore(b) > reqScore(a) ? [b, a] : [a, b];
+  // Si solo una es obligatoria, ese texto es el que vale: no dejar
+  // badge Obligatorio con la descripcion larga de la entrada opcional.
+  const soloUno = !!a.obligatorio !== !!b.obligatorio;
+  const [primary, other] = soloUno
+    ? (a.obligatorio ? [a, b] : [b, a])
+    : (reqScore(b) > reqScore(a) ? [b, a] : [a, b]);
   const out = { ...primary };
   for (const k of ['descripcion', 'costo_aproximado', 'anticipacion_recomendada', 'url_oficial', 'categoria', 'nombre']) {
     if (!out[k] && other[k]) out[k] = other[k];

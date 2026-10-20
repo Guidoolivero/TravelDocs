@@ -920,6 +920,28 @@ describe('dedupeTravelReqs', () => {
     ]);
     assert.equal(out.length, 2);
   });
+
+  it('si una entrada es obligatoria, el texto no queda el de la opcional mas larga', () => {
+    const url = 'https://wwwnc.cdc.gov/travel/yellowfever';
+    const out = dedupeTravelReqs([
+      {
+        nombre: 'Fiebre amarilla',
+        url_oficial: url,
+        obligatorio: false,
+        descripcion: 'No se exige certificado de fiebre amarilla si el pasajero sale de Argentina y no transito por zona de riesgo.'
+      },
+      {
+        nombre: 'Fiebre amarilla',
+        url_oficial: url,
+        obligatorio: true,
+        descripcion: 'Exigida: viene de Colombia.'
+      }
+    ]);
+    assert.equal(out.length, 1);
+    assert.equal(out[0].obligatorio, true);
+    assert.match(out[0].descripcion, /Colombia/);
+    assert.doesNotMatch(out[0].descripcion, /No se exige/);
+  });
 });
 
 describe('injectKnownAlerts', () => {
