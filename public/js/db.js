@@ -19,6 +19,7 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { storeAgencyId } from './tenant.js';
+import { snapshotChanged } from './snapshot.mjs';
 
 let db;
 let agencyId = null;
@@ -107,8 +108,12 @@ export async function saveGdsCities(items) {
 export function listenPassengers(callback) {
   if (unsubscribe) unsubscribe();
   const q = query(passengersCollection(), orderBy('createdAt', 'desc'));
+  let lastFp = null;
   unsubscribe = onSnapshot(q, snapshot => {
     const passengers = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const { fp, changed } = snapshotChanged(lastFp, passengers);
+    if (!changed) return;
+    lastFp = fp;
     callback(passengers);
   }, err => {
     console.error('Error escuchando pasajeros:', err);
@@ -167,8 +172,12 @@ let unsubReservations = null;
 export function listenReservations(callback) {
   if (unsubReservations) unsubReservations();
   const q = query(reservationsCollection(), orderBy('fecha', 'asc'));
+  let lastFp = null;
   unsubReservations = onSnapshot(q, snapshot => {
     const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const { fp, changed } = snapshotChanged(lastFp, list);
+    if (!changed) return;
+    lastFp = fp;
     callback(list);
   }, err => { console.error('Error escuchando reservas:', err); });
 }
@@ -244,6 +253,18 @@ export async function updateReservation(id, data) {
 
 export async function deleteReservation(id) {
   return await deleteDoc(reservationDoc(id));
+}
+
+export async function deleteReservations(ids) {
+  const list = (ids || []).filter(Boolean);
+  const CHUNK = 450;
+  for (let i = 0; i < list.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    for (const id of list.slice(i, i + CHUNK)) {
+      batch.delete(reservationDoc(id));
+    }
+    await batch.commit();
+  }
 }
 
 export async function isNotified(key) {

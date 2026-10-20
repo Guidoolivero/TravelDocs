@@ -3,10 +3,10 @@
 <head>
 <!-- Google tag (gtag.js) — la config vive en js/analytics.js (script externo:
      el CSP enforced bloquea los scripts inline, la config inline no se ejecutaba) -->
-<script src="https://browser.sentry-cdn.com/11.7.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
-<script src="/js/sentry.js"></script>
+<script defer src="https://browser.sentry-cdn.com/11.7.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+<script defer src="/js/sentry.js"></script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JTG1QQCTXC"></script>
-<script src="/js/analytics.js"></script>
+<script defer src="/js/analytics.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TravelDocs — Documentos de pasajeros, listos para el GDS</title>
@@ -39,6 +39,8 @@
 }
 </script>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/landing.css">
 </head>

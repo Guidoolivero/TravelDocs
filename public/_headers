@@ -18,3 +18,13 @@
   # Dominios de Google Ads (googleadservices, doubleclick, googlesyndication, google.com)
   # agregados para medición de conversiones de campañas. Sin impacto hasta activarlas.
   Content-Security-Policy: default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com https://cdn.jsdelivr.net https://unpkg.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://browser.sentry-cdn.com 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.ingest.us.sentry.io https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.emailjs.com https://cdn.jsdelivr.net https://unpkg.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.googleadservices.com https://ad.doubleclick.net https://www.google.com https://google.com https://www.google.com.ar; frame-src 'self' https://*.firebaseapp.com https://apis.google.com https://www.googletagmanager.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
+
+# JS/CSS sin hash en el filename: 60s + SWR. HTML (arriba) sigue en max-age=0.
+/js/*
+  Cache-Control: public, max-age=60, stale-while-revalidate=604800
+
+/css/*
+  Cache-Control: public, max-age=60, stale-while-revalidate=604800
+
+/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

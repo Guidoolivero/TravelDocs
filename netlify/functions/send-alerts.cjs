@@ -160,25 +160,6 @@ async function clavesYaNotificadas(agenciaRef, keys) {
   return existentes;
 }
 
-// Apellidos de los pasajeros referenciados (db.getAll en chunks de 10).
-async function apellidosPorId(agenciaRef, ids) {
-  const unicos = [...new Set(ids)].filter(Boolean);
-  const map = new Map();
-  for (let i = 0; i < unicos.length; i += CHUNK) {
-    const lote = unicos.slice(i, i + CHUNK).map(id => agenciaRef.collection('passengers').doc(id));
-    const docs = await db().getAll(...lote);
-    docs.forEach(d => {
-      if (!d.exists) return;
-      const p = d.data() || {};
-      map.set(d.id, {
-        name: `${p.lastname || ''}, ${p.firstname || ''}`.replace(/^, |, $/g, '') || 'Pasajero',
-        nationality: p.nationality || '',
-      });
-    });
-  }
-  return map;
-}
-
 // Procesa una agencia. Devuelve { emailsSent }.
 async function processAgency(agencyDoc, { now, started }) {
   const agency = agencyDoc.data() || {};
@@ -224,9 +205,14 @@ async function processAgency(agencyDoc, { now, started }) {
     });
   }
 
-  // Apellidos para las líneas del email (solo de reservas due).
-  const paxIds = [...grupos.values()].flat().flatMap(x => x.paxIds);
-  const apellidos = await apellidosPorId(agenciaRef, paxIds);
+  // Una sola lectura de passengers: nombres del email + vencimientos + cumple + requisitos.
+  const paxSnap = await agenciaRef.collection('passengers').get();
+  const passengers = paxSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const paxMap = new Map(passengers.map(p => [p.id, p]));
+  const apellidos = new Map(passengers.map(p => [p.id, {
+    name: `${p.lastname || ''}, ${p.firstname || ''}`.replace(/^, |, $/g, '') || 'Pasajero',
+    nationality: p.nationality || '',
+  }]));
   const itemCheckin = x => ({
     pax: [...new Set(x.paxIds)].map(id => apellidos.get(id)?.name).filter(Boolean).join(', ') || 'Pasajeros',
     paxCount: (x.paxIds || []).length,
@@ -236,9 +222,6 @@ async function processAgency(agencyDoc, { now, started }) {
     ref: x.ref,
   });
 
-  // ── Vencimientos + cumpleaños (pasajeros de la agencia).
-  const paxSnap = await agenciaRef.collection('passengers').get();
-  const passengers = paxSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const candidatos = collectEmailAlertCandidates(passengers, now);
   const yaNotificadas = await clavesYaNotificadas(agenciaRef, candidatos.map(c => c.key));
   const toNotify = candidatos.filter(c => !yaNotificadas.has(c.key)).sort((a, b) => a.days - b.days);
@@ -247,8 +230,6 @@ async function processAgency(agencyDoc, { now, started }) {
   const bdCandidates = passengers
     .filter(p => isBirthdayToday(p, now) && (!p.birthdayNotifiedYear || p.birthdayNotifiedYear !== year))
     .map(p => ({ paxId: p.id, name: `${p.lastname}, ${p.firstname}`, dob: p.dob }));
-
-  const paxMap = new Map(passengers.map(p => [p.id, p]));
   // Mismo mail que al crear el check-in. Sale al entrar en los 30 días,
   // salvo que el alta ya lo haya mandado adentro de esa ventana.
   const pendientesReq = [];

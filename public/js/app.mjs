@@ -4,7 +4,7 @@ import { FIREBASE_CONFIG, REQUIRE_2FA } from './config.js';
 import {
   initDB, setTenantContext, getUserAgency, getAgency, listenPassengers,
   addPassenger, addPassengersBatch, updatePassenger, deletePassenger, isNotified, markNotified,
-  listenReservations, addReservation, updateReservation, deleteReservation,
+  listenReservations, addReservation, updateReservation, deleteReservation, deleteReservations,
   getGdsCities, saveGdsCities
 } from './db.js';
 import {
@@ -17,18 +17,20 @@ import {
 } from './utils.js';
 import { checkinAlertDue, requisitosAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje, reservationStale, isBirthdayToday, anioART, buildAlertEmail as buildAlertEmailHtml } from './alert-core.mjs';
 import { buildSSRStrings, generateNM } from './ssr.js';
-import { scanDocument, mapScanToForm, prepareImageForScan, prepareLogoDataUrl, textoDeImagen, archivosImportacionMasiva } from './scanner.js';
 import { programaFfn } from './ffn-programs.mjs';
 import { nombreAerolinea } from './airlines.mjs';
-import { planTravelStopView, injectKnownForms, injectKnownAlerts, paradasVisibles } from './travel-reqs.mjs';
 import { fromStorage, addCity, updateCity, saveCity, editCity, removeCity, persistable, copyValue } from './gds-cities.mjs';
 import { reservationViewPassengers, passengerDetailFlags, reservationViewLayout } from './reservation-view.mjs';
 import { DIRECT_MESSAGES, findDirectMessage } from './direct-messages.mjs';
 import { opcionesPais } from './paises.mjs';
 import { alcanzaConDni } from './cabotaje.mjs';
-import { parseItinerarioTexto, fechaIso, textoDesdeItems, claseItinerario, normalizarOcr } from './itinerario-pdf.mjs';
 import { generarContrasena } from './contrasena.mjs';
 import { venceSesion } from './sesion.mjs';
+
+let _scannerP, _itinerarioP, _travelReqsP;
+function loadScanner() { return _scannerP || (_scannerP = import('./scanner.js')); }
+function loadItinerario() { return _itinerarioP || (_itinerarioP = import('./itinerario-pdf.mjs')); }
+function loadTravelReqs() { return _travelReqsP || (_travelReqsP = import('./travel-reqs.mjs')); }
 
 function llenarSelectPais(id, extra) {
   const el = document.getElementById(id);
@@ -352,10 +354,9 @@ onAuthStateChanged(auth, async user => {
     reservations = data;
     // Limpieza automática: los check-ins cuyo último tramo voló ayer o antes
     // se borran solos (regla en reservationStale, testeada en alerts.test.mjs).
-    for (const r of data) {
-      if (reservationStale(resPiernas(r))) {
-        deleteReservation(r.id).catch(err => console.warn('[Check-ins] Limpieza automática falló:', err?.message || err));
-      }
+    const stale = data.filter(r => reservationStale(resPiernas(r))).map(r => r.id);
+    if (stale.length) {
+      deleteReservations(stale).catch(err => console.warn('[Check-ins] Limpieza automática falló:', err?.message || err));
     }
     refreshCurrentView();
     updateReservationsBadge();
@@ -415,7 +416,8 @@ window.showView = function(v) {
   if (v === 'reservations') renderReservations();
   if (v === 'documents') renderDocuments();
   if (v === 'alerts') renderAlerts();
-  if (v === 'import') loadXlsx();
+  if (v === 'import') { loadXlsx(); loadScanner(); }
+  if (v === 'travel') loadTravelReqs();
   if (v === 'security') renderSecurity();
   if (v === 'cities') loadGdsCities();
   if (v === 'admin') renderAdmin();
@@ -491,7 +493,7 @@ document.getElementById('pdf-dropzone')?.addEventListener('drop', e => {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
   const files = Array.from(e.dataTransfer?.files || []);
-  const file = files.find(f => claseItinerario(f)) || files[0];
+  const file = files.find(f => /\.pdf$/i.test(f.name)) || files[0];
   window.leerItinerarioPdf(file);
 });
 document.getElementById('btn-interpret-pnr')?.addEventListener('click', () => window.interpretarPNR());
@@ -1918,6 +1920,7 @@ async function processScannedFiles(files) {
 }
 
 async function processScannedFile(file, index, context) {
+  const { scanDocument, mapScanToForm, prepareImageForScan } = await loadScanner();
   const preview = document.getElementById('scan-preview');
   const statusEl = document.getElementById('scan-status');
   const errorEl = document.getElementById('scan-error');
@@ -2204,12 +2207,14 @@ function loadXlsx() {
   return xlsxPromise;
 }
 
-function handleImportDrop(e) {
+async function handleImportDrop(e) {
+  const { archivosImportacionMasiva } = await loadScanner();
   const files = archivosImportacionMasiva(e.dataTransfer.files);
   if (files.length) startBulkImport(files);
 }
 
-window.handleImportFiles = function(e) {
+window.handleImportFiles = async function(e) {
+  const { archivosImportacionMasiva } = await loadScanner();
   const files = archivosImportacionMasiva(e.target.files);
   if (files.length) startBulkImport(files);
   e.target.value = ''; // allow re-selecting the same file/folder via click
@@ -2226,6 +2231,7 @@ async function startBulkImport(files) {
   const progressCount = document.getElementById('import-progress-count');
   progressWrap.style.display = 'block';
 
+  const { scanDocument, mapScanToForm } = await loadScanner();
   const results = [];
   for (let i = 0; i < files.length; i++) {
     progressLabel.textContent = `Analizando: ${files[i].name}`;
@@ -4007,6 +4013,7 @@ function cargarPdfjs() {
 }
 
 window.leerItinerarioPdf = async function(file) {
+  const { parseItinerarioTexto, fechaIso, textoDesdeItems, claseItinerario, normalizarOcr } = await loadItinerario();
   const preview = document.getElementById('pdf-preview');
   _pdfSegmentos = [];
   if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
@@ -4031,6 +4038,7 @@ window.leerItinerarioPdf = async function(file) {
       }
       texto = partes.join('\n');
     } else {
+      const { textoDeImagen, prepareImageForScan } = await loadScanner();
       texto = normalizarOcr(await textoDeImagen(await prepareImageForScan(file)));
     }
     let todos = parseItinerarioTexto(texto);
@@ -4172,9 +4180,10 @@ window.consultarVuelo = async function() {
       return;
     }
 
-    injectKnownForms(json.data, nacionalidad);
-    injectKnownAlerts(json.data, nacionalidad);
-    renderTravelResult(json.data, resultsEl);
+    const tr = await loadTravelReqs();
+    tr.injectKnownForms(json.data, nacionalidad);
+    tr.injectKnownAlerts(json.data, nacionalidad);
+    await renderTravelResult(json.data, resultsEl);
 
     // 2da llamada (split): verificacion web con presupuesto propio de 26s.
     // Completa URLs oficiales + agrega requisitos omitidos, y re-renderiza.
@@ -4209,9 +4218,9 @@ window.consultarVuelo = async function() {
       if (vRes.ok && vJson.data && Array.isArray(vJson.data.ruta)) {
         json.data.ruta = vJson.data.ruta;
         json.data._meta = { ...json.data._meta, ...vJson.data._meta };
-        injectKnownForms(json.data, nacionalidad);
-        injectKnownAlerts(json.data, nacionalidad);
-        renderTravelResult(json.data, resultsEl);
+        tr.injectKnownForms(json.data, nacionalidad);
+        tr.injectKnownAlerts(json.data, nacionalidad);
+        await renderTravelResult(json.data, resultsEl);
       } else if (json.data._meta) {
         json.data._meta.verificoWeb = false;
       }
@@ -4263,7 +4272,7 @@ function recorridoPais(stop) {
 }
 
 // Seleccionar pestaña de parada — muestra tarjetas de requisitos
-window.selectTravelStop = function(idx) {
+window.selectTravelStop = async function(idx) {
   document.querySelectorAll('.stop-tab-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === idx);
   });
@@ -4287,7 +4296,8 @@ window.selectTravelStop = function(idx) {
 
   const fromCode  = (_passportCode || 'ARG').replace(/[^A-Z]/g, '').slice(0, 3);
   const toCode    = (stop.pais_codigo || '').replace(/[^A-Z]/g, '').slice(0, 3);
-  const view = planTravelStopView(stop);
+  const tr = await loadTravelReqs();
+  const view = tr.planTravelStopView(stop);
   const { migratorios, salud } = view;
 
   // Etiqueta y color por categoría
@@ -4379,7 +4389,7 @@ window.selectTravelStop = function(idx) {
 };
 
 // Renderizar resultados
-function renderTravelResult(data, container) {
+async function renderTravelResult(data, container) {
   if (!data || typeof data !== 'object') {
     container.innerHTML = `<div class="scan-error" style="margin:0;">⚠ Respuesta inesperada del servidor. Intentá de nuevo.</div>`;
     return;
@@ -4392,7 +4402,8 @@ function renderTravelResult(data, container) {
   const rawNac    = document.getElementById('tv-nacionalidad')?.value || '';
   const nacMatch  = rawNac.match(/\(([A-Z]{3})\)/);
   _passportCode   = nacMatch ? nacMatch[1] : 'ARG';
-  _travelStops    = paradasVisibles(ruta, _passportCode);
+  const tr = await loadTravelReqs();
+  _travelStops    = tr.paradasVisibles(ruta, _passportCode);
 
   // Barra de info del vuelo
   const confianzaClass = { alta: 'confianza-alta', media: 'confianza-media', baja: 'confianza-baja' }[v.confianza_ruta] || 'confianza-media';
@@ -4662,6 +4673,7 @@ async function handleAgencyLogoChange(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
+    const { prepareLogoDataUrl } = await loadScanner();
     const dataUrl = await prepareLogoDataUrl(file);
     adminLogoDataUrl = dataUrl;
     setAgencyLogoPreview(dataUrl);
