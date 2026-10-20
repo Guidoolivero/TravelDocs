@@ -223,8 +223,56 @@ function isoNacionalidad(nacionalidad) {
   return s.replace(/[^A-Z]/g, '').slice(0, 3) || 'ARG';
 }
 
-// La vuelta por el mismo aeropuerto no es otra ficha. La llegada de vuelta
-// al pais de salida tampoco, si el pasajero es de ese pais.
+const TIPO_RANGO = { destino: 3, escala_comercial: 2, parada_tecnica: 1, origen: 0 };
+
+function clavePais(stop) {
+  const iso = String(stop?.pais_codigo || '').toUpperCase();
+  if (iso) return iso;
+  const iata = String(stop?.aeropuerto_iata || '').toUpperCase();
+  return iata ? 'iata:' + iata : '';
+}
+
+function seedParada(stop) {
+  const iata = String(stop.aeropuerto_iata || '').toUpperCase();
+  const ciudad = String(stop.ciudad || '').trim();
+  return {
+    ...stop,
+    aeropuertos: iata ? [iata] : [],
+    ciudades: iata ? [ciudad] : (ciudad ? [ciudad] : []),
+    requisitos: Array.isArray(stop.requisitos) ? stop.requisitos.slice() : [],
+  };
+}
+
+function sumarParada(into, stop) {
+  const iata = String(stop.aeropuerto_iata || '').toUpperCase();
+  const ciudad = String(stop.ciudad || '').trim();
+  if (iata) {
+    const idx = into.aeropuertos.indexOf(iata);
+    if (idx < 0) {
+      into.aeropuertos.push(iata);
+      into.ciudades.push(ciudad);
+    } else if (ciudad && !into.ciudades[idx]) {
+      into.ciudades[idx] = ciudad;
+    }
+  } else if (ciudad && !into.ciudades.includes(ciudad)) {
+    into.ciudades.push(ciudad);
+  }
+  if (!into.pais && stop.pais) into.pais = stop.pais;
+  if (!into.pais_codigo && stop.pais_codigo) into.pais_codigo = stop.pais_codigo;
+  if (stop.alerta) into.alerta = true;
+  if (stop.libre_ingreso) into.libre_ingreso = true;
+  if (stop.notas) into.notas = into.notas ? into.notas + ' ' + stop.notas : stop.notas;
+  const rangoNuevo = TIPO_RANGO[stop.tipo] || 0;
+  const rangoOld = TIPO_RANGO[into.tipo] || 0;
+  if (rangoNuevo > rangoOld) into.tipo = stop.tipo;
+  if (Array.isArray(stop.requisitos) && stop.requisitos.length) {
+    into.requisitos = into.requisitos.concat(stop.requisitos);
+  }
+}
+
+// Requisitos por pais, no por ciudad. El origen vacio no se muestra si hay
+// destino. La vuelta a casa del pasajero de ese pais tampoco. Cabotaje
+// interno: solo la llegada. Reentrada al mismo pais: se unen requisitos.
 export function paradasVisibles(ruta, nacionalidad = 'ARG') {
   const stops = Array.isArray(ruta) ? ruta : [];
   const nac = isoNacionalidad(nacionalidad);
@@ -233,21 +281,37 @@ export function paradasVisibles(ruta, nacionalidad = 'ARG') {
     const iso = String(s?.pais_codigo || '').toUpperCase();
     return iso && iso !== origenIso;
   });
-  const vistos = new Set();
-  const out = [];
+  const hayDestino = stops.some(s => s && s.tipo && s.tipo !== 'origen');
+  const grupos = [];
+  const porClave = new Map();
+
   stops.forEach((stop, i) => {
     if (!stop) return;
-    const iata = String(stop.aeropuerto_iata || '').toUpperCase();
+    if (stop.tipo === 'origen' && hayDestino) return;
     const iso = String(stop.pais_codigo || '').toUpperCase();
     const esUltimo = i === stops.length - 1;
     if (esUltimo && origenIso && iso === origenIso && nac === origenIso && hayOtroPais) return;
-    if (iata && vistos.has(iata)) {
-      if (!(esUltimo && origenIso && iso === origenIso && nac !== origenIso)) return;
+    const clave = clavePais(stop);
+    if (!clave) {
+      grupos.push(seedParada(stop));
+      return;
     }
-    if (iata) vistos.add(iata);
-    out.push(stop);
+    const ya = porClave.get(clave);
+    if (!ya) {
+      const g = seedParada(stop);
+      porClave.set(clave, g);
+      grupos.push(g);
+    } else {
+      sumarParada(ya, stop);
+    }
   });
-  return out;
+
+  for (const g of grupos) {
+    g.requisitos = dedupeTravelReqs(g.requisitos);
+    g.aeropuerto_iata = g.aeropuertos[0] || g.aeropuerto_iata || '';
+    if (g.ciudades[0] && !g.ciudad) g.ciudad = g.ciudades[0];
+  }
+  return grupos;
 }
 
 export function planTravelStopView(stop) {

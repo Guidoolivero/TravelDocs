@@ -558,27 +558,102 @@ function pantalla(data, nacionalidad, segmentos) {
 
 describe('paradasVisibles', () => {
   const idaVuelta = [
-    { pais_codigo: 'ARG', aeropuerto_iata: 'AEP', tipo: 'origen' },
-    { pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino' },
-    { pais_codigo: 'ABW', aeropuerto_iata: 'AUA', tipo: 'destino' },
-    { pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino' },
-    { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino' },
+    { pais_codigo: 'ARG', aeropuerto_iata: 'AEP', tipo: 'origen', pais: 'Argentina' },
+    { pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino', pais: 'Peru', ciudad: 'Lima' },
+    { pais_codigo: 'ABW', aeropuerto_iata: 'AUA', tipo: 'destino', pais: 'Aruba', ciudad: 'Oranjestad' },
+    { pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino', pais: 'Peru', ciudad: 'Lima' },
+    { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino', pais: 'Argentina', ciudad: 'Buenos Aires' },
   ];
 
-  it('no repite Lima ni la vuelta a casa de un argentino', () => {
-    assert.deepEqual(paradasVisibles(idaVuelta, 'ARG').map(s => s.aeropuerto_iata), ['AEP', 'LIM', 'AUA']);
+  it('no muestra el origen ni la vuelta a casa de un argentino, y junta Lima', () => {
+    assert.deepEqual(paradasVisibles(idaVuelta, 'ARG').map(s => s.pais_codigo), ['PER', 'ABW']);
+    assert.deepEqual(paradasVisibles(idaVuelta, 'ARG').map(s => s.aeropuertos), [['LIM'], ['AUA']]);
   });
 
-  it('deja Ezeiza si el pasajero no es argentino', () => {
-    assert.deepEqual(paradasVisibles(idaVuelta, 'USA').map(s => s.aeropuerto_iata), ['AEP', 'LIM', 'AUA', 'EZE']);
+  it('deja Argentina si el pasajero no es argentino', () => {
+    assert.deepEqual(paradasVisibles(idaVuelta, 'USA').map(s => s.pais_codigo), ['PER', 'ABW', 'ARG']);
   });
 
-  it('un vuelo interno sigue mostrando el aeropuerto de llegada', () => {
+  it('un vuelo interno sigue mostrando el aeropuerto de llegada, sin el origen vacio', () => {
     const ruta = [
-      { pais_codigo: 'ARG', aeropuerto_iata: 'AEP', tipo: 'origen' },
-      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino' },
+      { pais_codigo: 'ARG', aeropuerto_iata: 'AEP', tipo: 'origen', pais: 'Argentina' },
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino', pais: 'Argentina', ciudad: 'Buenos Aires' },
     ];
-    assert.deepEqual(paradasVisibles(ruta, 'ARG').map(s => s.aeropuerto_iata), ['AEP', 'EZE']);
+    const out = paradasVisibles(ruta, 'ARG');
+    assert.equal(out.length, 1);
+    assert.equal(out[0].tipo, 'destino');
+    assert.deepEqual(out[0].aeropuertos, ['EZE']);
+  });
+
+  it('junta las ciudades de EE.UU. en una sola parada y saca EZE vacio', () => {
+    const hoy = [
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', pais: 'Argentina', ciudad: 'Buenos Aires' },
+      { pais_codigo: 'USA', aeropuerto_iata: 'JFK', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Nueva York', requisitos: [{ nombre: 'Visa B1/B2', obligatorio: true, url_oficial: 'https://www.usa.gov/visitor-visa' }] },
+      { pais_codigo: 'USA', aeropuerto_iata: 'PDX', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Portland', requisitos: [{ nombre: 'Visa B1/B2', obligatorio: true, url_oficial: 'https://www.usa.gov/visitor-visa' }] },
+      { pais_codigo: 'USA', aeropuerto_iata: 'DFW', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Dallas', requisitos: [{ nombre: 'Visa B1/B2', obligatorio: true, url_oficial: 'https://www.usa.gov/visitor-visa' }] },
+      { pais_codigo: 'USA', aeropuerto_iata: 'MIA', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Miami', requisitos: [{ nombre: 'Visa B1/B2', obligatorio: true, url_oficial: 'https://www.usa.gov/visitor-visa' }] },
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino', pais: 'Argentina', ciudad: 'Buenos Aires' },
+    ];
+    const out = paradasVisibles(hoy, 'ARG');
+    assert.equal(out.length, 1);
+    assert.equal(out[0].pais_codigo, 'USA');
+    assert.equal(out[0].pais, 'Estados Unidos');
+    assert.deepEqual(out[0].aeropuertos, ['JFK', 'PDX', 'DFW', 'MIA']);
+    assert.deepEqual(out[0].ciudades, ['Nueva York', 'Portland', 'Dallas', 'Miami']);
+    assert.equal(out[0].requisitos.length, 1);
+    assert.equal(out[0].requisitos[0].nombre, 'Visa B1/B2');
+  });
+
+  it('separa Espana e Italia y junta MAD con BCN', () => {
+    const ruta = [
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', pais: 'Argentina' },
+      { pais_codigo: 'ESP', aeropuerto_iata: 'MAD', tipo: 'destino', pais: 'Espana', ciudad: 'Madrid' },
+      { pais_codigo: 'ESP', aeropuerto_iata: 'BCN', tipo: 'destino', pais: 'Espana', ciudad: 'Barcelona' },
+      { pais_codigo: 'ITA', aeropuerto_iata: 'FCO', tipo: 'destino', pais: 'Italia', ciudad: 'Roma' },
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino', pais: 'Argentina' },
+    ];
+    const out = paradasVisibles(ruta, 'ARG');
+    assert.deepEqual(out.map(s => s.pais_codigo), ['ESP', 'ITA']);
+    assert.deepEqual(out[0].aeropuertos, ['MAD', 'BCN']);
+    assert.deepEqual(out[1].aeropuertos, ['FCO']);
+  });
+
+  it('conserva la parada tecnica de otro pais y absorbe la del mismo destino', () => {
+    const ruta = [
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', pais: 'Argentina' },
+      { pais_codigo: 'BRA', aeropuerto_iata: 'GRU', tipo: 'parada_tecnica', pais: 'Brasil', ciudad: 'Sao Paulo' },
+      { pais_codigo: 'USA', aeropuerto_iata: 'JFK', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Nueva York' },
+      { pais_codigo: 'USA', aeropuerto_iata: 'DFW', tipo: 'parada_tecnica', pais: 'Estados Unidos', ciudad: 'Dallas' },
+    ];
+    const out = paradasVisibles(ruta, 'ARG');
+    assert.equal(out.length, 2);
+    assert.equal(out[0].pais_codigo, 'BRA');
+    assert.equal(out[0].tipo, 'parada_tecnica');
+    assert.equal(out[1].pais_codigo, 'USA');
+    assert.equal(out[1].tipo, 'destino');
+    assert.deepEqual(out[1].aeropuertos, ['JFK', 'DFW']);
+  });
+
+  it('en una reentrada al mismo pais conserva el requisito mas exigente', () => {
+    const ruta = [
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', pais: 'Argentina' },
+      { pais_codigo: 'USA', aeropuerto_iata: 'MIA', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Miami', requisitos: [{ nombre: 'Fiebre amarilla', obligatorio: false, descripcion: 'No exigida desde Argentina', url_oficial: 'https://wwwnc.cdc.gov/travel/yellowfever' }] },
+      { pais_codigo: 'COL', aeropuerto_iata: 'BOG', tipo: 'destino', pais: 'Colombia', ciudad: 'Bogota' },
+      { pais_codigo: 'USA', aeropuerto_iata: 'MIA', tipo: 'destino', pais: 'Estados Unidos', ciudad: 'Miami', requisitos: [{ nombre: 'Fiebre amarilla', obligatorio: true, descripcion: 'Exigida porque el pasajero viene de Colombia, zona de riesgo', url_oficial: 'https://wwwnc.cdc.gov/travel/yellowfever' }] },
+    ];
+    const out = paradasVisibles(ruta, 'ARG');
+    assert.deepEqual(out.map(s => s.pais_codigo), ['USA', 'COL']);
+    const fa = out[0].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
+    assert.equal(fa.obligatorio, true);
+  });
+
+  it('no mezcla Hong Kong con China continental', () => {
+    const ruta = [
+      { pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'origen', pais: 'Argentina' },
+      { pais_codigo: 'CHN', aeropuerto_iata: 'PVG', tipo: 'destino', pais: 'China', ciudad: 'Shanghai' },
+      { pais_codigo: 'HKG', aeropuerto_iata: 'HKG', tipo: 'destino', pais: 'Hong Kong', ciudad: 'Hong Kong' },
+    ];
+    assert.deepEqual(paradasVisibles(ruta, 'ARG').map(s => s.pais_codigo), ['CHN', 'HKG']);
   });
 });
 

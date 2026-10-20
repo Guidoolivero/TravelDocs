@@ -4238,6 +4238,30 @@ window.consultarVuelo = async function() {
 let _travelStops    = [];
 let _passportCode   = 'ARG';
 
+function iatasDeStop(stop) {
+  if (Array.isArray(stop?.aeropuertos) && stop.aeropuertos.length) return stop.aeropuertos;
+  const iata = String(stop?.aeropuerto_iata || '').toUpperCase();
+  return iata ? [iata] : [];
+}
+
+function subtituloTab(stop) {
+  const iatas = iatasDeStop(stop);
+  if (iatas.length > 1) return iatas.join(' · ');
+  const ciudad = (Array.isArray(stop?.ciudades) && stop.ciudades[0]) || stop?.ciudad || '';
+  if (iatas[0] && ciudad) return iatas[0] + ' · ' + ciudad;
+  return iatas[0] || '';
+}
+
+function recorridoPais(stop) {
+  const iatas = iatasDeStop(stop);
+  const ciudades = Array.isArray(stop?.ciudades) ? stop.ciudades : [];
+  if (!iatas.length) return '';
+  return iatas.map((code, i) => {
+    const c = ciudades[i];
+    return c ? `${c} (${code})` : code;
+  }).join(' · ');
+}
+
 // Seleccionar pestaña de parada — muestra tarjetas de requisitos
 window.selectTravelStop = function(idx) {
   document.querySelectorAll('.stop-tab-btn').forEach((btn, i) => {
@@ -4295,6 +4319,11 @@ window.selectTravelStop = function(idx) {
   };
 
   let html = '<div class="req-panel">';
+
+  const recorrido = recorridoPais(stop);
+  if (recorrido) {
+    html += `<div class="req-recorrido">${esc(recorrido)}</div>`;
+  }
 
   if (view.showEmptyState) {
     html += `<div class="req-libre">
@@ -4438,8 +4467,8 @@ function renderTravelResult(data, container) {
           : '';
 
     html += `<button class="stop-tab-btn ${tabClass}${idx === 0 ? ' active' : ''}" data-select-stop="${idx}">
-      <span class="stop-tab-iata">${esc(stop.aeropuerto_iata || stop.pais_codigo || '???')}</span>
-      <span class="stop-tab-label">${esc(stop.ciudad || stop.pais || '')}</span>
+      <span class="stop-tab-iata">${esc(stop.pais || stop.pais_codigo || stop.aeropuerto_iata || '???')}</span>
+      <span class="stop-tab-label">${esc(subtituloTab(stop))}</span>
       ${badge}
     </button>`;
   });
