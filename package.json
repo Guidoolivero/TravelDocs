@@ -25,7 +25,8 @@
     "pilot:seed-passengers": "node scripts/seed-pilot-passengers.mjs",
     "mfa:enable-totp": "node scripts/enable-totp-mfa.mjs",
     "mfa:set-email-verified": "node scripts/set-email-verified.mjs",
-    "test:e2e": "e2e run"
+    "test:e2e": "e2e run",
+    "measure:perf": "node scripts/measure-perf.mjs"
   },
   "devDependencies": {
     "@ai-sdk/xai": "^5.0.14",
