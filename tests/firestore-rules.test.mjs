@@ -266,6 +266,20 @@ if (!HAS_EMULATOR) {
       await assertSucceeds(settingsDoc(db, AGENCY_A, 'gdsCities').get());
     });
 
+    for (const role of ['owner', 'admin', 'agent']) {
+      it(`${role} crea, edita y borra ciudades de su agencia`, async () => {
+        const db = authAs(UID_A, AGENCY_A, role).firestore();
+        const ref = settingsDoc(db, AGENCY_A, 'gdsCities');
+        await testEnv.withSecurityRulesDisabled(c => settingsDoc(c.firestore(), AGENCY_A, 'gdsCities').delete());
+        await assertSucceeds(ref.set({ items: [{ id: 'city', title: 'Buenos Aires', code: 'BUE' }] }));
+        await assertSucceeds(ref.update({ items: [{ id: 'city', title: 'Buenos Aires editada', code: 'EZE' }] }));
+        assert.equal((await ref.get()).data().items[0].code, 'EZE');
+        await assertSucceeds(ref.set({ items: [] }));
+        assert.equal((await ref.get()).data().items.length, 0);
+        await assertSucceeds(ref.delete());
+      });
+    }
+
     it('agent de A NO escribe ni lee settings/gdsCities de agencia B', async () => {
       const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
       await assertFails(settingsDoc(db, AGENCY_B, 'gdsCities').set({ items: [] }));
