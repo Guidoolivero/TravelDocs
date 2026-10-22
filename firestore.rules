@@ -3,11 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Custom claims en el JWT (seteados por scripts/seed-trading-travel.mjs).
-    // Necesarios para queries/listas — get() en users/{uid} falla en onSnapshot.
+    // El perfil vigente bloquea sesiones con claims anteriores a la desactivacion.
     function hasTenantClaims() {
       return request.auth != null
         && request.auth.token.agencyId is string
-        && request.auth.token.role is string;
+        && request.auth.token.role is string
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('active', true) != false;
     }
 
     function userAgency() {

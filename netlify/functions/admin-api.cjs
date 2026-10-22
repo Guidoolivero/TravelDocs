@@ -290,8 +290,9 @@ async function updateUser(uid, event, adminAuth) {
     memberPatch.role = b.role;
   }
   if (b.active !== undefined) {
-    patch.active = !!b.active;
-    memberPatch.active = !!b.active;
+    if (typeof b.active !== 'boolean') return reply(400, { error: 'active debe ser booleano.' });
+    patch.active = b.active;
+    memberPatch.active = b.active;
   }
 
   // Email: actualizar en Auth y sincronizar users/{uid} + members/{uid}.
@@ -319,6 +320,15 @@ async function updateUser(uid, event, adminAuth) {
     }
   }
 
+  if (b.active !== undefined) {
+    try {
+      await auth().updateUser(uid, { disabled: !b.active });
+    } catch (err) {
+      console.error('admin-api: updateUser(disabled) fallo:', err?.message || err);
+      return reply(500, { error: 'No se pudo actualizar el estado de la cuenta en Auth.' });
+    }
+  }
+
   if (Object.keys(patch).length) {
     patch.updatedAt = FieldValue.serverTimestamp();
     await db().collection('users').doc(uid).set(patch, { merge: true });
@@ -331,7 +341,7 @@ async function updateUser(uid, event, adminAuth) {
   if (b.role !== undefined || b.active === false) {
     const claims = userRec.customClaims || {};
     if (b.role !== undefined) claims.role = b.role;
-    // active:false no es un claim; el login lo rechaza leyendo users/{uid}.
+    // El estado activo se valida en Auth y users/{uid}, no en claims.
     await auth().setCustomUserClaims(uid, claims);
   }
 

@@ -35,23 +35,22 @@ async function verifyAuth(event, { requireMfa = true } = {}) {
   }
 
   try {
-    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const decoded = await admin.auth().verifyIdToken(match[1], true);
     const uid = decoded.uid;
     let email = (decoded.email || '').toLowerCase();
     let agencyId = decoded.agencyId || null;
     let role = decoded.role || null;
 
+    const userSnap = await admin.firestore().collection('users').doc(uid).get();
+    if (!userSnap.exists) {
+      return { ok: false, status: 403, error: 'Usuario no autorizado.' };
+    }
+    const data = userSnap.data() || {};
+    if (data.active === false) {
+      return { ok: false, status: 403, error: 'Cuenta desactivada.' };
+    }
+
     if (!agencyId || !role) {
-      const userSnap = await admin.firestore().collection('users').doc(uid).get();
-      if (!userSnap.exists) {
-        return { ok: false, status: 403, error: 'Usuario no autorizado.' };
-      }
-
-      const data = userSnap.data() || {};
-      if (data.active === false) {
-        return { ok: false, status: 403, error: 'Cuenta desactivada.' };
-      }
-
       agencyId = data.agencyId || null;
       role = data.role || null;
       if (!email) email = (data.email || '').toLowerCase();

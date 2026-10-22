@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
 import { describe, it, before, after } from 'node:test';
 import {
   initializeTestEnvironment,
@@ -79,6 +80,43 @@ if (!HAS_EMULATOR) {
   }
 
   describe('Firestore rules — aislamiento multi-tenant', () => {
+    it('usuario desactivado no lee ni escribe con claims antiguos de cualquier rol', async () => {
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc('users/disabled').set({ active: false }));
+      for (const role of ['agent', 'admin', 'owner']) {
+        const db = authAs('disabled', AGENCY_A, role).firestore();
+        await assertFails(db.collection(`agencies/${AGENCY_A}/passengers`).get());
+        await assertFails(db.doc(`agencies/${AGENCY_A}/passengers/p1`).get());
+        await assertFails(db.doc(`agencies/${AGENCY_A}/passengers/new`).set({ firstname: 'TEST' }));
+        await assertFails(db.doc(`agencies/${AGENCY_A}/settings/gdsCities`).set({ cities: [] }));
+        await assertFails(db.doc(`agencies/${AGENCY_A}`).update({ name: 'blocked' }));
+      }
+    });
+
+    it('perfil inexistente no accede con claims antiguos', async () => {
+      const db = authAs('missing', AGENCY_A, 'owner').firestore();
+      await assertFails(db.collection(`agencies/${AGENCY_A}/passengers`).get());
+    });
+
+    it('onSnapshot activo funciona y no entrega cambios tras desactivar el perfil', { timeout: 15000 }, async () => {
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc('users/listener').set({ active: true }));
+      const db = authAs('listener', AGENCY_A, 'agent').firestore();
+      let unsubscribe;
+      let ready;
+      const firstSnapshot = new Promise(resolve => { ready = resolve; });
+      const denied = new Promise(resolve => {
+        unsubscribe = db.collection(`agencies/${AGENCY_A}/passengers`).onSnapshot(ready, resolve);
+      });
+      try {
+        await firstSnapshot;
+        await testEnv.withSecurityRulesDisabled(c => c.firestore().doc('users/listener').update({ active: false }));
+        // Disparar una entrega: el emulador reevalua el listener al cambiar sus datos.
+        await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${AGENCY_A}/passengers/p1`).update({ firstname: 'UPDATED' }));
+        assert.equal((await denied).code, 'permission-denied');
+      } finally {
+        unsubscribe();
+      }
+    });
+
     it('usuario A lee pasajeros de su agencia', async () => {
       const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
       await assertSucceeds(
