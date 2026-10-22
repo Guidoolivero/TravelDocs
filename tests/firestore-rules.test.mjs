@@ -117,6 +117,56 @@ if (!HAS_EMULATOR) {
       }
     });
 
+    it('agencia suspendida bloquea todos los roles y no puede reactivarse desde el cliente', async () => {
+      const agencyId = 'suspended-agency';
+      await testEnv.withSecurityRulesDisabled(async c => {
+        await c.firestore().doc(`agencies/${agencyId}`).set({ status: 'suspended' });
+        await c.firestore().doc('users/suspended-member').set({ active: true });
+      });
+      for (const role of ['owner', 'admin', 'agent']) {
+        const db = authAs('suspended-member', agencyId, role).firestore();
+        await assertFails(db.doc(`agencies/${agencyId}`).get());
+        await assertFails(db.doc(`agencies/${agencyId}`).update({ status: 'active' }));
+        for (const collection of ['passengers', 'reservations', 'notifications', 'members', 'invites', 'settings']) {
+          await assertFails(db.collection(`agencies/${agencyId}/${collection}`).get());
+          const id = collection === 'settings' ? 'gdsCities' : 'test';
+          await assertFails(db.doc(`agencies/${agencyId}/${collection}/${id}`).set({ test: true }));
+        }
+      }
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).update({ status: 'active' }));
+      const db = authAs('suspended-member', agencyId, 'agent').firestore();
+      await assertSucceeds(db.collection(`agencies/${agencyId}/passengers`).get());
+      await assertSucceeds(db.doc(`agencies/${agencyId}/settings/gdsCities`).set({ items: [] }));
+    });
+
+    it('listener abierto no recibe nuevos pasajeros al suspender la agencia', { timeout: 15000 }, async () => {
+      const agencyId = 'listener-agency';
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set({ status: 'active' }));
+      const db = authAs(UID_A, agencyId, 'agent').firestore();
+      let ready;
+      const firstSnapshot = new Promise(resolve => { ready = resolve; });
+      let unsubscribe;
+      const denied = new Promise(resolve => {
+        unsubscribe = db.collection(`agencies/${agencyId}/passengers`).onSnapshot(ready, resolve);
+      });
+      try {
+        await firstSnapshot;
+        await testEnv.withSecurityRulesDisabled(async c => {
+          await c.firestore().doc(`agencies/${agencyId}`).update({ status: 'suspended' });
+          await c.firestore().doc(`agencies/${agencyId}/passengers/new`).set({ firstname: 'TEST' });
+        });
+        assert.equal((await denied).code, 'permission-denied');
+      } finally {
+        unsubscribe();
+      }
+    });
+
+    it('agencia eliminada no permite leer ni recrear datos con claims antiguos', async () => {
+      const db = authAs(UID_A, 'missing-agency', 'owner').firestore();
+      await assertFails(db.collection('agencies/missing-agency/passengers').get());
+      await assertFails(db.doc('agencies/missing-agency/passengers/test').set({ test: true }));
+    });
+
     it('usuario A lee pasajeros de su agencia', async () => {
       const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
       await assertSucceeds(

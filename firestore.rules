@@ -22,12 +22,12 @@ service cloud.firestore {
     function isMemberOf(agencyId) {
       return hasTenantClaims()
         && userAgency() == agencyId
-        && userRole() in ['owner', 'admin', 'agent'];
+        && userRole() in ['owner', 'admin', 'agent']
+        && get(/databases/$(database)/documents/agencies/$(agencyId)).data.get('status', 'active') == 'active';
     }
 
     function isAdminOf(agencyId) {
-      return hasTenantClaims()
-        && userAgency() == agencyId
+      return isMemberOf(agencyId)
         && userRole() in ['owner', 'admin'];
     }
 

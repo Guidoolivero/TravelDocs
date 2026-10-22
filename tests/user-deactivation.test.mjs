@@ -88,3 +88,16 @@ test('fallo de Auth no informa exito ni modifica perfiles', async () => {
   assert.equal((await f.patch(false)).statusCode, 500);
   assert.equal(f.docs.get('users/user').active, true);
 });
+
+test('agencia suspendida rechaza Functions y la reactivacion restaura acceso', async () => {
+  const f = fixture();
+  f.docs.set('agencies/agency', { status: 'suspended' });
+  assert.equal((await f.verify()).status, 403);
+  f.docs.set('agencies/agency', { status: 'active' });
+  assert.equal((await f.verify()).ok, true);
+});
+test('agencia eliminada rechaza Functions', async () => {
+  const f = fixture();
+  f.docs.delete('agencies/agency');
+  assert.equal((await f.verify()).status, 403);
+});
