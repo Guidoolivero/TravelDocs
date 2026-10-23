@@ -201,7 +201,7 @@ async function processAgency(agencyDoc, { now, started }) {
       if (p.checkin || p.notified) return;
       if (!checkinAlertDue(p.fecha, horas, now)) return;
       if (!grupos.has(to)) grupos.set(to, []);
-      grupos.get(to).push({ resId: r.id, piernas, idx, vuelo: p.vuelo, ruta: (p.origen && p.destino) ? `${p.origen}-${p.destino}` : '', fecha: p.fecha, ref: p.reservaVuelo, paxIds: r.pasajeros || [] });
+      grupos.get(to).push({ resId: r.id, piernas, idx, vuelo: p.vuelo, ruta: (p.origen && p.destino) ? `${p.origen}-${p.destino}` : '', fecha: p.fecha, ref: p.reservaVuelo, paxIds: r.pasajeros || [], pending: r.pendingPassengers || [] });
     });
   }
 
@@ -214,8 +214,8 @@ async function processAgency(agencyDoc, { now, started }) {
     nationality: p.nationality || '',
   }]));
   const itemCheckin = x => ({
-    pax: [...new Set(x.paxIds)].map(id => apellidos.get(id)?.name).filter(Boolean).join(', ') || 'Pasajeros',
-    paxCount: (x.paxIds || []).length,
+    pax: [...new Set(x.paxIds)].map(id => apellidos.get(id)?.name).filter(Boolean).concat(x.pending.map(p => `${p.lastname}, ${p.firstname} (sin vincular)`)).join(', ') || 'Pasajeros',
+    paxCount: (x.paxIds || []).length + x.pending.length,
     vuelo: x.vuelo,
     ruta: x.ruta,
     fecha: x.fecha,

@@ -162,7 +162,7 @@ tbody tr:hover { background: var(--surface2); }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 .form-group.full { grid-column: 1 / -1; }
 label { font-size: 12px; font-weight: 500; color: var(--text2); }
-input[type="text"], input[type="date"], input[type="email"], input[type="tel"], select, textarea {
+input[type="text"], input[type="date"], input[type="email"], input[type="tel"], input[data-form-days], select, textarea {
   background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
   padding: 8px 11px; font-size: 13px; font-family: inherit; color: var(--text);
   transition: all 0.15s; width: 100%;

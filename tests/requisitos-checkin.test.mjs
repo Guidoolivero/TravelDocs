@@ -4,6 +4,13 @@ import { debeEnviarRequisitos, emailAviso, buildRequisitosEmail, marcasTrasEnvio
 
 const ahora = Date.parse('2026-09-29T12:00:00-03:00');
 
+test('el email identifica los nombres del itinerario pendientes de vincular sin asumir documentos', () => {
+  const r = reserva('2026-10-05T12:00', { pasajeros: [], pendingPassengers: [{ lastname: 'BERALDI', firstname: 'JOSE' }] });
+  const mail = buildRequisitosEmail({ reserva: r, now: ahora });
+  assert.match(mail.html, /BERALDI/);
+  assert.match(mail.html, /pendiente de vincular/i);
+});
+
 function reserva(fecha, extra = {}) {
   return {
     alertEmail: '',

@@ -5,7 +5,7 @@
 // ============================================================
 import { fmtDateGDS } from './utils.js';
 
-function stripDiacritics(s) { return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function stripDiacritics(s) { return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim(); }
 
 // ISO 3166-1 alpha-3 \u2192 alpha-2. Sabre y Galileo usan 2 letras en DOCS/FOID;
 // el substring(0,2) anterior era incorrecto para varios pa\u00edses (CHL\u2192CH, MEX\u2192ME, URY\u2192UR...).
