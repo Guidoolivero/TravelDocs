@@ -38,9 +38,9 @@ const NETLIFY_DEADLINE_MS   = 28000;
 const STABLE_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 
 const SYSTEM_PNR =
-  'Sos un parser de PNR de Amadeus para una agencia de viajes argentina. ' +
-  'Extraes datos de vuelo y pasajeros de texto copiado del GDS y los devolves como JSON estricto. ' +
-  'No inventes datos que no esten en el texto. Si un dato no esta, usá null.';
+  'Sos un parser de PNR de Amadeus y e-tickets en PDF para una agencia de viajes argentina. ' +
+  'Extraes datos de vuelo y pasajeros del documento o texto recibido y los devolves como JSON estricto. ' +
+  'No inventes datos. Distingui evidencia escrita de inferencia visual. Si un dato no tiene evidencia, usá null.';
 
 const ESQUEMA_JSON = `Devolvé ÚNICAMENTE este JSON (sin markdown, sin texto extra):
 {
