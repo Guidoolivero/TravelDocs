@@ -39,7 +39,6 @@ const { FieldValue, FieldPath } = require('firebase-admin/firestore');
 const {
   checkinAlertDue, REQUISITOS_DIAS, isBirthdayToday, anioART, collectEmailAlertCandidates, buildAlertEmail,
 } = require('../../public/js/alert-core.mjs');
-const { dueFormReminders } = require('../../public/js/form-reminders.mjs');
 const { debeEnviarRequisitos, emailAviso, buildRequisitosEmail } = require('../../lib/requisitos-checkin.mjs');
 
 const EMAILJS_SEND_URL = 'https://api.emailjs.com/api/v1.0/email/send';
@@ -223,18 +222,6 @@ async function processAgency(agencyDoc, { now, started }) {
     ref: x.ref,
   });
 
-  // Consulta separada: un formulario puede abrir antes de la ventana de 30 dias del viaje.
-  const formSnap = email ? await agenciaRef.collection('reservations').where('hasFormReminders', '==', true).get() : { docs: [] };
-  const formReservations = formSnap.docs.map(d => ({ ...d.data(), id: d.id }));
-  const formsDue = dueFormReminders(formReservations, now);
-  const formsSent = await clavesYaNotificadas(agenciaRef, formsDue.map(f => f.key));
-  const formularios = formsDue.filter(f => !formsSent.has(f.key)).map(f => {
-    const r = formReservations.find(r => r.id === f.reservationId);
-    const names = (r.pasajeros || []).map(id => apellidos.get(id)?.name).filter(Boolean);
-    names.push(...(r.pendingPassengers || []).map(p => `${p.lastname}, ${p.firstname} (sin vincular)`));
-    return { ...f, pax: names.join(', ') || r.pnr || 'Check-in sin pasajero' };
-  });
-
   const candidatos = collectEmailAlertCandidates(passengers, now);
   const yaNotificadas = await clavesYaNotificadas(agenciaRef, candidatos.map(c => c.key));
   const toNotify = candidatos.filter(c => !yaNotificadas.has(c.key)).sort((a, b) => a.days - b.days);
@@ -269,7 +256,7 @@ async function processAgency(agencyDoc, { now, started }) {
   }
 
   let emailsSent = 0;
-  if (!toNotify.length && !bdCandidates.length && !checkinsAgencia.length && !individuales.length && !pendientesReq.length && !formularios.length) {
+  if (!toNotify.length && !bdCandidates.length && !checkinsAgencia.length && !individuales.length && !pendientesReq.length) {
     return { emailsSent };
   }
 
@@ -298,13 +285,12 @@ async function processAgency(agencyDoc, { now, started }) {
   }
 
   // 2) Unificado al inbox de la agencia.
-  if (email && (toNotify.length || checkinsAgencia.length || bdCandidates.length || formularios.length)) {
+  if (email && (toNotify.length || checkinsAgencia.length || bdCandidates.length)) {
     const { subject, html } = buildAlertEmail({
       appName,
       vencimientos: toNotify,
       checkins: checkinsAgencia.map(itemCheckin),
       cumpleanos: bdCandidates,
-      formularios,
     });
     await enviar(email, subject, html);
     console.log(`send-alerts: ${agencyId} email unificado OK: ${subject}`);
@@ -316,7 +302,7 @@ async function processAgency(agencyDoc, { now, started }) {
       // Chunks de 450: el batch de Firestore falla determinístico arriba de
       // 500 writes (una agencia grande con muchos vencimientos pendientes).
       const ops = [];
-      [...toNotify, ...formularios].forEach(c => ops.push(b => b.set(agenciaRef.collection('notifications').doc(c.key), { sentAt: FieldValue.serverTimestamp() })));
+      toNotify.forEach(c => ops.push(b => b.set(agenciaRef.collection('notifications').doc(c.key), { sentAt: FieldValue.serverTimestamp() })));
       bdCandidates.forEach(c => ops.push(b => b.update(agenciaRef.collection('passengers').doc(c.paxId), { birthdayNotifiedYear: year, updatedAt: FieldValue.serverTimestamp() })));
       for (let i = 0; i < ops.length; i += 450) {
         const batch = db().batch();

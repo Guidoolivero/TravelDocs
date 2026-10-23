@@ -1,4 +1,3 @@
-import { validateFormReminders, dueFormReminders } from './form-reminders.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
 import { csvField, excelRowToPassenger } from './csv-import.mjs';
 import { matchesPassenger } from './passenger-search.mjs';
@@ -358,7 +357,7 @@ onAuthStateChanged(auth, async user => {
     reservations = data;
     // Limpieza automática: los check-ins cuyo último tramo voló ayer o antes
     // se borran solos (regla en reservationStale, testeada en alerts.test.mjs).
-    const stale = data.filter(r => reservationStale(resPiernas(r)) && !(r.formReminders || []).some(f => !f.completed)).map(r => r.id);
+    const stale = data.filter(r => reservationStale(resPiernas(r))).map(r => r.id);
     if (stale.length) {
       deleteReservations(stale).catch(err => console.warn('[Check-ins] Limpieza automática falló:', err?.message || err));
     }
@@ -1021,11 +1020,6 @@ ${a.email ? `<a href="mailto:${escStr(a.email)}?subject=${encodeURIComponent(a.i
       : emptyMsg('✓ Sin viajes para verificar');
   }
 
-  document.getElementById('alerts-formularios').innerHTML = dueFormReminders(reservations).map(f => {
-    const r = reservations.find(r => r.id === f.reservationId);
-    return `<div class="alert-row"><div style="flex:1;"><strong>${esc(f.title)}</strong><div>${esc(resPaxSurnames(r))} · Ingreso: ${fmtDate(f.date)}</div></div><button type="button" class="btn btn-ghost btn-sm" data-edit-reservation="${escStr(f.reservationId)}">Revisar / completar</button></div>`;
-  }).join('') || emptyMsg('Sin formularios pendientes dentro del plazo configurado.');
-
   // Sección cumpleaños: primeras 5, el resto detrás de Ver todos.
   const wrapBd = document.getElementById('alerts-birthdays');
   if (wrapBd) {
@@ -1037,7 +1031,7 @@ ${a.email ? `<a href="mailto:${escStr(a.email)}?subject=${encodeURIComponent(a.i
 }
 
 function updateAlertBadge() {
-  const count = getAlertItems().filter(a => a.urgency <= 2).length + dueFormReminders(reservations).length;
+  const count = getAlertItems().filter(a => a.urgency <= 2).length;
   const badge = document.getElementById('alert-badge');
   if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
   else { badge.style.display = 'none'; }
@@ -2927,41 +2921,10 @@ document.addEventListener('click', e => {
   if (openId) { window.openViewReservation(openId); return; }
 });
 
-function readFormReminders() {
-  return [...document.querySelectorAll('#res-form-reminders [data-form-reminder]')].map(row => ({
-    id: row.dataset.formReminder,
-    title: row.querySelector('[data-form-title]').value.trim(),
-    date: row.querySelector('[data-form-date]').value,
-    daysBefore: row.querySelector('[data-form-days]').value === '' ? NaN : Number(row.querySelector('[data-form-days]').value),
-    completed: row.querySelector('[data-form-completed]').checked
-  }));
-}
-
-function renderFormReminders(forms) {
-  document.getElementById('res-form-reminders').innerHTML = forms.map(f => `
-    <div class="form-section" data-form-reminder="${escStr(f.id)}">
-      <div class="form-grid">
-        <label class="form-group">Formulario<input type="text" data-form-title value="${escStr(f.title)}" maxlength="160" placeholder="Formulario de ingreso"></label>
-        <label class="form-group">Fecha de ingreso al destino<input type="date" data-form-date value="${escStr(f.date)}"></label>
-        <label class="form-group">Días de anticipación<input type="number" data-form-days min="0" max="365" step="1" value="${Number.isFinite(f.daysBefore) ? f.daysBefore : ''}"></label>
-        <label><input type="checkbox" data-form-completed ${f.completed ? 'checked' : ''}> Completado</label>
-      </div>
-      <button type="button" class="btn btn-ghost btn-sm" data-remove-form>Quitar formulario</button>
-    </div>`).join('');
-}
-
-document.getElementById('res-add-form')?.addEventListener('click', () => {
-  renderFormReminders([...readFormReminders(), { id: crypto.randomUUID(), title: '', date: '', daysBefore: 7, completed: false }]);
-});
-document.getElementById('res-form-reminders')?.addEventListener('click', e => {
-  if (e.target.closest('[data-remove-form]')) e.target.closest('[data-form-reminder]').remove();
-});
-
 window.openNewReservation = function() {
   _resEditingId = null;
   _resSelectedPax = new Set();
   _resPendingPax = [];
-  renderFormReminders([]);
   document.getElementById('modal-reservation-title').textContent = 'Nuevo check-in';
   document.getElementById('res-id').value = '';
   document.getElementById('res-pnr').value = '';
@@ -3028,7 +2991,6 @@ window.openViewReservation = function(id) {
       ${(r.pendingPassengers || []).map(p => `<div class="info-row"><span>${esc(p.lastname)}, ${esc(p.firstname)}</span><span>Pendiente de vincular</span></div>`).join('')}
     </div>
     <div class="form-section" style="margin-bottom:0;">
-      ${(r.formReminders || []).map(f => `<div class="info-row"><span>${esc(f.title)} · ${fmtDate(f.date)} · ${esc(String(f.daysBefore))} días antes</span><span>${f.completed ? 'Completado' : 'Pendiente'}</span></div>`).join('')}
       <div class="form-section-title">Aviso</div>
       <div class="info-row"><span class="info-label">Email</span><span class="info-value">${esc(r.alertEmail || 'Agencia')}</span></div>
       <div class="info-row"><span class="info-label">Anticipación</span><span class="info-value">${esc(String([24, 48, 72].includes(Number(r.alertHorasAntes)) ? Number(r.alertHorasAntes) : 24))} hs</span></div>
@@ -3042,7 +3004,6 @@ window.openEditReservation = function(id) {
   _resEditingId = id;
   _resSelectedPax = new Set(r.pasajeros || []);
   _resPendingPax = structuredClone(r.pendingPassengers || []);
-  renderFormReminders(r.formReminders || []);
   document.getElementById('modal-reservation-title').textContent = 'Editar check-in';
   document.getElementById('res-id').value = id;
   document.getElementById('res-pnr').value = r.pnr || '';
@@ -3306,9 +3267,6 @@ async function avisarRequisitosCheckin(reservationId) {
 
 window.saveReservation = async function() {
   const pnr = document.getElementById('res-pnr').value.trim();
-  const formReminders = readFormReminders();
-  const formError = validateFormReminders(formReminders);
-  if (formError) { showToast(formError, true); return; }
 
   // Sincroniza los inputs del draft (fechas, checkin, aerolínea, ref) antes de guardar.
   window.syncResPiernasDraft();
@@ -3366,8 +3324,6 @@ window.saveReservation = async function() {
     fecha: piernas[0].fecha,
     pasajeros: Array.from(_resSelectedPax),
     pendingPassengers: _resPendingPax,
-    formReminders,
-    hasFormReminders: formReminders.some(f => !f.completed),
     piernas,
     alertEmail,
     alertHorasAntes

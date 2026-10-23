@@ -376,23 +376,15 @@ ${[head, ...filas, foot].join('\n')}
  * Devuelve { subject, html }. Las secciones vacías no se renderizan y el
  * asunto arma dinámicamente solo con las presentes, en orden fijo.
  */
-export function buildAlertEmail({ appName = 'TravelDocs', vencimientos = [], checkins = [], cumpleanos = [], requisitos = [], formularios = [], now = Date.now() }) {
+export function buildAlertEmail({ appName = 'TravelDocs', vencimientos = [], checkins = [], cumpleanos = [], requisitos = [], now = Date.now() }) {
   const secciones = [];
   if (vencimientos.length) secciones.push('Vencimientos');
   if (checkins.length) secciones.push('Check Ins');
   if (cumpleanos.length) secciones.push('Cumpleaños');
   if (requisitos.length) secciones.push('Verifique requisitos');
-  if (formularios.length) secciones.push('Formularios');
   const subject = secciones.length ? `${appName} · ${secciones.join(' | ')}` : appName;
 
   const filas = [];
-  if (formularios.length) {
-    filas.push(`<tr><td style="padding-top:36px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-${encabezadoSeccion('Formularios pendientes', `${formularios.length} recordatorio(s)`)}
-${filaEncabezado([{ t: 'Formulario', w: 40 }, { t: 'Pasajeros', w: 40 }, { t: 'Ingreso', w: 20 }])}
-${formularios.map(f => filaDatos(tdDatos(40, escHtml(f.title)) + tdDatos(40, escHtml(f.pax)) + tdDatos(20, escHtml(fmtDiaStr(f.date))))).join('\n')}
-</table></td></tr>`);
-  }
 
   // Sección 1: Vencimientos próximos
   if (vencimientos.length) {

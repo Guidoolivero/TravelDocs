@@ -53,16 +53,9 @@ try{
  await page.evaluate(()=>window.openEditReservation('pending'));
  assert.match(await page.locator('#res-pax-pending').innerText(),/BERALDI/);
  await page.locator('[data-link-pending]').selectOption('jose');
- await page.locator('#res-add-form').click();await page.locator('[data-form-title]').fill('Ingreso de prueba');
- const today=new Date().toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'});
- await page.locator('[data-form-date]').fill(today);await page.locator('[data-form-days]').fill('7');
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
- assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);assert.equal(saved.hasFormReminders,true);
- await page.evaluate(()=>window.showView('alerts'));assert.match(await page.locator('#alerts-formularios').innerText(),/Ingreso de prueba/);
- await page.locator('#alerts-formularios [data-edit-reservation]').click();await page.locator('[data-form-completed]').check();await page.evaluate(()=>window.saveReservation());
- assert.equal(await page.evaluate(()=>window.fixture.savedReservation.hasFormReminders),false);
- assert.doesNotMatch(await page.locator('#alerts-formularios').innerText(),/Ingreso de prueba/);
+ assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
  await page.evaluate(()=>window.showView('import'));
  await page.locator('#import-excel-input').setInputFiles({name:'synthetic.csv',mimeType:'text/csv',buffer:Buffer.from('APELLIDO,NOMBRE,FECHA NAC,FFN AEROLINEA,FFN NUMERO,OBSERVACIONES,EMERGENCIA TELEFONO,ASISTENCIA COMPANIA,ASISTENCIA NUMERO\nPRUEBA,CSV,01/01/1980,AA,000123,Observacion ficticia,+5490000000000,TEST,V001')});
  await page.locator('#import-review-wrap').waitFor({state:'visible'});
@@ -70,5 +63,5 @@ try{
  const imported=await page.evaluate(()=>window.fixture.imported[0]);
  assert.equal(imported.ffn[0].number,'000123');assert.equal(imported.notes,'Observacion ficticia');assert.equal(imported.emergencyContact.phone,'+5490000000000');assert.equal(imported.asistencias[0].num,'V001');
  assert.deepEqual(errors,[]);
- console.log('PASS browser: search, optional emergency roundtrip, pending linkage, form create/save/complete, real CSV parser to save; no external services');
+ console.log('PASS browser: search, optional emergency roundtrip, pending linkage, real CSV parser to save; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}

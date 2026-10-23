@@ -5,14 +5,12 @@ Rama: `codex/mejoras-agencias`. Revisar el PR antes de integrar a `main`: ese me
 ## Que probar
 
 1. Buscar un pasajero por `jose ber` y por `ber jose`. Debe encontrar a JOSE BERALDI aunque el nombre tenga acento. El filtro de estado sigue aplicando.
-2. Generar NM y SSR en Amadeus, Sabre y Galileo con nombres como `D'ANGELO`, `MUÑOZ` o `JOSE-MARIA`. La salida usa letras A-Z y espacios; elimina signos y acentos. Los formatos de los comandos se conservan.
+2. Generar NM y SSR en Amadeus, Sabre y Galileo con nombres como `D'ANGELO`, `MUÑOZ` o `JOSE-MARIA`. La salida usa letras A-Z y espacios: apostrofe y guion pasan a espacio (`D ANGELO`, `JOSE MARIA`), la enie a N (`MUNOZ`). Los formatos de los comandos se conservan.
 3. Crear o editar una ficha con el contacto de emergencia vacio. Debe guardar. Completar nombre, parentesco y telefono, guardar y volver a abrir: los datos deben seguir ahi.
 4. Importar el CSV usando los encabezados de la plantilla. Revisar observaciones, programas de viajero frecuente, asistencia y emergencia antes de confirmar. Los pasajeros ya existentes se omiten como antes; el import no actualiza sus fichas.
 5. Cargar un itinerario con un pasajero sin ficha. Su nombre debe quedar como pendiente de vincular, incluso al cerrar y reabrir el check-in. Al crear la ficha, editar el check-in y elegirla en el selector del nombre pendiente. No se inventan documentos ni nacionalidad.
-6. Agregar un formulario al check-in: nombre, fecha de ingreso al destino y anticipacion de 0 a 365 dias. Debe aparecer en Alertas dentro de ese plazo, incluido el dia del ingreso. Marcarlo completado y guardar: deja de aparecer. Editar el check-in conserva los formularios.
-7. Los recordatorios de formularios llegan al email de la agencia en la revision diaria (9:00 Argentina), una vez por formulario/fecha/plazo. Requieren la configuracion EmailJS habitual. El email particular del aviso de check-in no cambia el destinatario de estos recordatorios. El cron no corre automaticamente en previews.
 
-Los check-ins con formularios sin completar se conservan aunque sus vuelos hayan pasado. Se pueden completar los formularios o borrar el check-in manualmente. Los plazos los carga la agencia: no se asumieron fechas oficiales para Aruba ni otros destinos.
+No hay recordatorios de formularios por destino (Punta Cana, Aruba, etc.). Esa parte se saco del PR.
 
 ## Columnas nuevas del CSV
 
@@ -34,9 +32,8 @@ No se agrego almacenamiento de contrasenas de cuentas de pasajeros. Usar un gest
 
 ## Verificacion tecnica
 
-- `npm test`: incluye busqueda, nombres GDS, CSV, pendientes y formularios.
+- `npm test`: incluye busqueda, nombres GDS, CSV y pendientes.
 - `TZ=UTC npm test`: comprueba que las fechas no dependan del huso del servidor.
-- `tests/form-reminders-cron.test.mjs`: ejecuta el handler real con Firestore y EmailJS simulados. Comprueba plazos mayores a 30 dias, deduplicacion, completados y fallo de envio sin marcar como enviado.
 - Prueba de navegador local, sin escrituras ni emails reales:
 
 ```sh
@@ -50,4 +47,4 @@ Usa Chrome instalado en macOS y `playwright-core`, disponible con las herramient
 
 El frontend del preview usa el mismo proyecto Firebase que produccion. No es una base aislada: usar una agencia de pruebas. Guardar, borrar o importar desde el preview cambia sus datos reales. El flujo existente tambien puede enviar avisos de check-in al guardar; usar destinatarios de prueba.
 
-No se desplegaron reglas ni se migraron registros. Los nuevos campos son opcionales; al volver a la version anterior dejan de verse. Editar esos registros con la version anterior puede dejar recordatorios desactualizados.
+No se desplegaron reglas ni se migraron registros. Los nuevos campos son opcionales; al volver a la version anterior dejan de verse.

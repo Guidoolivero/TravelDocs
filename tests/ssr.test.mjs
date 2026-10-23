@@ -107,13 +107,15 @@ describe('CTCE — codificacion IATA de email (@ → //, _ → .., - → ./)', (
 });
 
 describe('nombres compatibles con GDS', () => {
-  it('quita apostrofes, acentos, enie y signos en NM y DOCS de todos los GDS', () => {
+  it('reemplaza apostrofes y guiones por espacio, y quita acentos y enie, en NM y DOCS de todos los GDS', () => {
     const p = { ...P_DNI_ARG, lastname: "D’ÁÑGÉLO", firstname: "José-María" };
     for (const gds of ['amadeus', 'sabre', 'galileo']) {
       const items = buildSSRStrings(p, '1', '1', null, { gds });
       const docs = dniItem(p, gds).value;
-      assert.ok(docs.includes('DANGELO'));
-      assert.ok(docs.includes('JOSEMARIA'));
+      assert.ok(docs.includes('D ANGELO'));
+      assert.ok(docs.includes('JOSE MARIA'));
+      assert.equal(docs.includes('DANGELO'), false);
+      assert.equal(docs.includes('JOSEMARIA'), false);
       assert.equal(items.some(item => /[’'Ññáéíóú]/.test(item.value)), false);
     }
   });
