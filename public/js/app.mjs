@@ -1,3 +1,7 @@
+import { validateFormReminders, dueFormReminders } from './form-reminders.mjs';
+import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
+import { csvField, excelRowToPassenger } from './csv-import.mjs';
+import { matchesPassenger } from './passenger-search.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut, multiFactor } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { FIREBASE_CONFIG, REQUIRE_2FA } from './config.js';
@@ -354,12 +358,13 @@ onAuthStateChanged(auth, async user => {
     reservations = data;
     // Limpieza automática: los check-ins cuyo último tramo voló ayer o antes
     // se borran solos (regla en reservationStale, testeada en alerts.test.mjs).
-    const stale = data.filter(r => reservationStale(resPiernas(r))).map(r => r.id);
+    const stale = data.filter(r => reservationStale(resPiernas(r)) && !(r.formReminders || []).some(f => !f.completed)).map(r => r.id);
     if (stale.length) {
       deleteReservations(stale).catch(err => console.warn('[Check-ins] Limpieza automática falló:', err?.message || err));
     }
     refreshCurrentView();
     updateReservationsBadge();
+    updateAlertBadge();
     _resLoaded = true;
     checkAndSendUnifiedAlerts();
   });
@@ -745,7 +750,7 @@ window.renderPassengers = function() {
   const search = document.getElementById('global-search')?.value?.toLowerCase() || '';
 
   let list = passengers.filter(p => {
-    const matchSearch = !search || `${p.lastname} ${p.firstname} ${p.dni?.num||''} ${p.parg?.num||''} ${p.pext?.num||''} ${p.notes||''}`.toLowerCase().includes(search);
+    const matchSearch = matchesPassenger(p, search);
     const s = passengerOverallStatus(p);
     const matchFilter = !filter ||
       (filter === 'ok' && s === 'ok') ||
@@ -1016,6 +1021,11 @@ ${a.email ? `<a href="mailto:${escStr(a.email)}?subject=${encodeURIComponent(a.i
       : emptyMsg('✓ Sin viajes para verificar');
   }
 
+  document.getElementById('alerts-formularios').innerHTML = dueFormReminders(reservations).map(f => {
+    const r = reservations.find(r => r.id === f.reservationId);
+    return `<div class="alert-row"><div style="flex:1;"><strong>${esc(f.title)}</strong><div>${esc(resPaxSurnames(r))} · Ingreso: ${fmtDate(f.date)}</div></div><button type="button" class="btn btn-ghost btn-sm" data-edit-reservation="${escStr(f.reservationId)}">Revisar / completar</button></div>`;
+  }).join('') || emptyMsg('Sin formularios pendientes dentro del plazo configurado.');
+
   // Sección cumpleaños: primeras 5, el resto detrás de Ver todos.
   const wrapBd = document.getElementById('alerts-birthdays');
   if (wrapBd) {
@@ -1027,7 +1037,7 @@ ${a.email ? `<a href="mailto:${escStr(a.email)}?subject=${encodeURIComponent(a.i
 }
 
 function updateAlertBadge() {
-  const count = getAlertItems().filter(a => a.urgency <= 2).length;
+  const count = getAlertItems().filter(a => a.urgency <= 2).length + dueFormReminders(reservations).length;
   const badge = document.getElementById('alert-badge');
   if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
   else { badge.style.display = 'none'; }
@@ -1115,6 +1125,7 @@ window.openDetail = function(id, opts = {}) {
           <div class="info-row"><span class="info-label">Nacionalidad</span><span class="info-value">${esc(p.nationality)}</span></div>
           ${p.email ? `<div class="info-row"><span class="info-label">Email</span><span class="info-value" style="font-size:12px;">${esc(p.email)}</span></div>` : ''}
           ${p.whatsapp ? `<div class="info-row"><span class="info-label">WhatsApp</span><span class="info-value" style="font-size:12px;">${esc(p.whatsapp)}</span></div>` : ''}
+          ${p.emergencyContact && Object.values(p.emergencyContact).some(Boolean) ? `<div class="info-row"><span class="info-label">Emergencia</span><span class="info-value">${esc([p.emergencyContact.name, p.emergencyContact.relationship, p.emergencyContact.phone].filter(Boolean).join(' · '))}</span></div>` : ''}
           ${p.notes ? `<div class="info-row"><span class="info-label">Notas</span><span class="info-value" style="font-size:12px;color:var(--text2);">${esc(p.notes)}</span></div>` : ''}
         </div>
       </div>
@@ -1497,7 +1508,7 @@ function clearFFNList() {
 }
 
 function clearForm() {
-  const ids = ['form-id','form-lastname','form-firstname','form-dob','form-cuil','form-email','form-whatsapp','form-notes',
+  const ids = ['form-id','form-lastname','form-firstname','form-dob','form-cuil','form-email','form-whatsapp','form-notes','form-emergency-name','form-emergency-relationship','form-emergency-phone',
     'form-dni-num','form-dni-issue','form-dni-exp',
     'form-parg-num','form-parg-issue','form-parg-exp',
     'form-pext-num','form-pext-issue','form-pext-exp',
@@ -1519,6 +1530,9 @@ function fillForm(p) {
   set('form-email', p.email);
   set('form-whatsapp', p.whatsapp);
   set('form-notes', p.notes);
+  set('form-emergency-name', p.emergencyContact?.name);
+  set('form-emergency-relationship', p.emergencyContact?.relationship);
+  set('form-emergency-phone', p.emergencyContact?.phone);
   set('form-gender', p.gender);
   set('form-nationality', p.nationality);
   set('form-dni-country', p.dni?.country || 'ARG');
@@ -1593,6 +1607,7 @@ window.savePassenger = async function() {
     email: g('form-email'),
     whatsapp: g('form-whatsapp'),
     notes: g('form-notes'),
+    emergencyContact: { name: g('form-emergency-name'), relationship: g('form-emergency-relationship'), phone: g('form-emergency-phone') },
     dni: { country: g('form-dni-country') || 'ARG', num: g('form-dni-num'), issue: g('form-dni-issue'), exp: g('form-dni-exp') },
     parg: { num: g('form-parg-num'), issue: g('form-parg-issue'), exp: g('form-parg-exp') },
     pext: { country: g('form-pext-country'), num: g('form-pext-num'), issue: g('form-pext-issue'), exp: g('form-pext-exp'), lastname: g('form-pext-lastname'), firstname: g('form-pext-firstname') },
@@ -1825,6 +1840,7 @@ window.addDetectedOtherPassengers = async function() {
         email: g.email || '',
         whatsapp: g.whatsapp || '',
         notes: g.notes || '',
+        emergencyContact: g.emergencyContact || {},
         dni: g.dni || { num: '', issue: '', exp: '' },
         parg: g.parg || { num: '', issue: '', exp: '' },
         pext: g.pext || { country: '', num: '', issue: '', exp: '' },
@@ -2259,157 +2275,6 @@ async function startBulkImport(files) {
 
 // ==================== IMPORTACION DESDE EXCEL/CSV ====================
 
-// Normaliza un encabezado: mayusculas, sin acentos, sin puntos/commas, espacios colapsados
-function normHeader(h) {
-  return (h || '')
-    .toString()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
-    .toUpperCase()
-    .replace(/[.,]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-// Mapeo encabezado normalizado -> campo del pasajero
-const EXCEL_HEADER_MAP = (() => {
-  const aliases = {
-    lastname:  ['APELLIDO', 'APELLIDOS', 'SURNAME'],
-    firstname: ['NOMBRE', 'NOMBRES', 'NAME'],
-    dob:       ['FECHA NAC', 'FECHA NACIMIENTO', 'NACIMIENTO', 'FECHANAC', 'FECHA DE NACIMIENTO', 'BIRTHDAY'],
-    dniNum:    ['DNI', 'DOC', 'DOCUMENTO', 'NUMERO DNI', 'NRO DNI'],
-    dniExp:    ['VTO DNI', 'VENC DNI', 'VENCIMIENTO DNI', 'VENCIMIENTO DOCUMENTO', 'EXPIRACION DNI', 'VTO DOCUMENTO'],
-    pargNum:   ['PASAPORTE', 'PASS', 'PAS', 'NUMERO PASAPORTE', 'NRO PASAPORTE', 'PASAPORTE ARG'],
-    pargExp:   ['VTO PASS', 'VENC PASS', 'VTO PASAPORTE', 'VENC PASAPORTE', 'VENCIMIENTO PASAPORTE', 'VENC PASAP', 'VTO PASAP'],
-    cuil:      ['CUILS', 'CUIL', 'CUIT', 'CUIL CUIT'],
-    whatsapp:  ['TELEFONO', 'TEL', 'TELEFONO FIJO', 'CEL', 'CELULAR', 'MOVIL', 'WPP', 'WHATSAPP'],
-    direccion: ['DIRECCION', 'DOMICILIO', 'CALLE', 'DIRECC'],
-    localidad: ['LOCALIDAD', 'CIUDAD', 'LOCAL'],
-    provincia: ['PROVINCIA', 'PROV', 'ESTADO'],
-    cp:        ['CODIGO POSTAL', 'CP', 'COD POSTAL', 'CODIGOPOSTAL']
-  };
-  const m = {};
-  for (const [field, list] of Object.entries(aliases)) {
-    for (const a of list) m[normHeader(a)] = field;
-  }
-  return m;
-})();
-
-// Convierte un valor de fecha del Excel a YYYY-MM-DD.
-// Acepta: serial de Excel, objeto Date, ISO, dd/mm/yyyy, formatos GDS (15DEC86,
-// 25/DEC/76, 30dec2000) y fecha larga en español ("4 de julio de 1997").
-const EXCEL_MONTHS = {
-  JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12,
-  ENE:1,ABR:4,AGO:8,DIC:12,SEPT:9,
-  ENERO:1,FEBRERO:2,MARZO:3,ABRIL:4,MAYO:5,JUNIO:6,JULIO:7,AGOSTO:8,SEPTIEMBRE:9,OCTUBRE:10,NOVIEMBRE:11,DICIEMBRE:12
-};
-function excelMonthToNum(name) {
-  return EXCEL_MONTHS[String(name).toUpperCase().replace(/\./g, '')];
-}
-// Ano de 2 digitos -> 4 digitos (pivot: si es mayor al anno actual, es 19xx; sino 20xx)
-function expandYear(yy) {
-  if (yy.length === 4) return yy;
-  const n = parseInt(yy, 10);
-  const cur = new Date().getFullYear() % 100;
-  return String(n > cur ? 1900 + n : 2000 + n);
-}
-function normalizeExcelDate(v) {
-  if (v == null || v === '') return '';
-  if (v instanceof Date) {
-    if (isNaN(v)) return '';
-    const y = v.getFullYear();
-    const mo = String(v.getMonth() + 1).padStart(2, '0');
-    const da = String(v.getDate()).padStart(2, '0');
-    return `${y}-${mo}-${da}`;
-  }
-  if (typeof v === 'number') {
-    // Serial de Excel: epoch 1899-12-30
-    const d = new Date(Date.UTC(1899, 11, 30) + v * 86400000);
-    if (isNaN(d)) return '';
-    const y = d.getUTCFullYear();
-    const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const da = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${mo}-${da}`;
-  }
-  const s = String(v).trim().replace(/\.+$/, '');
-  // ISO YYYY-MM-DD (con o sin hora)
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  // dd/mm/yyyy numerico
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (m) {
-    const yy = expandYear(m[3]);
-    return `${yy}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-  }
-  // GDS: ddMMMyy / ddMMMyyyy con / opcional (15DEC86, 25/DEC/76, 30dec2000)
-  const g = s.match(/^(\d{1,2})\/?([A-Za-zÁÉÍÓÚáéíóú]{3,})\/?(\d{2,4})$/);
-  if (g) {
-    const mm = excelMonthToNum(g[2]);
-    if (mm) return `${expandYear(g[3])}-${String(mm).padStart(2, '0')}-${g[1].padStart(2, '0')}`;
-  }
-  // Fecha larga en español: "4 de julio de 1997"
-  const es = s.match(/^(\d{1,2})\s+de\s+([A-Za-zÁÉÍÓÚáéíóú]+)\s+de\s+(\d{4})$/);
-  if (es) {
-    const mm = excelMonthToNum(es[2]);
-    if (mm) return `${es[3]}-${String(mm).padStart(2, '0')}-${es[1].padStart(2, '0')}`;
-  }
-  return s;
-}
-
-// Mapea una fila (array por columna) a un objeto pasajero del mismo shape que mapScanToForm.
-// fieldOf mapea campo -> indice de columna (number).
-function excelRowToPassenger(row, fieldOf) {
-  // Devuelve el valor crudo (conserva tipo number para fechas serial de Excel)
-  const raw = field => {
-    const idx = fieldOf[field];
-    return idx != null && row[idx] != null ? row[idx] : '';
-  };
-  // Devuelve string limpio para campos de texto
-  const txt = field => {
-    const v = raw(field);
-    return v !== '' ? String(v).trim() : '';
-  };
-  // Limpia numeros que Excel guarda como float (ej. 31253132.0 -> 31253132)
-  const cleanNum = s => String(s).replace(/\.0+$/, '');
-
-  const lastname  = txt('lastname').toUpperCase();
-  const firstname = txt('firstname').toUpperCase();
-  const dob       = normalizeExcelDate(raw('dob'));
-  const dniNum    = cleanNum(txt('dniNum'));
-  const dniExp    = normalizeExcelDate(raw('dniExp'));
-  const pargNum   = cleanNum(txt('pargNum'));
-  const pargExp   = normalizeExcelDate(raw('pargExp'));
-  const cuil      = cleanNum(txt('cuil'));
-  const whatsapp  = cleanNum(txt('whatsapp'));
-  const direccion = txt('direccion');
-  const localidad = txt('localidad');
-  const provincia = txt('provincia');
-  const cp        = cleanNum(txt('cp'));
-
-  const mapped = {
-    lastname,
-    firstname,
-    dob,
-    gender: 'M',
-    nationality: 'ARG',
-    doc_type: 'dni',
-    cuil,
-    whatsapp
-  };
-
-  if (dniNum) mapped.dni = { num: dniNum, issue: '', exp: dniExp };
-  if (pargNum) mapped.parg = { num: pargNum, issue: '', exp: pargExp };
-
-  // Observaciones: direccion + localidad + provincia + cp (el CUIT va en su propio campo)
-  const obs = [];
-  if (direccion) obs.push(`Direccion: ${direccion}`);
-  if (localidad) obs.push(`Localidad: ${localidad}`);
-  if (provincia) obs.push(`Provincia: ${provincia}`);
-  if (cp) obs.push(`CP: ${cp}`);
-  if (obs.length) mapped.notes = obs.join(' · ');
-
-  return mapped;
-}
-
 window.handleExcelImport = function(e) {
   const file = e.target.files && e.target.files[0];
   e.target.value = ''; // permitir re-seleccionar el mismo archivo
@@ -2434,7 +2299,7 @@ async function startExcelImport(file) {
   try {
     await loadXlsx();
     const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type: 'array' });
+    const wb = XLSX.read(buf, { type: 'array', raw: true });
     const ws = wb.Sheets[wb.SheetNames[0]];
     const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
@@ -2453,7 +2318,7 @@ async function startExcelImport(file) {
       const map = {};
       let hits = 0;
       (aoa[i] || []).forEach((cell, ci) => {
-        const field = EXCEL_HEADER_MAP[normHeader(cell)];
+        const field = csvField(cell);
         if (field && map[field] == null) { map[field] = ci; hits++; }
       });
       if (hits >= 2) { headerIdx = i; Object.assign(fieldOf, map); break; }
@@ -2466,6 +2331,8 @@ async function startExcelImport(file) {
       return;
     }
 
+    const ignored = (aoa[headerIdx] || []).filter(h => String(h).trim() && !csvField(h));
+    if (ignored.length) showToast('Columnas no importadas: ' + ignored.join(', '), true);
     progressBar.style.width = '70%';
     progressLabel.textContent = 'Mapeando pasajeros...';
 
@@ -2567,6 +2434,7 @@ function renderImportReview() {
     if (g.dni?.num) docs.push(`DNI ${esc(g.dni.num)}`);
     if (g.visa1?.num) docs.push(`Visa ${esc(g.visa1.country || '')} ${esc(g.visa1.num)}`);
     if (g.visa2?.num) docs.push(`Visa ${esc(g.visa2.country || '')} ${esc(g.visa2.num)}`);
+    (Array.isArray(g.ffn) ? g.ffn : []).forEach(f => docs.push(`Viajero frecuente ${esc(f.airline || '')}: ${esc(f.number || '')}`));
     if (Array.isArray(g.asistencias)) {
       g.asistencias.forEach(a => { 
         const label = a.compania ? `${esc(a.compania)} ${esc(a.num)}` : esc(a.num);
@@ -2590,6 +2458,8 @@ function renderImportReview() {
             ${docs.map(d => `<span class="badge badge-blue">${d}</span>`).join('')}
             ${docs.length === 0 ? '<span style="color:var(--red)">Sin documentos detectados</span>' : ''}
           </div>
+          ${g.notes ? `<div style="font-size:12px;margin-top:6px;">Observaciones: ${esc(g.notes)}</div>` : ''}
+          ${g.emergencyContact && Object.values(g.emergencyContact).some(Boolean) ? `<div style="font-size:12px;">Emergencia: ${esc(Object.values(g.emergencyContact).filter(Boolean).join(' · '))}</div>` : ''}
           <div style="font-size:11px;color:var(--text3);margin-top:6px;">Archivos: ${g._files.map(f => esc(f)).join(', ')}</div>
         </div>
         <button class="btn btn-ghost btn-sm" data-remove-import="${idx}" title="Quitar este pasajero" style="flex-shrink:0;color:var(--red);" data-no-row-action="true">
@@ -2687,11 +2557,14 @@ window.saveImportedPassengers = async function() {
       email: g.email || '',
       whatsapp: g.whatsapp || '',
       notes: g.notes || '',
+      emergencyContact: g.emergencyContact || {},
       dni: g.dni || { num: '', issue: '', exp: '' },
       parg: g.parg || { num: '', issue: '', exp: '' },
       pext: g.pext || { country: '', num: '', issue: '', exp: '' },
       visa1: g.visa1 || { country: '', num: '', issued_at: '', type: 'T', issue: '', exp: '', passport: '' },
-      visa2: g.visa2 || { country: '', num: '', issued_at: '', type: 'T', issue: '', exp: '', passport: '' }
+      visa2: g.visa2 || { country: '', num: '', issued_at: '', type: 'T', issue: '', exp: '', passport: '' },
+      asistencias: g.asistencias || [],
+      ffn: g.ffn || []
     });
   }
 
@@ -2716,6 +2589,7 @@ window.saveImportedPassengers = async function() {
 
 // ==================== RESERVAS / CHECK-IN ====================
 
+let _resPendingPax = [];
 let _resSelectedPax = new Set();      // ids de pasajeros seleccionados en el modal
 let _resEditingId = null;
 let _resPiernasDraft = [];            // tramos en edicion: {fecha, vuelo, origen, destino, escalas, checkin, compania, reservaVuelo}
@@ -2855,12 +2729,12 @@ function viajesRequisitos(now = Date.now()) {
     if (!requisitosAlertDue(primera, now)) continue;
     const primeraP = piernas.find(p => p.fecha === primera) || {};
     const pax = (r.pasajeros || []).map(id => passengers.find(p => p.id === id)).filter(Boolean);
-    if (alcanzaConDni(piernas, pax)) continue;
+    if (!r.pendingPassengers?.length && alcanzaConDni(piernas, pax)) continue;
     const name = pax.map(p => `${p.lastname || ''}, ${p.firstname || ''}`.replace(/^, |, $/g, '')).filter(Boolean).join(', ');
     out.push({
       id: r.id,
       r,
-      name: name || 'Sin pasajeros',
+      name: [name, ...(r.pendingPassengers || []).map(p => `${p.lastname}, ${p.firstname} (sin vincular)`)].filter(Boolean).join(', ') || 'Sin pasajeros',
       nationality: [...new Set(pax.map(p => p.nationality).filter(Boolean))].join(', '),
       ruta: piernas.filter(p => p.origen && p.destino).map(p => `${p.origen}-${p.destino}`).join(' · '),
       fecha: primera,
@@ -2900,6 +2774,7 @@ function resPaxSurnames(r) {
     .filter(Boolean)
     .map(p => p.lastname)
     .filter(Boolean);
+  apellidos.push(...(r.pendingPassengers || []).map(p => `${p.lastname}, ${p.firstname} (sin vincular)`));
   return apellidos.length ? apellidos.join(', ') : 'Sin pasajeros';
 }
 
@@ -3052,9 +2927,41 @@ document.addEventListener('click', e => {
   if (openId) { window.openViewReservation(openId); return; }
 });
 
+function readFormReminders() {
+  return [...document.querySelectorAll('#res-form-reminders [data-form-reminder]')].map(row => ({
+    id: row.dataset.formReminder,
+    title: row.querySelector('[data-form-title]').value.trim(),
+    date: row.querySelector('[data-form-date]').value,
+    daysBefore: row.querySelector('[data-form-days]').value === '' ? NaN : Number(row.querySelector('[data-form-days]').value),
+    completed: row.querySelector('[data-form-completed]').checked
+  }));
+}
+
+function renderFormReminders(forms) {
+  document.getElementById('res-form-reminders').innerHTML = forms.map(f => `
+    <div class="form-section" data-form-reminder="${escStr(f.id)}">
+      <div class="form-grid">
+        <label class="form-group">Formulario<input type="text" data-form-title value="${escStr(f.title)}" maxlength="160" placeholder="Formulario de ingreso"></label>
+        <label class="form-group">Fecha de ingreso al destino<input type="date" data-form-date value="${escStr(f.date)}"></label>
+        <label class="form-group">Días de anticipación<input type="number" data-form-days min="0" max="365" step="1" value="${Number.isFinite(f.daysBefore) ? f.daysBefore : ''}"></label>
+        <label><input type="checkbox" data-form-completed ${f.completed ? 'checked' : ''}> Completado</label>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-remove-form>Quitar formulario</button>
+    </div>`).join('');
+}
+
+document.getElementById('res-add-form')?.addEventListener('click', () => {
+  renderFormReminders([...readFormReminders(), { id: crypto.randomUUID(), title: '', date: '', daysBefore: 7, completed: false }]);
+});
+document.getElementById('res-form-reminders')?.addEventListener('click', e => {
+  if (e.target.closest('[data-remove-form]')) e.target.closest('[data-form-reminder]').remove();
+});
+
 window.openNewReservation = function() {
   _resEditingId = null;
   _resSelectedPax = new Set();
+  _resPendingPax = [];
+  renderFormReminders([]);
   document.getElementById('modal-reservation-title').textContent = 'Nuevo check-in';
   document.getElementById('res-id').value = '';
   document.getElementById('res-pnr').value = '';
@@ -3107,7 +3014,7 @@ window.openViewReservation = function(id) {
           <span class="info-label">${esc(p.lastname)}, ${esc(p.firstname)}</span>
           <span class="info-value">${p.dob ? fmtDate(p.dob) : 'Sin fecha de nacimiento'}</span>
         </div>`).join('')
-    : '<div style="font-size:13px;color:var(--text3);">Sin pasajeros asociados.</div>';
+    : (r.pendingPassengers?.length ? '' : '<div style="font-size:13px;color:var(--text3);">Sin pasajeros asociados.</div>');
   document.getElementById('res-view-body').innerHTML = `
     <div class="form-section">
       <div class="form-section-title">Datos del vuelo</div>
@@ -3118,8 +3025,10 @@ window.openViewReservation = function(id) {
       <div class="form-section-title">Pasajeros</div>
       <p class="res-view-pax-hint">Tocá un nombre para abrir la ficha</p>
       ${paxHtml}
+      ${(r.pendingPassengers || []).map(p => `<div class="info-row"><span>${esc(p.lastname)}, ${esc(p.firstname)}</span><span>Pendiente de vincular</span></div>`).join('')}
     </div>
     <div class="form-section" style="margin-bottom:0;">
+      ${(r.formReminders || []).map(f => `<div class="info-row"><span>${esc(f.title)} · ${fmtDate(f.date)} · ${esc(String(f.daysBefore))} días antes</span><span>${f.completed ? 'Completado' : 'Pendiente'}</span></div>`).join('')}
       <div class="form-section-title">Aviso</div>
       <div class="info-row"><span class="info-label">Email</span><span class="info-value">${esc(r.alertEmail || 'Agencia')}</span></div>
       <div class="info-row"><span class="info-label">Anticipación</span><span class="info-value">${esc(String([24, 48, 72].includes(Number(r.alertHorasAntes)) ? Number(r.alertHorasAntes) : 24))} hs</span></div>
@@ -3132,6 +3041,8 @@ window.openEditReservation = function(id) {
   if (!r) return;
   _resEditingId = id;
   _resSelectedPax = new Set(r.pasajeros || []);
+  _resPendingPax = structuredClone(r.pendingPassengers || []);
+  renderFormReminders(r.formReminders || []);
   document.getElementById('modal-reservation-title').textContent = 'Editar check-in';
   document.getElementById('res-id').value = id;
   document.getElementById('res-pnr').value = r.pnr || '';
@@ -3157,7 +3068,7 @@ window.renderResPaxList = function(search) {
   const s = (search || '').toLowerCase();
   const list = passengers
     .filter(p => !_resSelectedPax.has(p.id))
-    .filter(p => !s || `${p.lastname} ${p.firstname} ${p.dni?.num || ''}`.toLowerCase().includes(s))
+    .filter(p => matchesPassenger(p, s))
     .slice(0, 50);
   if (!list.length) {
     wrap.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px;">Sin pasajeros para agregar.</div>';
@@ -3180,9 +3091,32 @@ document.addEventListener('click', e => {
   window.renderResSelectedPax();
 });
 
+document.addEventListener('change', e => {
+  if (!e.target.matches('[data-link-pending]') || !e.target.value) return;
+  const id = e.target.value;
+  if (!passengers.some(p => p.id === id)) return;
+  _resSelectedPax.add(id);
+  _resPendingPax.splice(Number(e.target.dataset.linkPending), 1);
+  window.renderResSelectedPax();
+  window.renderResPaxList(document.getElementById('res-pax-search').value);
+});
+document.addEventListener('click', e => {
+  const button = e.target.closest('[data-remove-pending]');
+  if (!button) return;
+  _resPendingPax.splice(Number(button.dataset.removePending), 1);
+  window.renderResSelectedPax();
+});
+
 window.renderResSelectedPax = function() {
   const wrap = document.getElementById('res-pax-selected');
   if (!wrap) return;
+  document.getElementById('res-pax-pending').innerHTML = _resPendingPax.map((p, i) => `
+    <div class="form-group"><strong>${esc(p.lastname)}, ${esc(p.firstname)}</strong> <small>Pendiente de vincular</small>
+      <select data-link-pending="${i}" aria-label="Vincular ${escStr(p.lastname)} a una ficha">
+        <option value="">Elegir ficha existente...</option>
+        ${passengers.filter(x => !_resSelectedPax.has(x.id)).map(x => `<option value="${escStr(x.id)}">${esc(x.lastname)}, ${esc(x.firstname)}${x.dob ? ' - ' + esc(x.dob) : ''}</option>`).join('')}
+      </select><button type="button" class="btn btn-ghost btn-sm" data-remove-pending="${i}">Quitar nombre</button>
+    </div>`).join('');
   const selected = passengers.filter(p => _resSelectedPax.has(p.id));
   if (!selected.length) {
     wrap.innerHTML = '';
@@ -3372,6 +3306,9 @@ async function avisarRequisitosCheckin(reservationId) {
 
 window.saveReservation = async function() {
   const pnr = document.getElementById('res-pnr').value.trim();
+  const formReminders = readFormReminders();
+  const formError = validateFormReminders(formReminders);
+  if (formError) { showToast(formError, true); return; }
 
   // Sincroniza los inputs del draft (fechas, checkin, aerolínea, ref) antes de guardar.
   window.syncResPiernasDraft();
@@ -3428,6 +3365,9 @@ window.saveReservation = async function() {
     pnr: pnr || '', reservaVuelo, compania,
     fecha: piernas[0].fecha,
     pasajeros: Array.from(_resSelectedPax),
+    pendingPassengers: _resPendingPax,
+    formReminders,
+    hasFormReminders: formReminders.some(f => !f.completed),
     piernas,
     alertEmail,
     alertHorasAntes
@@ -3450,30 +3390,13 @@ window.saveReservation = async function() {
 };
 
 // ── Interpretar PNR de Amadeus pegado (IA) ──────────────────
-// Normaliza texto: uppercase + sin acentos, para comparar nombres.
-function _normStr(s) {
-  return (s || '').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
 // Busca cada pasajero del PNR en la base (passengers en memoria) por
 // apellido + primer nombre. Devuelve { encontrados: [ids], noEncontrados: [nombre] }.
 function matchPnrPasajeros(pasajeros) {
-  const encontrados = [];
-  const noEncontrados = [];
-  for (const px of (pasajeros || [])) {
-    const apellido = _normStr(px.apellido);
-    const primerNombre = _normStr((px.nombre || '').split(' ')[0]);
-    const match = passengers.find(p =>
-      _normStr(p.lastname) === apellido &&
-      _normStr((p.firstname || '').split(' ')[0]) === primerNombre
-    );
-    if (match) {
-      if (!_resSelectedPax.has(match.id)) encontrados.push(match.id);
-    } else {
-      noEncontrados.push(`${px.apellido || ''}/${px.nombre || ''}`.trim());
-    }
-  }
-  return { encontrados, noEncontrados };
+  const previous = _resPendingPax.map(p => ({ apellido: p.lastname, nombre: p.firstname }));
+  const result = matchItineraryPassengers([...previous, ...(pasajeros || [])], passengers);
+  _resPendingPax = mergePendingPassengers([], result.pending);
+  return { encontrados: result.ids, noEncontrados: result.pending.map(p => `${p.lastname}/${p.firstname}`) };
 }
 
 // Lee un File como base64 (sin el prefijo data:...;base64,). Espeja el patrón
@@ -3530,7 +3453,7 @@ window.applyInterpretedReservation = function(d) {
   html += `<div style="margin-bottom:4px;"><strong>${totalPax}</strong> pasajero(s) · <strong>${encontrados.length}</strong> asociado(s) a la base</div>`;
   if (d.notas) html += `<div style="color:var(--text3);margin-bottom:6px;">${esc(d.notas)}</div>`;
   if (noEncontrados.length) {
-    html += `<div style="color:var(--red);margin-top:4px;">No encontrados en la base (darlos de alta en Pasajeros): ${esc(noEncontrados.join(' · '))}</div>`;
+    html += `<div style="color:var(--red);margin-top:4px;">Nombres conservados en el check-in, pendientes de vincular: ${esc(noEncontrados.join(' · '))}</div>`;
   }
   html += `</div>`;
   return { html };

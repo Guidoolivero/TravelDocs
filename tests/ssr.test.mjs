@@ -105,3 +105,16 @@ describe('CTCE — codificacion IATA de email (@ → //, _ → .., - → ./)', (
     assert.equal(ctceItem({ email: 'sanmar_33@hotmail.com' }, 'galileo'), undefined);
   });
 });
+
+describe('nombres compatibles con GDS', () => {
+  it('quita apostrofes, acentos, enie y signos en NM y DOCS de todos los GDS', () => {
+    const p = { ...P_DNI_ARG, lastname: "D’ÁÑGÉLO", firstname: "José-María" };
+    for (const gds of ['amadeus', 'sabre', 'galileo']) {
+      const items = buildSSRStrings(p, '1', '1', null, { gds });
+      const docs = dniItem(p, gds).value;
+      assert.ok(docs.includes('DANGELO'));
+      assert.ok(docs.includes('JOSEMARIA'));
+      assert.equal(items.some(item => /[’'Ññáéíóú]/.test(item.value)), false);
+    }
+  });
+});
