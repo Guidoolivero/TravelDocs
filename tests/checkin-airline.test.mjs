@@ -78,6 +78,9 @@ test('codigo compartido usa la operadora escrita despues de operado por y conser
   const p = preparePdfAirline({ vuelo: 'IB1234', compania: 'AR', companiaEvidencia: 'IB1234 Operado por AR' }, 'IB1234 Operado por AR');
   assert.equal(p.compania, 'AR');
   assert.equal(p.vuelo, 'IB1234');
+  const mixed = preparePdfAirline({ vuelo: 'G31234', compania: 'LA', companiaEvidencia: 'G31234 Operado por LATAM Airlines' }, 'G31234 Operado por LATAM Airlines');
+  assert.equal(mixed.compania, 'LA');
+  assert.equal(mixed.vuelo, 'G31234');
   const contradicted = preparePdfAirline({ vuelo: 'IB1234', compania: 'AR', companiaEvidencia: 'IB1234 Aerolíneas Argentinas - Operado por Air Europa' }, 'IB1234 Aerolíneas Argentinas - Operado por Air Europa');
   assert.notEqual(contradicted.compania, 'AR');
 });

@@ -22,7 +22,7 @@ export function preparePdfAirline(segment, pdfText = '') {
   const candidate = plain(segment.compania);
   const operatorText = quote.match(/(?:OPERAD[OA] POR|OPERATED BY)\s+(.+)$/)?.[1] || '';
   const operator = quote && text.includes(quote) && number &&
-    new RegExp(`\\b${escapeRegex(number)}\\b`).test(quote.replace(/([A-Z])(?=\d)/g, '$1 ')) &&
+    new RegExp(`\\b(?:(?:[A-Z][A-Z0-9]|[0-9][A-Z])\\s*)?${escapeRegex(number)}\\b`).test(quote) &&
     nombreAerolinea(candidate) && (writtenNames(operatorText).includes(candidate) || new RegExp(`^${escapeRegex(candidate)}\\b`).test(operatorText));
   let code = '';
   if (operator) code = candidate;
