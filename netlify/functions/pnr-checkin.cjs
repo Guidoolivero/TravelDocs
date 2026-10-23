@@ -22,6 +22,7 @@
 
 const { verifyAuth } = require('./_auth.cjs');
 const { recordUsage } = require('./_usage.cjs');
+const { parsePnrPassengers } = require('../../public/js/parse-pnr-passengers.mjs');
 
 const { GoogleGenAI, HarmCategory, HarmBlockThreshold } = require('@google/genai');
 
@@ -59,7 +60,7 @@ ${pnrText}
 Fecha de hoy (referencia para inferir el año, Argentina): ${hoy}
 
 Reglas de interpretación:
-1. PASAJEROS: una linea por pasajero, formato "APELLIDO/NOMBRE [(CHD|INF)]". El primero suele no tener numero de linea. tipo = "ADT" por defecto, "CHD" si tiene (CHD), "INF" si tiene (INF). Separá apellido (antes de la barra) y nombre (después de la barra, sin el sufijo entre parentesis).
+1. PASAJEROS: una linea por pasajero, formato "APELLIDO/NOMBRE [(CHD|INF)]". El primero suele no tener numero de linea. tipo = "ADT" por defecto, "CHD" si tiene (CHD), "INF" si tiene (INF). Separá apellido (antes de la barra) y nombre (después de la barra, sin el sufijo entre parentesis). La D de "2.D IMPERIO" o "D'ANGELO" es parte del apellido, no un titulo ni el numero de linea.
 2. SEGMENTOS: cada linea de vuelo del PNR (que NO tenga status FLWN) es un segmento. Extraé para cada uno, en orden: "vuelo" (aerolinea+numero, ej. "AA908"), "origen" (IATA), "destino" (IATA), "fecha_salida" y "fecha_llegada". NO agrupes, NO decidas escalas ni ida/vuelta: devolvé un item por cada linea de vuelo, en el orden del PNR. Si una linea tiene status FLWN (ya volado), ignorala por completo.
 3. FECHAS: "fecha_salida" y "fecha_llegada" en horario Argentina (America/Argentina/Buenos_Aires, UTC-3). El PNR trae la hora local del aeropuerto; vos sabes la zona horaria por el codigo IATA, asi que convertí esa hora local a hora Argentina. Formato "YYYY-MM-DDTHH:mm" (ej. 0845 local -> 08:45 Argentina, o 2020 HKG -> 09:20 Argentina). Si el PNR no trae hora de llegada, repetí la fecha_salida como fecha_llegada. Inferí el año con la fecha de hoy: usá la próxima ocurrencia de ese ddMMM hacia adelante (si ya pasó este año, usá el año que viene).
 4. Por cada segmento: compania = codigo IATA de 2-3 letras de la aerolinea operadora de ese segmento (el prefijo del numero de vuelo, ej. IB, AR, AA, G3). reservaVuelo = lo que va despues de la barra en el sufijo "AEROLINEA/REF" al final de ESA linea de segmento (ej. "IB/KRBJJ" -> "KRBJJ"). Si la linea no trae sufijo /REF, va null. NO propagues el reservaVuelo entre segmentos: cada segmento tiene el suyo o null (la misma aerolinea puede tener distintos codigos de reserva en distintos grupos de vuelos). pnrAmadeus = record locator de 6 caracteres de Amadeus si aparece en el texto (suele estar en el encabezado). Si no aparece, null.
@@ -504,6 +505,8 @@ exports.handler = async function handler(event) {
       const result = await interpretarPNR(ai, model, makeJsonRequest(buildPromptPnr(pnrText, hoy)), fnStart, 'pnr-checkin: pnr');
       data = result.data;
       modelUsed = result.modelUsed;
+      const names = parsePnrPassengers(pnrText);
+      if (names.length) data = { ...(data || {}), pasajeros: names };
     }
 
     // Agrupacion deterministica de segmentos en piernas (un check-in por pierna).

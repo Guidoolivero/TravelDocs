@@ -1,11 +1,17 @@
 const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]+/g, ' ').trim();
 
+function lastNamesMatch(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  return a.endsWith(' ' + b) || b.endsWith(' ' + a);
+}
+
 export function matchItineraryPassengers(input, passengers) {
   const ids = [], pending = [];
   for (const p of input || []) {
     if (!p.apellido && !p.nombre) continue;
     const last = norm(p.apellido), first = norm(p.nombre);
-    const matches = passengers.filter(x => last && first && norm(x.lastname) === last &&
+    const matches = passengers.filter(x => last && first && lastNamesMatch(norm(x.lastname), last) &&
       (norm(x.firstname) === first || (!first.includes(' ') && norm(x.firstname).split(' ')[0] === first)));
     if (matches.length === 1) ids.push(matches[0].id);
     else pending.push({ lastname: p.apellido || '', firstname: p.nombre || '' });

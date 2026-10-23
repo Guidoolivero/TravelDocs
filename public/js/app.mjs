@@ -1,4 +1,5 @@
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
+import { parsePnrPassengers } from './parse-pnr-passengers.mjs';
 import { csvField, excelRowToPassenger } from './csv-import.mjs';
 import { matchesPassenger } from './passenger-search.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -3542,7 +3543,10 @@ window.interpretarPNR = async function() {
       return;
     }
 
-    const { html } = window.applyInterpretedReservation(json.data || {});
+    const data = json.data || {};
+    const names = parsePnrPassengers(pnrText);
+    if (names.length) data.pasajeros = names;
+    const { html } = window.applyInterpretedReservation(data);
     if (previewEl) { previewEl.innerHTML = html; previewEl.style.display = 'block'; }
     if (statusEl) { statusEl.textContent = 'PNR interpretado. Revisá los datos antes de guardar.'; statusEl.style.color = 'var(--green)'; }
   } catch (err) {

@@ -19,6 +19,11 @@ test('enlaza apostrofe o guion del PNR con la ficha escrita con espacio', () => 
   assert.deepEqual(matchItineraryPassengers([{apellido:'JOSE-MARIA',nombre:'PEREZ'}], [{id:'j',lastname:'JOSE MARIA',firstname:'PEREZ'}]), {ids:['j'],pending:[]});
 });
 
+test('enlaza IMPERIO del parser con la ficha D IMPERIO si el nombre es unico', () => {
+  const pax = [{id:'m',lastname:'D IMPERIO',firstname:'MIGUEL ANGEL'}];
+  assert.deepEqual(matchItineraryPassengers([{apellido:'IMPERIO',nombre:'MIGUEL ANGEL'}], pax), {ids:['m'],pending:[]});
+});
+
 test('no confunde nombres distintos por compartir el primer nombre ni enlaza nombres incompletos', () => {
  const passengers = [{id:'x',lastname:'PEREZ',firstname:'ANA MARIA'}];
  const input = [{apellido:'Perez',nombre:'Ana Laura'}, {apellido:'Perez',nombre:''}];
