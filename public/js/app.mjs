@@ -3202,8 +3202,8 @@ window.renderResPiernasDraft = function() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;margin-top:6px;">
         <div class="form-group" style="margin:0;width:90px;">
           <label style="font-size:10px;">Aerolínea</label>
-          <input type="text" data-field="compania" value="${escStr(p.compania || p.companiaSugerida || '')}" maxlength="3" style="font-family:var(--mono);text-transform:uppercase;">
-          <span data-compania-badge style="margin-top:3px;display:block;">${_airlineBadgeHtml(p.compania || p.companiaSugerida || '')}</span>
+          <input type="text" data-field="compania" value="${escStr(p.compania || '')}" maxlength="3" style="font-family:var(--mono);text-transform:uppercase;">
+          <span data-compania-badge style="margin-top:3px;display:block;">${_airlineBadgeHtml(p.compania || '')}</span>
         </div>
         <div class="form-group" style="margin:0;flex:1;min-width:120px;">
           <label style="font-size:10px;">Reserva aerolínea</label>
@@ -3244,10 +3244,8 @@ window.renderResPiernasDraft = function() {
         <button type="button" class="btn btn-ghost btn-sm" data-remove-pierna="${i}" data-no-row-action="true" style="color:var(--red);">✕</button>
       </div>
       ${p.companiaPendiente ? `<div style="margin-top:8px;font-size:12px;" role="status">
-        <strong>Confirmá la aerolínea de este tramo antes de guardar.</strong>
-        <div>${p.companiaSugerida ? `Sugerida: ${esc(nombreAerolinea(p.companiaSugerida))} (${esc(p.companiaSugerida)}). ` : 'No se pudo identificar con certeza. '}${p.companiaFuente === 'logo' ? 'Identificación por logo.' : ''}</div>
-        ${p.companiaEvidencia ? `<div>Evidencia indicada en la lectura: ${esc(p.companiaEvidencia)}</div>` : ''}
-        <div>Revisá el código en Aerolínea o escribí otro y confirmalo.</div>
+        <strong>No se detectó la compañía aérea en el texto del documento.</strong>
+        <div>El sistema no identifica aerolíneas por sus logos. Completá la compañía manualmente y confirmala para continuar.</div>
         <button type="button" class="btn btn-ghost btn-sm" data-confirm-airline="${i}">Confirmar aerolínea</button>
       </div>` : ''}
       ${aerolineaRow}
@@ -3495,7 +3493,6 @@ window.applyInterpretedReservation = function(d) {
         escalas: Array.isArray(p.escalas) ? p.escalas : [],
         compania: (p.compania || (p.companiaPendiente ? '' : _deriveCompania(p.vuelo))).toUpperCase(),
         companiaPendiente: !!p.companiaPendiente,
-        companiaSugerida: p.companiaSugerida || '',
         companiaFuente: p.companiaFuente || '',
         companiaEvidencia: p.companiaEvidencia || '',
         reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
@@ -3594,11 +3591,30 @@ window.interpretarPNR = async function() {
 };
 
 // Lee uno o varios e-tickets en PDF, los manda a pnr-checkin (modo PDF) y
-// autocompleta el formulario con los datos extraídos y mergeados. Los PDFs se
-// leen una sola vez para extraer los datos; no se guardan ni se adjuntan al
-// check-in. Reutiliza applyInterpretedReservation (mismo mapeo que el PNR
-// pegado). Con 1 PDF manda { pdf }; con varios manda { pdfs: [...] } para que
-// el backend los procese en paralelo y mergee a nivel de segmentos.
+// autocompleta el formulario. La compania se contrasta con texto extraido por
+// PDF.js; los documentos y ese texto no se guardan en el check-in.
+async function textoPdfCheckin(file) {
+  let doc;
+  try {
+    const pdfjs = await cargarPdfjs();
+    const { textoDesdeItems } = await loadItinerario();
+    doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    if (doc.numPages > 20) return '';
+    const parts = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      parts.push(textoDesdeItems(content.items));
+    }
+    const text = parts.join('\n');
+    return text.length <= 40000 ? text : '';
+  } catch {
+    return ''; // Sin texto verificable, la compania siempre se completa a mano.
+  } finally {
+    if (doc) await doc.destroy();
+  }
+}
+
 window.interpretarPDFs = async function(fileList) {
   const files = Array.from(fileList || []);
   if (!files.length) return;
@@ -3627,9 +3643,10 @@ window.interpretarPDFs = async function(fileList) {
 
   try {
     const b64s = await Promise.all(validos.map(fileToBase64));
+    const pdfTexts = await Promise.all(validos.map(textoPdfCheckin));
     const idToken = await currentUser.getIdToken();
     const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
-    const body = validos.length === 1 ? { pdf: b64s[0], hoy } : { pdfs: b64s, hoy };
+    const body = validos.length === 1 ? { pdf: b64s[0], pdfText: pdfTexts[0], hoy } : { pdfs: b64s, pdfTexts, hoy };
     const res = await fetch(fnUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },

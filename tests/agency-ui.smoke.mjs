@@ -3,10 +3,13 @@ import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
+import { interpret } from './helpers/checkin-fixture.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)).replace(/\/$/,'');
 // Prueba local: Firebase, Functions, email y telemetria quedan aislados.
 // XLSX_QA_PATH apunta a una copia local del mismo bundle CDN usado por la app.
 const xlsxPath=process.env.XLSX_QA_PATH;
+const pdfPath=process.env.CHECKIN_PDF_QA_PATH;
+let pdfRequest;
 if(!xlsxPath) throw new Error('Indicá XLSX_QA_PATH con el bundle xlsx@0.18.5');
 const require=createRequire(root+'/package.json');
 const {chromium}=require('playwright-core');
@@ -27,10 +30,20 @@ export const deletePassenger=async()=>{},isNotified=async()=>true,markNotified=a
 await page.route('**/*',async route=>{
  const u=new URL(route.request().url());
  if(u.hostname==='www.gstatic.com'){
-  const body=u.pathname.endsWith('firebase-app.js')?'export const initializeApp=()=>({});':`const user={uid:'test',email:'test@example.invalid',getIdTokenResult:async()=>({claims:{iat:Math.floor(Date.now()/1000),auth_time:Math.floor(Date.now()/1000),role:'agent'}})};export const getAuth=()=>({currentUser:user}),onAuthStateChanged=(_,cb)=>setTimeout(()=>cb(user),20),signOut=async()=>{},multiFactor=()=>({enrolledFactors:[{}]});`;
+  const body=u.pathname.endsWith('firebase-app.js')?'export const initializeApp=()=>({});':`const user={uid:'test',email:'test@example.invalid',getIdToken:async()=> 'synthetic',getIdTokenResult:async()=>({claims:{iat:Math.floor(Date.now()/1000),auth_time:Math.floor(Date.now()/1000),role:'agent'}})};export const getAuth=()=>({currentUser:user}),onAuthStateChanged=(_,cb)=>setTimeout(()=>cb(user),20),signOut=async()=>{},multiFactor=()=>({enrolledFactors:[{}]});`;
   return route.fulfill({contentType:'application/javascript',body});
  }
  if(u.href==='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js') return route.fulfill({contentType:'application/javascript',body:await readFile(xlsxPath,'utf8')});
+ if(u.href.startsWith('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/')) return route.fulfill({contentType:'application/javascript',body:await readFile(process.env.PDFJS_QA_PREFIX+(u.pathname.endsWith('pdf.worker.min.mjs')?'.worker.min.mjs':'.min.mjs'),'utf8')});
+ if(['localhost','127.0.0.1'].includes(u.hostname) && u.pathname.startsWith('/.netlify/')) {
+  if(route.request().method()==='OPTIONS') return route.fulfill({status:204,headers:{'access-control-allow-origin':url,'access-control-allow-methods':'POST','access-control-allow-headers':'authorization,content-type'}});
+ if(u.pathname==='/.netlify/functions/pnr-checkin') {
+  pdfRequest=route.request().postDataJSON();
+  const {data}=await interpret([[{vuelo:'UX1134',vueloDocumento:'UX1134',compania:'UX',companiaEvidencia:'Air Europa UX1134',fecha_salida:'2026-10-24T15:05',fecha_llegada:'2026-10-25T03:20',origen:'EZE',destino:'MAD'}]],pdfRequest);
+  return route.fulfill({headers:{'access-control-allow-origin':url},contentType:'application/json',body:JSON.stringify({data})});
+ }
+ return route.fulfill({headers:{'access-control-allow-origin':url},contentType:'application/json',body:'{"ok":true}'});
+ }
  if(u.origin!==url) return route.abort();
  if(['/js/sentry.js','/js/analytics.js'].includes(u.pathname)) return route.fulfill({contentType:'application/javascript',body:''});
  if(u.pathname==='/js/db.js')return route.fulfill({contentType:'application/javascript',body:stub});
@@ -65,9 +78,13 @@ try{
  });
  assert.equal(await page.locator('[data-confirm-airline]').count(),1);
  assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'1134');
+ assert.equal(await page.locator('[data-field="compania"]').inputValue(),'');
+ assert.match(await page.locator('#res-piernas').innerText(),/no identifica aerolíneas por sus logos/);
+ assert.doesNotMatch(await page.locator('#res-piernas').innerText(),/Sugerida/);
  await page.evaluate(()=>window.saveReservation());
  assert.equal(await page.evaluate(()=>window.fixture.savedReservation),undefined);
  assert.match(await page.locator('#toast-text').innerText(),/confirm/i);
+ await page.locator('[data-field="compania"]').fill('AR');
  await page.locator('[data-confirm-airline]').click();
  assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'AR1134');
  await page.evaluate(()=>window.saveReservation());
@@ -85,6 +102,16 @@ try{
  await page.locator('[data-confirm-airline]').click();
  assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'AR1133');
  await page.evaluate(()=>window.closeModal('modal-reservation'));
+ if(pdfPath) {
+  await page.evaluate(()=>window.openNewReservation());
+  await page.locator('#res-pdf-input').setInputFiles(pdfPath);
+  await page.locator('[data-confirm-airline]').waitFor();
+  assert.ok(pdfRequest.pdfText.includes('1134'));
+  assert.equal(await page.locator('[data-field="compania"]').inputValue(),'');
+  assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'1134');
+  assert.match(await page.locator('#res-piernas').innerText(),/no identifica aerolíneas por sus logos/);
+  await page.evaluate(()=>window.closeModal('modal-reservation'));
+ }
  await page.evaluate(()=>window.showView('import'));
  await page.locator('#import-excel-input').setInputFiles({name:'synthetic.csv',mimeType:'text/csv',buffer:Buffer.from('APELLIDO,NOMBRE,FECHA NAC,FFN AEROLINEA,FFN NUMERO,OBSERVACIONES,EMERGENCIA TELEFONO,ASISTENCIA COMPANIA,ASISTENCIA NUMERO\nPRUEBA,CSV,01/01/1980,AA,000123,Observacion ficticia,+5490000000000,TEST,V001')});
  await page.locator('#import-review-wrap').waitFor({state:'visible'});
@@ -92,5 +119,5 @@ try{
  const imported=await page.evaluate(()=>window.fixture.imported[0]);
  assert.equal(imported.ffn[0].number,'000123');assert.equal(imported.notes,'Observacion ficticia');assert.equal(imported.emergencyContact.phone,'+5490000000000');assert.equal(imported.asistencias[0].num,'V001');
  assert.deepEqual(errors,[]);
- console.log('PASS browser: search, optional emergency roundtrip, pending linkage, airline confirmation blocks save, real CSV parser to save; no external services');
+ console.log('PASS browser: search, optional emergency roundtrip, pending linkage, text-only airline validation, real CSV parser to save; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}

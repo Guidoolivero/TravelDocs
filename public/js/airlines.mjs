@@ -2,7 +2,7 @@
 // Aerolineas de pasajeros vigentes mas designadores IATA de Wikidata.
 // DM es Arajet. AR sigue siendo Aerolineas Argentinas.
 
-const AIRLINES = {
+export const AIRLINES = {
   '00': 'Anadolujet',
   '0G': 'Ghadames Air Transport',
   '0V': 'Vietnam Air Services Company',
