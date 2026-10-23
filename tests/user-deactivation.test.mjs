@@ -49,6 +49,7 @@ function fixture({ active = true, missing = false, revoked = false } = {}) {
   }
   return {
     docs, calls, sdkAuth,
+    agency: (agencyId, body) => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: `/.netlify/functions/admin-api/agencies/${agencyId}`, headers: { authorization: 'Bearer admin' }, body: JSON.stringify(body) }),
     verify: () => load(new URL('../netlify/functions/_auth.cjs', import.meta.url)).verifyAuth({ headers: { authorization: 'Bearer user' } }),
     patch: active => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: '/.netlify/functions/admin-api/users/user', headers: { authorization: 'Bearer admin' }, body: JSON.stringify({ active }) }),
   };
@@ -100,4 +101,20 @@ test('agencia eliminada rechaza Functions', async () => {
   const f = fixture();
   f.docs.delete('agencies/agency');
   assert.equal((await f.verify()).status, 403);
+});
+
+test('platformAdmin no puede suspender su propia agencia ni aplicar cambios parciales', async () => {
+  const f = fixture();
+  assert.equal((await f.agency('agency', { status: 'suspended', name: 'Cambio' })).statusCode, 409);
+  assert.equal(f.docs.get('agencies/agency').status, 'active');
+  assert.equal(f.docs.get('agencies/agency').name, undefined);
+});
+test('platformAdmin conserva edicion propia y suspension/reactivacion de otra agencia', async () => {
+  const f = fixture();
+  assert.equal((await f.agency('agency', { name: 'Nombre', status: 'active' })).statusCode, 200);
+  f.docs.set('agencies/client', { status: 'active' });
+  for (const status of ['suspended', 'active']) {
+    assert.equal((await f.agency('client', { status })).statusCode, 200);
+    assert.equal(f.docs.get('agencies/client').status, status);
+  }
 });

@@ -161,6 +161,9 @@ async function updateAgency(agencyId, event, adminAuth) {
   }
   if (b.status !== undefined) {
     if (!VALID_STATUS.includes(b.status)) return reply(400, { error: 'Estado inválido.' });
+    if (b.status === 'suspended' && agencyId === adminAuth.agencyId) {
+      return reply(409, { error: 'No podes suspender la agencia vinculada a tu cuenta de administrador.' });
+    }
     patch.status = b.status;
   }
   if (b.branding !== undefined) patch.branding = sanitizeBranding(b.branding);

@@ -167,6 +167,18 @@ if (!HAS_EMULATOR) {
       await assertFails(db.doc('agencies/missing-agency/passengers/test').set({ test: true }));
     });
 
+    it('estado de agencia solo se modifica desde el backend de plataforma', async () => {
+      const agencyId = 'protected-status';
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set({ status: 'active' }));
+      for (const role of ['owner', 'admin']) {
+        const ref = authAs(UID_A, agencyId, role).firestore().doc(`agencies/${agencyId}`);
+        await assertFails(ref.update({ status: 'suspended' }));
+        await assertFails(ref.set({ name: 'Sin estado' }));
+        await assertSucceeds(ref.update({ name: 'Nombre permitido' }));
+        await assertSucceeds(ref.update({ status: 'active' }));
+      }
+    });
+
     it('usuario A lee pasajeros de su agencia', async () => {
       const db = authAs(UID_A, AGENCY_A, 'agent').firestore();
       await assertSucceeds(

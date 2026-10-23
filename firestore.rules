@@ -46,7 +46,8 @@ service cloud.firestore {
     match /agencies/{agencyId} {
       allow read: if isMemberOf(agencyId);
       allow create, delete: if false;
-      allow update: if isAdminOf(agencyId);
+      allow update: if isAdminOf(agencyId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']);
 
       match /passengers/{passengerId} {
         allow read, write: if isMemberOf(agencyId);
