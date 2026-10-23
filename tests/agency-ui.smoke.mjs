@@ -43,12 +43,13 @@ try{
  assert.match(await page.locator('#passengers-tbody').innerText(),/BERALDI/);
  await page.locator('#global-search').fill('ber jose');assert.match(await page.locator('#passengers-count').innerText(),/1 pasajero/);
  await page.evaluate(()=>window.openEdit('jose'));
- await page.locator('#form-emergency-name').fill('Contacto de prueba');await page.locator('#form-emergency-phone').fill('+5490000000000');
+ await page.locator('#emergency-add-btn').click();
+ await page.locator('.emergency-name').fill('Contacto de prueba');await page.locator('.emergency-phone').fill('+5490000000000');
  await page.evaluate(()=>window.savePassenger());
  assert.equal(await page.evaluate(()=>window.fixture.savedPassenger.emergencyContact.name),'Contacto de prueba');
  await page.evaluate(()=>window.openEdit('jose'));
- assert.equal(await page.locator('#form-emergency-phone').inputValue(),'+5490000000000');
- await page.locator('#form-emergency-name').fill('');await page.locator('#form-emergency-phone').fill('');await page.evaluate(()=>window.savePassenger());
+ assert.equal(await page.locator('.emergency-phone').inputValue(),'+5490000000000');
+ await page.locator('#emergency-list button[title="Eliminar contacto"]').click();await page.evaluate(()=>window.savePassenger());
  assert.equal(await page.evaluate(()=>window.fixture.savedPassenger.emergencyContact.phone),'');
  await page.evaluate(()=>window.openEditReservation('pending'));
  assert.match(await page.locator('#res-pax-pending').innerText(),/BERALDI/);

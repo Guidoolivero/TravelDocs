@@ -557,6 +557,7 @@ document.getElementById('form-lastname')?.addEventListener('input', e => { e.tar
 document.getElementById('form-firstname')?.addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); });
 document.getElementById('visa-add-btn')?.addEventListener('click', () => window.addVisaEntry());
 document.getElementById('asistencia-add-btn')?.addEventListener('click', () => window.addAsistenciaEntry());
+document.getElementById('emergency-add-btn')?.addEventListener('click', () => window.addEmergencyEntry());
 document.getElementById('ffn-add-btn')?.addEventListener('click', () => window.addFFNEntry());
 
 document.getElementById('detail-delete-btn')?.addEventListener('click', () => {
@@ -1119,7 +1120,7 @@ window.openDetail = function(id, opts = {}) {
           <div class="info-row"><span class="info-label">Nacionalidad</span><span class="info-value">${esc(p.nationality)}</span></div>
           ${p.email ? `<div class="info-row"><span class="info-label">Email</span><span class="info-value" style="font-size:12px;">${esc(p.email)}</span></div>` : ''}
           ${p.whatsapp ? `<div class="info-row"><span class="info-label">WhatsApp</span><span class="info-value" style="font-size:12px;">${esc(p.whatsapp)}</span></div>` : ''}
-          ${p.emergencyContact && Object.values(p.emergencyContact).some(Boolean) ? `<div class="info-row"><span class="info-label">Emergencia</span><span class="info-value">${esc([p.emergencyContact.name, p.emergencyContact.relationship, p.emergencyContact.phone].filter(Boolean).join(' · '))}</span></div>` : ''}
+          ${emergencyContactsOf(p).map(c => `<div class="info-row"><span class="info-label">Emergencia</span><span class="info-value">${esc([c.name, c.relationship, c.phone].filter(Boolean).join(' · '))}</span></div>`).join('')}
           ${p.notes ? `<div class="info-row"><span class="info-label">Notas</span><span class="info-value" style="font-size:12px;color:var(--text2);">${esc(p.notes)}</span></div>` : ''}
         </div>
       </div>
@@ -1501,8 +1502,74 @@ function clearFFNList() {
   if (empty) empty.style.display = '';
 }
 
+let _emergencyIdx = 0;
+window.addEmergencyEntry = function(c) {
+  const eid = ++_emergencyIdx;
+  const list = document.getElementById('emergency-list');
+  const empty = document.getElementById('emergency-empty');
+  if (empty) empty.style.display = 'none';
+  const row = document.createElement('div');
+  row.className = 'emergency-row';
+  row.style.cssText = 'padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;';
+  row.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Contacto de emergencia</span>
+      <button type="button"
+        style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text3);font-size:14px;transition:all .15s;"
+        title="Eliminar contacto">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label for="emergency-name-${eid}">Nombre</label><input id="emergency-name-${eid}" class="emergency-name" type="text" value="${escStr(c?.name)}"></div>
+      <div class="form-group"><label for="emergency-relationship-${eid}">Parentesco o relacion</label><input id="emergency-relationship-${eid}" class="emergency-relationship" type="text" value="${escStr(c?.relationship)}"></div>
+      <div class="form-group"><label for="emergency-phone-${eid}">Telefono con prefijo internacional</label><input id="emergency-phone-${eid}" class="emergency-phone" type="tel" placeholder="+54 9 11 1234-5678" value="${escStr(c?.phone)}"></div>
+    </div>`;
+  list.appendChild(row);
+  const removeBtn = row.querySelector('button[title="Eliminar contacto"]');
+  removeBtn?.addEventListener('click', () => window.removeEmergencyEntry(removeBtn));
+  renumberEmergencies();
+};
+
+window.removeEmergencyEntry = function(btn) {
+  btn.closest('.emergency-row').remove();
+  const list = document.getElementById('emergency-list');
+  const empty = document.getElementById('emergency-empty');
+  if (empty) empty.style.display = list.children.length === 0 ? '' : 'none';
+  renumberEmergencies();
+};
+
+function renumberEmergencies() {
+  document.querySelectorAll('#emergency-list .emergency-row').forEach((row, i) => {
+    const label = row.querySelector('span');
+    if (label) label.textContent = `Contacto de emergencia ${i + 1}`;
+  });
+}
+
+function getEmergencyEntries() {
+  return Array.from(document.querySelectorAll('#emergency-list .emergency-row')).map(row => ({
+    name: row.querySelector('.emergency-name')?.value?.trim() || '',
+    relationship: row.querySelector('.emergency-relationship')?.value?.trim() || '',
+    phone: row.querySelector('.emergency-phone')?.value?.trim() || ''
+  })).filter(c => c.name || c.relationship || c.phone);
+}
+
+function emergencyContactsOf(p) {
+  const list = Array.isArray(p?.emergencyContacts) ? p.emergencyContacts : [];
+  const filled = list.filter(c => c && Object.values(c).some(Boolean));
+  if (filled.length) return filled;
+  const one = p?.emergencyContact;
+  return one && Object.values(one).some(Boolean) ? [one] : [];
+}
+
+function clearEmergencyList() {
+  const list = document.getElementById('emergency-list');
+  if (list) list.innerHTML = '';
+  const empty = document.getElementById('emergency-empty');
+  if (empty) empty.style.display = '';
+  _emergencyIdx = 0;
+}
+
 function clearForm() {
-  const ids = ['form-id','form-lastname','form-firstname','form-dob','form-cuil','form-email','form-whatsapp','form-notes','form-emergency-name','form-emergency-relationship','form-emergency-phone',
+  const ids = ['form-id','form-lastname','form-firstname','form-dob','form-cuil','form-email','form-whatsapp','form-notes',
     'form-dni-num','form-dni-issue','form-dni-exp',
     'form-parg-num','form-parg-issue','form-parg-exp',
     'form-pext-num','form-pext-issue','form-pext-exp',
@@ -1511,6 +1578,7 @@ function clearForm() {
   ['form-gender','form-nationality','form-pext-country','form-dni-country']
     .forEach(id => { const el = document.getElementById(id); if (el) el.selectedIndex = 0; });
   clearVisaList();
+  clearEmergencyList();
   clearFFNList();
 }
 
@@ -1524,9 +1592,6 @@ function fillForm(p) {
   set('form-email', p.email);
   set('form-whatsapp', p.whatsapp);
   set('form-notes', p.notes);
-  set('form-emergency-name', p.emergencyContact?.name);
-  set('form-emergency-relationship', p.emergencyContact?.relationship);
-  set('form-emergency-phone', p.emergencyContact?.phone);
   set('form-gender', p.gender);
   set('form-nationality', p.nationality);
   set('form-dni-country', p.dni?.country || 'ARG');
@@ -1545,6 +1610,8 @@ function fillForm(p) {
         return { ...v, passport };
       });
   visasToLoad.forEach(v => addVisaEntry(v));
+  clearEmergencyList();
+  emergencyContactsOf(p).forEach(c => addEmergencyEntry(c));
   // Cargar asistencias médicas (reutiliza patrón de visas)
   clearAsistenciaList();
   if (Array.isArray(p.asistencias) && p.asistencias.length > 0) {
@@ -1593,6 +1660,7 @@ window.savePassenger = async function() {
   btn.disabled = true;
   btn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>Guardando...';
 
+  const emergencyContacts = getEmergencyEntries();
   const data = {
     lastname, firstname, dob,
     gender: g('form-gender') || 'M',
@@ -1601,7 +1669,8 @@ window.savePassenger = async function() {
     email: g('form-email'),
     whatsapp: g('form-whatsapp'),
     notes: g('form-notes'),
-    emergencyContact: { name: g('form-emergency-name'), relationship: g('form-emergency-relationship'), phone: g('form-emergency-phone') },
+    emergencyContacts,
+    emergencyContact: emergencyContacts[0] || { name: '', relationship: '', phone: '' },
     dni: { country: g('form-dni-country') || 'ARG', num: g('form-dni-num'), issue: g('form-dni-issue'), exp: g('form-dni-exp') },
     parg: { num: g('form-parg-num'), issue: g('form-parg-issue'), exp: g('form-parg-exp') },
     pext: { country: g('form-pext-country'), num: g('form-pext-num'), issue: g('form-pext-issue'), exp: g('form-pext-exp'), lastname: g('form-pext-lastname'), firstname: g('form-pext-firstname') },
@@ -2453,7 +2522,7 @@ function renderImportReview() {
             ${docs.length === 0 ? '<span style="color:var(--red)">Sin documentos detectados</span>' : ''}
           </div>
           ${g.notes ? `<div style="font-size:12px;margin-top:6px;">Observaciones: ${esc(g.notes)}</div>` : ''}
-          ${g.emergencyContact && Object.values(g.emergencyContact).some(Boolean) ? `<div style="font-size:12px;">Emergencia: ${esc(Object.values(g.emergencyContact).filter(Boolean).join(' · '))}</div>` : ''}
+          ${emergencyContactsOf(g).map(c => `<div style="font-size:12px;">Emergencia: ${esc([c.name, c.relationship, c.phone].filter(Boolean).join(' · '))}</div>`).join('')}
           <div style="font-size:11px;color:var(--text3);margin-top:6px;">Archivos: ${g._files.map(f => esc(f)).join(', ')}</div>
         </div>
         <button class="btn btn-ghost btn-sm" data-remove-import="${idx}" title="Quitar este pasajero" style="flex-shrink:0;color:var(--red);" data-no-row-action="true">
