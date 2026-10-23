@@ -195,12 +195,14 @@ describe('collectEmailAlertCandidates', () => {
   });
 
   it('genera clave de deduplicación estable', () => {
-    const exp = daysFromNow(30);
+    const now = Date.parse('2026-10-23T01:00:00Z'); // En Argentina todavia es 22/10.
+    const exp = '2026-11-21';
     const p = {
       ...basePassenger,
       asistencias: [{ num: 'VCH-11', fin: exp, duracion: '365' }]
     };
-    const [c] = collectEmailAlertCandidates([p]).filter(x => x.docType === 'Asistencia al Viajero');
+    const [c] = collectEmailAlertCandidates([p], now).filter(x => x.docType === 'Asistencia al Viajero');
+    assert.equal(c.days, 30);
     assert.equal(c.key, `tdAlert_${p.id}_Asistencia al Viajero_${exp}`);
   });
 });
