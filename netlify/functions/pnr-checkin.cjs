@@ -23,6 +23,7 @@
 const { verifyAuth } = require('./_auth.cjs');
 const { recordUsage } = require('./_usage.cjs');
 const { parsePnrPassengers } = require('../../public/js/parse-pnr-passengers.mjs');
+const { preparePdfAirline } = require('../../public/js/checkin-airline.mjs');
 
 const { GoogleGenAI, HarmCategory, HarmBlockThreshold } = require('@google/genai');
 
@@ -80,9 +81,14 @@ Fecha de hoy (referencia para inferir el año, Argentina): ${hoy}
 
 Reglas de extracción (el PDF puede tener cualquier formato, pero los datos son siempre los mismos):
 1. PASAJEROS: uno por pasajero. Separá apellido y nombre (si vienen tipo "LABAYEN/CRISTINA EDITH", apellido = antes de la barra, nombre = después). tipo "ADT" por defecto, "CHD"/"INF" si lo indica el documento.
-2. SEGMENTOS: uno por cada vuelo del itinerario, en orden. Extraé "vuelo" (aerolínea + número, ej. "UX042"), "origen" y "destino" (IATA 3 letras; si solo figura la ciudad, inferí el IATA), "fecha_salida" y "fecha_llegada". NO agrupes ni decidas escalas: un item por cada vuelo, en el orden del itinerario.
+2. SEGMENTOS: uno por cada vuelo del itinerario, en orden. Extraé "vuelo" y "vueloDocumento" (copiá exactamente el vuelo escrito; si solo figura un número, conservá solo ese número, sin inventar un prefijo), "origen" y "destino" (IATA 3 letras; si solo figura la ciudad, inferí el IATA), "fecha_salida" y "fecha_llegada". NO agrupes ni decidas escalas: un item por cada vuelo, en el orden del itinerario.
 3. FECHAS: en horario Argentina (America/Argentina/Buenos_Aires, UTC-3). Los PDFs suelen mostrar la hora local de cada aeropuerto; vos sabes la zona horaria por el código IATA, asi que convertí esa hora local a hora Argentina. Formato "YYYY-MM-DDTHH:mm". Si solo hay fecha sin hora, para "fecha_salida" usá 00:01 y para "fecha_llegada" usá 23:59 (evita un gap exacto de 24h entre tramos conectados que los partiría en dos check-ins). Inferí el año con la fecha de hoy.
 4. Por cada segmento: compania = código IATA de 2-3 letras de la aerolínea operadora de ese segmento. reservaVuelo = el localizador / código de reserva de la aerolínea para ESE segmento. Se identifica por etiquetas como "LOCALIZADOR", "Localizador de reserva", "Booking Reference", "Record Locator", "Confirmation", "Reserva", "PNR", "Ref" o "Locator" (alfanumérico de 5-6 chars, ej. AGRZEP, A3MTSF, KRBJJ). Si el documento tiene un ÚNICO localizador compartido por todos los segmentos (lo más común), usalo como reservaVuelo en CADA segmento; si cada segmento trae el suyo, usá el de ese segmento. NUNCA devuelvas null en reservaVuelo si existe algún código de reserva en el documento: si solo hay uno global, replicalo en todos los segmentos. pnrAmadeus = el código principal de reserva / record locator del documento (6 chars si es Amadeus); null si no aparece.
+
+5. EVIDENCIA DE AEROLINEA (campos adicionales en CADA segmento): "companiaFuente" = "texto", "logo" o "desconocida"; "companiaEvidencia" = cita literal del nombre/codigo escrito o descripcion breve del logo. "vueloDocumento" = numero de vuelo tal como esta impreso, sin agregar codigo de aerolinea.
+- "texto": el nombre o codigo esta escrito junto al vuelo o hay una indicacion explicita de la operadora. "logo": solo se reconoce el simbolo o imagen de marca, aunque no diga el nombre. El condor de Aerolineas Argentinas es evidencia visual, no texto.
+- Si solo hay un logo reconocible, devolve su codigo como sugerencia en "compania", pero no agregues ese codigo a "vueloDocumento". Si el logo es ambiguo o no hay evidencia, "compania" = null y fuente "desconocida". No deduzcas la operadora por ruta, numero solo o por ejemplos del prompt.
+- El prefijo numerico del e-ticket identifica a la emisora, no necesariamente a la operadora. No lo uses como unica prueba. Distingui operadora y comercial en codigo compartido: conserva el prefijo comercial impreso del vuelo, aunque la operadora explicita sea otra.
 
 ${ESQUEMA_JSON}`;
 }
@@ -291,6 +297,10 @@ function groupSegmentos(segmentos) {
       origen: s.origen || '',
       destino: s.destino || '',
       compania: s.compania || '',
+      companiaPendiente: !!s.companiaPendiente,
+      companiaSugerida: s.companiaSugerida || '',
+      companiaFuente: s.companiaFuente || '',
+      companiaEvidencia: s.companiaEvidencia || '',
       reservaVuelo: s.reservaVuelo || null
     }));
   if (!segs.length) return [];
@@ -304,7 +314,7 @@ function groupSegmentos(segmentos) {
     // solo cuando AMBOS lados tienen el dato; vacio/null = desconocido, no corta).
     const distintaCompania = prev && s.compania && prev.compania && s.compania !== prev.compania;
     const distintaReserva = prev && s.reservaVuelo && prev.reservaVuelo && s.reservaVuelo !== prev.reservaVuelo;
-    if (prev && !distintaCompania && !distintaReserva && tSalida !== null && tLlegadaPrev !== null && (tSalida - tLlegadaPrev) < DIA_MS) {
+    if (prev && !prev.companiaPendiente && !s.companiaPendiente && !distintaCompania && !distintaReserva && tSalida !== null && tLlegadaPrev !== null && (tSalida - tLlegadaPrev) < DIA_MS) {
       // escala: misma pierna (< 24h en tierra, misma aerolinea y reserva)
       if (s.origen) prev.escalas.push(s.origen);
       prev.destino = s.destino || prev.destino;
@@ -314,7 +324,7 @@ function groupSegmentos(segmentos) {
       if (!prev.reservaVuelo && s.reservaVuelo) prev.reservaVuelo = s.reservaVuelo;
     } else {
       // nueva pierna (gap >= 24h o primera)
-      piernas.push({ fecha: s.salida, vuelo: s.vuelo, origen: s.origen, destino: s.destino, escalas: [], compania: s.compania, reservaVuelo: s.reservaVuelo, _tLlegada: s.llegada });
+      piernas.push({ fecha: s.salida, vuelo: s.vuelo, origen: s.origen, destino: s.destino, escalas: [], compania: s.compania, companiaPendiente: s.companiaPendiente, companiaSugerida: s.companiaSugerida, companiaFuente: s.companiaFuente, companiaEvidencia: s.companiaEvidencia, reservaVuelo: s.reservaVuelo, _tLlegada: s.llegada });
     }
   }
   return piernas.map(({ _tLlegada, ...p }) => p);
@@ -374,7 +384,7 @@ function mergePdfResults(resultados) {
   };
 }
 
-async function interpretarPNR(ai, primaryModel, requestFactory, fnStart, label = 'pnr-checkin: interpretar') {
+async function interpretarPNR(ai, primaryModel, requestFactory, fnStart, label = 'pnr-checkin: interpretar', pdfMode = false) {
   const deadlineMs = fnStart + NETLIFY_DEADLINE_MS;
   try {
     const result = await generateContentWithRetries(
@@ -397,6 +407,7 @@ async function interpretarPNR(ai, primaryModel, requestFactory, fnStart, label =
       console.error(`${label}: parse falló. Inicio: ${text.slice(0, 160).replace(/\s+/g, ' ')}`);
       throw new Error('JSON inválido');
     }
+    if (pdfMode && Array.isArray(parsed.segmentos)) parsed.segmentos = parsed.segmentos.filter(s => s && typeof s === 'object').map(preparePdfAirline);
     return { data: parsed, modelUsed: result.modelUsed };
   } catch (err) {
     throw err;
@@ -488,7 +499,7 @@ exports.handler = async function handler(event) {
       // segmentos. Si alguno falla, se mergean los exitosos y se informa el
       // conteo en _meta (tolerancia a fallo parcial).
       const resultados = await Promise.allSettled(pdfsInput.map((b64, i) =>
-        interpretarPNR(ai, model, makePdfRequest(b64, buildPromptEticket(hoy)), fnStart, `pnr-checkin: eticket ${i + 1}/${pdfsInput.length}`)
+        interpretarPNR(ai, model, makePdfRequest(b64, buildPromptEticket(hoy)), fnStart, `pnr-checkin: eticket ${i + 1}/${pdfsInput.length}`, true)
       ));
       const ok = resultados.filter(r => r.status === 'fulfilled').map(r => r.value);
       const fallados = resultados.length - ok.length;
@@ -498,7 +509,7 @@ exports.handler = async function handler(event) {
       modelUsed = ok[0]?.modelUsed;
       extra = { pdfs: ok.length, fallados };
     } else if (pdfBase64) {
-      const result = await interpretarPNR(ai, model, makePdfRequest(pdfBase64, buildPromptEticket(hoy)), fnStart, 'pnr-checkin: eticket');
+      const result = await interpretarPNR(ai, model, makePdfRequest(pdfBase64, buildPromptEticket(hoy)), fnStart, 'pnr-checkin: eticket', true);
       data = result.data;
       modelUsed = result.modelUsed;
     } else {

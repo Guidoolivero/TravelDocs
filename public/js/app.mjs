@@ -1,3 +1,4 @@
+import { confirmAirline } from './checkin-airline.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
 import { parsePnrPassengers } from './parse-pnr-passengers.mjs';
 import { csvField, excelRowToPassenger } from './csv-import.mjs';
@@ -2666,7 +2667,7 @@ function _resDraftMulti() {
     if (p.compania) cs.add(p.compania);
     if (p.reservaVuelo) rs.add(p.reservaVuelo);
   });
-  return cs.size > 1 || rs.size > 1;
+  return _resPiernasDraft.some(p => p.companiaPendiente) || cs.size > 1 || rs.size > 1;
 }
 
 // Sincroniza las celdas de arriba con el draft: en SIMPLE las carga con el valor
@@ -2676,7 +2677,12 @@ function _syncTopFromDraft() {
   const wrap = document.getElementById('res-compania-wrap');
   const note = document.getElementById('res-multi-note');
   if (wrap) wrap.style.display = multi ? 'none' : '';
-  if (note) note.style.display = multi ? '' : 'none';
+  if (note) {
+    note.style.display = multi ? '' : 'none';
+    note.textContent = _resPiernasDraft.some(p => p.companiaPendiente)
+      ? 'Hay aerolíneas pendientes de confirmar. Revisá cada tramo antes de guardar.'
+      : 'Itinerario multi-aerolínea: completá la aerolínea y el código de reserva de cada tramo.';
+  }
   if (!multi) {
     const c = _resPiernasDraft[0]?.compania || '';
     const rv = _resPiernasDraft[0]?.reservaVuelo || '';
@@ -3196,8 +3202,8 @@ window.renderResPiernasDraft = function() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;margin-top:6px;">
         <div class="form-group" style="margin:0;width:90px;">
           <label style="font-size:10px;">Aerolínea</label>
-          <input type="text" data-field="compania" value="${escStr(p.compania || '')}" maxlength="3" style="font-family:var(--mono);text-transform:uppercase;">
-          <span data-compania-badge style="margin-top:3px;display:block;">${_airlineBadgeHtml(p.compania || '')}</span>
+          <input type="text" data-field="compania" value="${escStr(p.compania || p.companiaSugerida || '')}" maxlength="3" style="font-family:var(--mono);text-transform:uppercase;">
+          <span data-compania-badge style="margin-top:3px;display:block;">${_airlineBadgeHtml(p.compania || p.companiaSugerida || '')}</span>
         </div>
         <div class="form-group" style="margin:0;flex:1;min-width:120px;">
           <label style="font-size:10px;">Reserva aerolínea</label>
@@ -3237,6 +3243,13 @@ window.renderResPiernasDraft = function() {
         </div>
         <button type="button" class="btn btn-ghost btn-sm" data-remove-pierna="${i}" data-no-row-action="true" style="color:var(--red);">✕</button>
       </div>
+      ${p.companiaPendiente ? `<div style="margin-top:8px;font-size:12px;" role="status">
+        <strong>Confirmá la aerolínea de este tramo antes de guardar.</strong>
+        <div>${p.companiaSugerida ? `Sugerida: ${esc(nombreAerolinea(p.companiaSugerida))} (${esc(p.companiaSugerida)}). ` : 'No se pudo identificar con certeza. '}${p.companiaFuente === 'logo' ? 'Identificación por logo.' : ''}</div>
+        ${p.companiaEvidencia ? `<div>Evidencia indicada en la lectura: ${esc(p.companiaEvidencia)}</div>` : ''}
+        <div>Revisá el código en Aerolínea o escribí otro y confirmalo.</div>
+        <button type="button" class="btn btn-ghost btn-sm" data-confirm-airline="${i}">Confirmar aerolínea</button>
+      </div>` : ''}
       ${aerolineaRow}
     </div>`;
   }).join('');
@@ -3290,6 +3303,17 @@ if (_resPiernasWrap) {
   _resPiernasWrap.addEventListener('input', onChange);
   _resPiernasWrap.addEventListener('change', onChange);
 }
+
+document.getElementById('res-piernas')?.addEventListener('click', e => {
+  const button = e.target.closest('[data-confirm-airline]');
+  if (!button) return;
+  window.syncResPiernasDraft();
+  const index = Number(button.dataset.confirmAirline);
+  try {
+    _resPiernasDraft[index] = confirmAirline(_resPiernasDraft[index], _resPiernasDraft[index].compania);
+    window.renderResPiernasDraft();
+  } catch (err) { showToast(err.message, true); }
+});
 
 // Quitar un tramo del draft.
 document.addEventListener('click', e => {
@@ -3347,6 +3371,10 @@ window.saveReservation = async function() {
 
   // Sincroniza los inputs del draft (fechas, checkin, aerolínea, ref) antes de guardar.
   window.syncResPiernasDraft();
+  if (_resPiernasDraft.some(p => p.companiaPendiente)) {
+    showToast('Confirmá la aerolínea de cada tramo pendiente antes de guardar.', true);
+    return;
+  }
   // Al editar: si un tramo cambió de fecha o es nuevo, su alerta tiene que
   // poder salir para la fecha nueva -> se resetea notified. Los tramos que
   // conservan vuelo+fecha mantienen su marca (no se reenvía).
@@ -3465,7 +3493,11 @@ window.applyInterpretedReservation = function(d) {
         origen: p.origen || '',
         destino: p.destino || '',
         escalas: Array.isArray(p.escalas) ? p.escalas : [],
-        compania: (p.compania || _deriveCompania(p.vuelo)).toUpperCase(),
+        compania: (p.compania || (p.companiaPendiente ? '' : _deriveCompania(p.vuelo))).toUpperCase(),
+        companiaPendiente: !!p.companiaPendiente,
+        companiaSugerida: p.companiaSugerida || '',
+        companiaFuente: p.companiaFuente || '',
+        companiaEvidencia: p.companiaEvidencia || '',
         reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
         checkin: previa ? !!previa.checkin : false,
         notified: previa ? !!previa.notified : false

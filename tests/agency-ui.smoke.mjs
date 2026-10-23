@@ -52,11 +52,39 @@ try{
  await page.locator('#emergency-list button[title="Eliminar contacto"]').click();await page.evaluate(()=>window.savePassenger());
  assert.equal(await page.evaluate(()=>window.fixture.savedPassenger.emergencyContact.phone),'');
  await page.evaluate(()=>window.openEditReservation('pending'));
- assert.match(await page.locator('#res-pax-pending').innerText(),/BERALDI/);
- await page.locator('[data-add-pax="jose"]').click();
+ assert.equal(await page.locator('#res-pax-pending').innerText(),'');
+ assert.match(await page.locator('#res-pax-selected').innerText(),/BERALDI/);
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
+ await page.evaluate(async()=>{
+   delete window.fixture.savedReservation;
+   window.openNewReservation();
+   const {preparePdfAirline}=await import('/js/checkin-airline.mjs');
+   window.applyInterpretedReservation({piernas:[preparePdfAirline({vuelo:'UX1134',vueloDocumento:'1134',compania:'AR',companiaFuente:'logo',companiaEvidencia:'Logo del condor',fecha:'2027-02-01T15:05',origen:'EZE',destino:'MAD'})]});
+ });
+ assert.equal(await page.locator('[data-confirm-airline]').count(),1);
+ assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'1134');
+ await page.evaluate(()=>window.saveReservation());
+ assert.equal(await page.evaluate(()=>window.fixture.savedReservation),undefined);
+ assert.match(await page.locator('#toast-text').innerText(),/confirm/i);
+ await page.locator('[data-confirm-airline]').click();
+ assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'AR1134');
+ await page.evaluate(()=>window.saveReservation());
+ assert.equal(await page.evaluate(()=>window.fixture.savedReservation.piernas[0].compania),'AR');
+ assert.equal(await page.evaluate(()=>window.fixture.savedReservation.piernas[0].vuelo),'AR1134');
+ await page.evaluate(async()=>{
+   window.openNewReservation();
+   const {preparePdfAirline}=await import('/js/checkin-airline.mjs');
+   window.applyInterpretedReservation({piernas:[preparePdfAirline({vuelo:'UX1133',vueloDocumento:'1133',compania:null,companiaFuente:'desconocida',companiaEvidencia:'',fecha:'2027-02-15T18:15',origen:'MAD',destino:'EZE'})]});
+ });
+ assert.equal(await page.locator('[data-field="compania"]').inputValue(),'');
+ await page.locator('[data-confirm-airline]').click();
+ assert.match(await page.locator('#toast-text').innerText(),/reconocido/);
+ await page.locator('[data-field="compania"]').fill('AR');
+ await page.locator('[data-confirm-airline]').click();
+ assert.equal(await page.locator('[data-field="vuelo"]').inputValue(),'AR1133');
+ await page.evaluate(()=>window.closeModal('modal-reservation'));
  await page.evaluate(()=>window.showView('import'));
  await page.locator('#import-excel-input').setInputFiles({name:'synthetic.csv',mimeType:'text/csv',buffer:Buffer.from('APELLIDO,NOMBRE,FECHA NAC,FFN AEROLINEA,FFN NUMERO,OBSERVACIONES,EMERGENCIA TELEFONO,ASISTENCIA COMPANIA,ASISTENCIA NUMERO\nPRUEBA,CSV,01/01/1980,AA,000123,Observacion ficticia,+5490000000000,TEST,V001')});
  await page.locator('#import-review-wrap').waitFor({state:'visible'});
@@ -64,5 +92,5 @@ try{
  const imported=await page.evaluate(()=>window.fixture.imported[0]);
  assert.equal(imported.ffn[0].number,'000123');assert.equal(imported.notes,'Observacion ficticia');assert.equal(imported.emergencyContact.phone,'+5490000000000');assert.equal(imported.asistencias[0].num,'V001');
  assert.deepEqual(errors,[]);
- console.log('PASS browser: search, optional emergency roundtrip, pending linkage, real CSV parser to save; no external services');
+ console.log('PASS browser: search, optional emergency roundtrip, pending linkage, airline confirmation blocks save, real CSV parser to save; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}
