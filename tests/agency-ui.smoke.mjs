@@ -53,7 +53,7 @@ try{
  assert.equal(await page.evaluate(()=>window.fixture.savedPassenger.emergencyContact.phone),'');
  await page.evaluate(()=>window.openEditReservation('pending'));
  assert.match(await page.locator('#res-pax-pending').innerText(),/BERALDI/);
- await page.locator('[data-link-pending]').selectOption('jose');
+ await page.locator('[data-add-pax="jose"]').click();
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);

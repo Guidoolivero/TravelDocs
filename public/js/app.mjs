@@ -3057,7 +3057,7 @@ window.openViewReservation = function(id) {
       <div class="form-section-title">Pasajeros</div>
       <p class="res-view-pax-hint">Tocá un nombre para abrir la ficha</p>
       ${paxHtml}
-      ${(r.pendingPassengers || []).map(p => `<div class="info-row"><span>${esc(p.lastname)}, ${esc(p.firstname)}</span><span>Pendiente de vincular</span></div>`).join('')}
+      ${(r.pendingPassengers || []).map(p => `<div class="info-row"><span>${esc(p.lastname)}, ${esc(p.firstname)}</span><span>Sin ficha</span></div>`).join('')}
     </div>
     <div class="form-section" style="margin-bottom:0;">
       <div class="form-section-title">Aviso</div>
@@ -3072,7 +3072,9 @@ window.openEditReservation = function(id) {
   if (!r) return;
   _resEditingId = id;
   _resSelectedPax = new Set(r.pasajeros || []);
-  _resPendingPax = structuredClone(r.pendingPassengers || []);
+  const rematch = matchItineraryPassengers((r.pendingPassengers || []).map(p => ({ apellido: p.lastname, nombre: p.firstname })), passengers);
+  rematch.ids.forEach(pid => _resSelectedPax.add(pid));
+  _resPendingPax = rematch.pending;
   document.getElementById('modal-reservation-title').textContent = 'Editar check-in';
   document.getElementById('res-id').value = id;
   document.getElementById('res-pnr').value = r.pnr || '';
@@ -3081,12 +3083,12 @@ window.openEditReservation = function(id) {
   document.getElementById('res-alert-horas').value = String([24, 48, 72].includes(Number(r.alertHorasAntes)) ? Number(r.alertHorasAntes) : 24);
   _resPiernasDraft = storedPiernas(r);
   window.renderResPiernasDraft();
-  document.getElementById('res-pax-search').value = '';
+  document.getElementById('res-pax-search').value = hintPendingSearch();
   const rawPreview = document.getElementById('res-pnr-preview');
   if (rawPreview) rawPreview.style.display = 'none';
   const rawStatus = document.getElementById('res-pnr-status');
   if (rawStatus) rawStatus.textContent = '';
-  window.renderResPaxList('');
+  window.renderResPaxList(document.getElementById('res-pax-search').value);
   window.renderResSelectedPax();
   openModal('modal-reservation');
 };
@@ -3111,25 +3113,29 @@ window.renderResPaxList = function(search) {
     </div>`).join('');
 };
 
+function hintPendingSearch() {
+  const last = _resPendingPax[0]?.lastname || '';
+  return last.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z]+/g, ' ').trim();
+}
+
+function consumePendingForPassenger(p) {
+  if (!p) return;
+  _resPendingPax = _resPendingPax.filter(pending =>
+    matchItineraryPassengers([{ apellido: pending.lastname, nombre: pending.firstname }], [p]).ids.length === 0
+  );
+}
+
 // Click para agregar un pasajero de la lista
 document.addEventListener('click', e => {
   const addId = e.target.closest('[data-add-pax]')?.dataset.addPax;
   if (!addId) return;
   _resSelectedPax.add(addId);
+  consumePendingForPassenger(passengers.find(p => p.id === addId));
   const search = document.getElementById('res-pax-search')?.value || '';
   window.renderResPaxList(search);
   window.renderResSelectedPax();
 });
 
-document.addEventListener('change', e => {
-  if (!e.target.matches('[data-link-pending]') || !e.target.value) return;
-  const id = e.target.value;
-  if (!passengers.some(p => p.id === id)) return;
-  _resSelectedPax.add(id);
-  _resPendingPax.splice(Number(e.target.dataset.linkPending), 1);
-  window.renderResSelectedPax();
-  window.renderResPaxList(document.getElementById('res-pax-search').value);
-});
 document.addEventListener('click', e => {
   const button = e.target.closest('[data-remove-pending]');
   if (!button) return;
@@ -3141,11 +3147,12 @@ window.renderResSelectedPax = function() {
   const wrap = document.getElementById('res-pax-selected');
   if (!wrap) return;
   document.getElementById('res-pax-pending').innerHTML = _resPendingPax.map((p, i) => `
-    <div class="form-group"><strong>${esc(p.lastname)}, ${esc(p.firstname)}</strong> <small>Pendiente de vincular</small>
-      <select data-link-pending="${i}" aria-label="Vincular ${escStr(p.lastname)} a una ficha">
-        <option value="">Elegir ficha existente...</option>
-        ${passengers.filter(x => !_resSelectedPax.has(x.id)).map(x => `<option value="${escStr(x.id)}">${esc(x.lastname)}, ${esc(x.firstname)}${x.dob ? ' - ' + esc(x.dob) : ''}</option>`).join('')}
-      </select><button type="button" class="btn btn-ghost btn-sm" data-remove-pending="${i}">Quitar nombre</button>
+    <div style="padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;">${esc(p.lastname)}, ${esc(p.firstname)}</span>
+        <button type="button" class="btn btn-ghost btn-sm" data-remove-pending="${i}" data-no-row-action="true" style="color:var(--red);">Quitar</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;">Del PNR · sin ficha. Buscala abajo para asociarla.</div>
     </div>`).join('');
   const selected = passengers.filter(p => _resSelectedPax.has(p.id));
   if (!selected.length) {
@@ -3421,7 +3428,7 @@ function matchPnrPasajeros(pasajeros) {
   const previous = _resPendingPax.map(p => ({ apellido: p.lastname, nombre: p.firstname }));
   const result = matchItineraryPassengers([...previous, ...(pasajeros || [])], passengers);
   _resPendingPax = mergePendingPassengers([], result.pending);
-  return { encontrados: result.ids, noEncontrados: result.pending.map(p => `${p.lastname}/${p.firstname}`) };
+  return { encontrados: result.ids, noEncontrados: result.pending.map(p => `${p.lastname}, ${p.firstname}`) };
 }
 
 // Lee un File como base64 (sin el prefijo data:...;base64,). Espeja el patrón
@@ -3469,7 +3476,9 @@ window.applyInterpretedReservation = function(d) {
   // Matching de pasajeros contra la base
   const { encontrados, noEncontrados } = matchPnrPasajeros(d.pasajeros);
   encontrados.forEach(id => _resSelectedPax.add(id));
-  window.renderResPaxList(document.getElementById('res-pax-search')?.value || '');
+  const searchEl = document.getElementById('res-pax-search');
+  if (searchEl) searchEl.value = hintPendingSearch();
+  window.renderResPaxList(searchEl?.value || '');
   window.renderResSelectedPax();
 
   // Preview con resumen + no encontrados
@@ -3478,7 +3487,7 @@ window.applyInterpretedReservation = function(d) {
   html += `<div style="margin-bottom:4px;"><strong>${totalPax}</strong> pasajero(s) · <strong>${encontrados.length}</strong> asociado(s) a la base</div>`;
   if (d.notas) html += `<div style="color:var(--text3);margin-bottom:6px;">${esc(d.notas)}</div>`;
   if (noEncontrados.length) {
-    html += `<div style="color:var(--red);margin-top:4px;">Nombres conservados en el check-in, pendientes de vincular: ${esc(noEncontrados.join(' · '))}</div>`;
+    html += `<div style="color:var(--text3);margin-top:4px;">Sin ficha para ${esc(noEncontrados.join(', '))}. Buscalas abajo o guardá el check-in con el nombre del PNR.</div>`;
   }
   html += `</div>`;
   return { html };

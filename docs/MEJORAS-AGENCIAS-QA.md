@@ -8,7 +8,7 @@ Rama: `codex/mejoras-agencias`. Revisar el PR antes de integrar a `main`: ese me
 2. Generar NM y SSR en Amadeus, Sabre y Galileo con nombres como `D'ANGELO`, `MUÑOZ` o `JOSE-MARIA`. La salida usa letras A-Z y espacios: apostrofe y guion pasan a espacio (`D ANGELO`, `JOSE MARIA`), la enie a N (`MUNOZ`). Los formatos de los comandos se conservan.
 3. En la ficha, Contacto de emergencia arranca vacio (como Visa / Asistencia / Viajero frecuente). Agregar, completar nombre/parentesco/telefono, guardar y volver a abrir: los datos siguen ahi. Quitar con × y guardar: queda vacio otra vez. No es obligatorio.
 4. Importar el CSV usando los encabezados de la plantilla. Revisar observaciones, programas de viajero frecuente, asistencia y emergencia antes de confirmar. Los pasajeros ya existentes se omiten como antes; el import no actualiza sus fichas.
-5. Cargar un itinerario con un pasajero sin ficha. Su nombre debe quedar como pendiente de vincular, incluso al cerrar y reabrir el check-in. Al crear la ficha, editar el check-in y elegirla en el selector del nombre pendiente. No se inventan documentos ni nacionalidad.
+5. Cargar un itinerario con un pasajero sin ficha. El nombre del PNR queda en el check-in (sin desplegable de toda la agencia). Si la ficha existe con el mismo nombre (apóstrofe o espacio da igual: D'IMPERIO y D IMPERIO), se asocia sola. Si no, buscala abajo con + o guardá el check-in igual. No se inventan documentos ni nacionalidad.
 
 No hay recordatorios de formularios por destino (Punta Cana, Aruba, etc.). Esa parte se saco del PR.
 

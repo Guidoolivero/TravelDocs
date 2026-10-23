@@ -13,6 +13,12 @@ test('enlaza una coincidencia unica con acentos y mantiene el id', () => {
  assert.deepEqual(matchItineraryPassengers([{apellido:'Beraldi',nombre:'José'}], [{id:'x',lastname:'BERALDI',firstname:'JOSE'}]), {ids:['x'],pending:[]});
 });
 
+test('enlaza apostrofe o guion del PNR con la ficha escrita con espacio', () => {
+  const pax = [{id:'g',lastname:'D IMPERIO',firstname:'GASTON FEDERICO'}];
+  assert.deepEqual(matchItineraryPassengers([{apellido:"D'IMPERIO",nombre:'GASTON FEDERICO'}], pax), {ids:['g'],pending:[]});
+  assert.deepEqual(matchItineraryPassengers([{apellido:'JOSE-MARIA',nombre:'PEREZ'}], [{id:'j',lastname:'JOSE MARIA',firstname:'PEREZ'}]), {ids:['j'],pending:[]});
+});
+
 test('no confunde nombres distintos por compartir el primer nombre ni enlaza nombres incompletos', () => {
  const passengers = [{id:'x',lastname:'PEREZ',firstname:'ANA MARIA'}];
  const input = [{apellido:'Perez',nombre:'Ana Laura'}, {apellido:'Perez',nombre:''}];
