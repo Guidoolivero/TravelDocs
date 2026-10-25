@@ -167,6 +167,30 @@ if (!HAS_EMULATOR) {
       await assertFails(db.doc('agencies/missing-agency/passengers/test').set({ test: true }));
     });
 
+    it('ningun rol de agencia modifica campos administrativos ni agrega campos nuevos', async () => {
+      const agencyId = 'protected-agency-fields';
+      const original = {
+        name: 'Agencia', slug: agencyId, status: 'active', plan: 'starter', memberCount: 2,
+        branding: { appName: 'Agencia' }, alerts: { email: 'agency@test.com' },
+        createdAt: 'original', updatedAt: 'original',
+      };
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set(original));
+      for (const role of ['owner', 'admin', 'agent']) {
+        const ref = authAs(UID_A, agencyId, role).firestore().doc(`agencies/${agencyId}`);
+        await assertSucceeds(ref.get());
+        for (const patch of [
+          { plan: 'pro' }, { slug: 'otra' }, { memberCount: 999 }, { name: 'Otro nombre' },
+          { branding: { appName: 'Otro' } }, { alerts: { email: 'other@test.com' } },
+          { createdAt: 'otro' }, { updatedAt: 'otro' }, { futureAdminField: true },
+        ]) {
+          await assertFails(ref.update(patch));
+        }
+        await assertFails(ref.set({ ...original, plan: 'pro' }));
+        await assertFails(ref.set({ name: 'Reemplazo' }));
+        assert.deepEqual((await ref.get()).data(), original);
+      }
+    });
+
     it('estado de agencia solo se modifica desde el backend de plataforma', async () => {
       const agencyId = 'protected-status';
       await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set({ status: 'active' }));
@@ -174,8 +198,8 @@ if (!HAS_EMULATOR) {
         const ref = authAs(UID_A, agencyId, role).firestore().doc(`agencies/${agencyId}`);
         await assertFails(ref.update({ status: 'suspended' }));
         await assertFails(ref.set({ name: 'Sin estado' }));
-        await assertSucceeds(ref.update({ name: 'Nombre permitido' }));
-        await assertSucceeds(ref.update({ status: 'active' }));
+        await assertFails(ref.update({ name: 'Cambio directo' }));
+        await assertFails(ref.update({ status: 'active' }));
       }
     });
 
