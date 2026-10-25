@@ -82,10 +82,23 @@ if (!HAS_EMULATOR) {
   });
 
   function authAs(uid, agencyId, role) {
-    return testEnv.authenticatedContext(uid, { agencyId, role });
+    return testEnv.authenticatedContext(uid, { agencyId, role, firebase: { sign_in_second_factor: 'totp' }, auth_time: Math.floor(Date.now() / 1000) });
   }
 
   describe('Firestore rules — aislamiento multi-tenant', () => {
+    it('sin MFA o con sesion anterior al reset no accede a datos de agencia', async () => {
+      const uid = 'mfa-session';
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ active: true, agencyId: AGENCY_A, role: 'agent', mfaResetAt: 100 }));
+      for (const extra of [{ auth_time: 200 }, { auth_time: 100, firebase: { sign_in_second_factor: 'totp' } }]) {
+        const db = testEnv.authenticatedContext(uid, { agencyId: AGENCY_A, role: 'agent', ...extra }).firestore();
+        await assertFails(db.collection(`agencies/${AGENCY_A}/passengers`).get());
+        await assertFails(db.doc(`agencies/${AGENCY_A}/settings/gdsCities`).set({ items: [] }));
+        await assertSucceeds(db.doc(`users/${uid}`).get());
+      }
+      const db = testEnv.authenticatedContext(uid, { agencyId: AGENCY_A, role: 'agent', auth_time: 200, firebase: { sign_in_second_factor: 'totp' } }).firestore();
+      await assertSucceeds(db.collection(`agencies/${AGENCY_A}/passengers`).get());
+    });
+
     it('membresias e invitaciones solo se escriben desde el backend', async () => {
       for (const role of ['owner', 'admin', 'agent']) {
         const uid = `member-${role}`;
@@ -125,7 +138,7 @@ if (!HAS_EMULATOR) {
       await assertSucceeds(newDb.doc(`agencies/${AGENCY_A}/settings/gdsCities`).set({ items: [] }));
     });
 
-    for (const changedField of ['agencyId', 'role']) {
+    for (const changedField of ['agencyId', 'role', 'mfaResetAt']) {
       it(`listener abierto deja de recibir datos cuando cambia ${changedField}`, { timeout: 15000 }, async () => {
         const uid = `listener-change-${changedField}`;
         await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ active: true, agencyId: AGENCY_A, role: 'owner' }));
@@ -139,7 +152,7 @@ if (!HAS_EMULATOR) {
         try {
           await firstSnapshot;
           await testEnv.withSecurityRulesDisabled(async c => {
-            await c.firestore().doc(`users/${uid}`).update({ [changedField]: changedField === 'role' ? 'agent' : AGENCY_B });
+            await c.firestore().doc(`users/${uid}`).update({ [changedField]: { role: 'agent', agencyId: AGENCY_B, mfaResetAt: Math.floor(Date.now() / 1000) + 1 }[changedField] });
             await c.firestore().doc(`agencies/${AGENCY_A}/passengers/change-${changedField}`).set({ firstname: 'TEST' });
           });
           assert.equal((await denied).code, 'permission-denied');

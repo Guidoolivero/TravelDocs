@@ -88,6 +88,16 @@ async function completeLogin(user) {
     return false;
   }
 
+  const token = await user.getIdTokenResult(true);
+  if (REQUIRE_2FA && token.claims.firebase?.sign_in_second_factor !== 'totp') {
+    clearStoredAgencyId();
+    await signOut(auth);
+    showLoginForm();
+    resetLoginButton();
+    showError('Ingresa nuevamente con tu contrasena y el codigo del autenticador para continuar.');
+    return false;
+  }
+
   const resolved = await resolveAgencyForUser(user.uid);
   if (!resolved) {
     clearStoredAgencyId();
@@ -130,6 +140,10 @@ if (params.get('error') === 'unauthorized') {
 }
 if (params.get('reason') === 'expired') {
   showError('Tu sesión venció. Volvé a ingresar.');
+  window.history.replaceState({}, '', window.location.pathname);
+}
+if (params.get('reason') === 'verify2fa') {
+  showError('Ingresa nuevamente con tu autenticador para continuar.');
   window.history.replaceState({}, '', window.location.pathname);
 }
 if (params.get('reason') === 'need2fa') {
@@ -186,7 +200,7 @@ document.getElementById('btn-mfa-enroll')?.addEventListener('click', async () =>
     // Setear claim mfaEnrolled + (si es primer enrolamiento) generar código de recuperación.
     const result = await completeMfaEnrollment(_pendingUser);
     if (result.existing) {
-      // Re-enrolamiento: ya tiene código de recuperación guardado, no lo mostramos de nuevo.
+      // Ya tiene un codigo sin consumir; no se vuelve a mostrar.
       await _pendingUser.getIdToken(true);
       _mfaPending = false;
       await completeLogin(_pendingUser);

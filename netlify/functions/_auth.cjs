@@ -48,6 +48,10 @@ async function verifyAuth(event, { requireMfa = true } = {}) {
       return { ok: false, status: 403, error: 'Cuenta desactivada.' };
     }
 
+    if (data.mfaResetAt != null && !(decoded.auth_time > data.mfaResetAt)) {
+      return { ok: false, status: 401, error: 'Tu sesion fue reseteada. Volve a iniciar sesion.' };
+    }
+
     const agencyId = data.agencyId;
     const role = data.role;
     if (typeof agencyId !== 'string' || !agencyId.trim() || !['owner', 'admin', 'agent'].includes(role)) {
@@ -69,17 +73,17 @@ async function verifyAuth(event, { requireMfa = true } = {}) {
       return { ok: false, status: 403, error: 'Agencia inactiva.' };
     }
 
-    // 2FA: si requireMfa + REQUIRE_2FA y el claim mfaEnrolled no está en true,
-    // rechazar. Excepción: las Functions de enrolamiento usan requireMfa:false.
+    // 2FA: exigir evidencia del segundo factor emitida por Firebase para esta sesion.
+    // El enrolamiento usa requireMfa:false; no habilita acceso a datos.
     // REQUIRE_2FA: env var 'true' de Netlify lo fuerza ya (para probar en staging);
     // si no, se activa solo el 21/09/2026 00:00 ART (misma fecha que public/js/config.js).
     const REQUIRE_2FA = process.env.REQUIRE_2FA === 'true' ||
       Date.now() >= Date.parse('2026-09-21T00:00:00-03:00');
-    if (requireMfa && REQUIRE_2FA && decoded.mfaEnrolled !== true) {
-      return { ok: false, status: 403, error: 'Debés activar el 2FA para usar el sistema.' };
+    if (requireMfa && REQUIRE_2FA && decoded.firebase?.sign_in_second_factor !== 'totp') {
+      return { ok: false, status: 403, error: 'Ingresa con tu autenticador para usar el sistema.' };
     }
 
-    return { ok: true, uid, agencyId, role, email };
+    return { ok: true, uid, agencyId, role, email, authTime: decoded.auth_time };
   } catch (err) {
     const code = err?.code || '';
     if (code === 'auth/id-token-expired' || code === 'auth/argument-error') {

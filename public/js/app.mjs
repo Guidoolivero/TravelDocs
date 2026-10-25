@@ -284,6 +284,12 @@ onAuthStateChanged(auth, async user => {
 
   // Sesion de 3h: el token forzado trae iat del server (ver sesion.mjs).
   const freshToken = await user.getIdTokenResult(true);
+  if (REQUIRE_2FA && freshToken.claims.firebase?.sign_in_second_factor !== 'totp') {
+    clearStoredAgencyId();
+    await signOut(auth);
+    window.location.href = './login.html?reason=verify2fa';
+    return;
+  }
   _venceSesion = venceSesion(freshToken.claims, Date.now());
   if (await cerrarSiVencio()) return;
 
@@ -4792,9 +4798,38 @@ function renderUsersTable() {
         ${m.active
           ? `<button class="btn btn-ghost btn-sm" data-user-deactivate="${esc(m.uid)}">Desactivar</button>`
           : `<button class="btn btn-ghost btn-sm" data-user-activate="${esc(m.uid)}">Reactivar</button>`}
+        <button class="btn btn-ghost btn-sm" data-user-mfa-reset="${escStr(m.uid)}">Resetear 2FA</button>
         <button class="btn btn-ghost btn-sm" data-user-delete="${esc(m.uid)}" style="color:var(--red);">Eliminar</button>
       </td>
     </tr>`).join('');
+}
+
+function forceResetUserMfa(uid) {
+  showConfirmDialog({
+    title: 'Resetear autenticador',
+    message: 'Se cerraran las sesiones del usuario y se invalidara su codigo de recuperacion. Debera ingresar con su contrasena y configurar un nuevo autenticador.',
+    confirmLabel: 'Resetear 2FA',
+    onConfirm: async () => {
+      try {
+        const idToken = await _mfaIdToken();
+        const res = await fetch(_mfaFnUrl('mfa-admin'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ action: 'force-reset', targetUid: uid }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'No se pudo resetear el 2FA.');
+        if (uid === auth.currentUser?.uid) {
+          await signOut(auth);
+          window.location.href = './login.html?reason=need2fa';
+          return;
+        }
+        showToast('2FA reseteado. El usuario debe configurar un nuevo autenticador.');
+      } catch (err) {
+        showToast(err.message || 'No se pudo resetear el 2FA.', true);
+      }
+    },
+  });
 }
 
 async function submitUserForm() {
@@ -5155,6 +5190,8 @@ document.addEventListener('click', e => {
   if (react) { toggleUserActive(react.dataset.userActivate, true); return; }
   const usEdit = e.target.closest('[data-user-edit]');
   if (usEdit) { openEditUserModal(usEdit.dataset.userEdit); return; }
+  const mfaReset = e.target.closest('[data-user-mfa-reset]');
+  if (mfaReset) { forceResetUserMfa(mfaReset.dataset.userMfaReset); return; }
   const usDel = e.target.closest('[data-user-delete]');
   if (usDel) { deleteUser(usDel.dataset.userDelete); return; }
 });

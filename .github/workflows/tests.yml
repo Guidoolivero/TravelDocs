@@ -75,9 +75,30 @@ jobs:
 
       - run: npm run test:rules:emulator
 
+  mfa-ui:
+    name: MFA en navegador (servicios simulados)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: mfa-ui-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - run: node tests/mfa-ui.smoke.mjs
+
   deploy:
     name: Deploy a produccion (Netlify)
-    needs: [unit, firestore-rules]
+    needs: [unit, firestore-rules, mfa-ui]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15

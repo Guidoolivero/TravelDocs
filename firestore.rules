@@ -8,7 +8,9 @@ service cloud.firestore {
       return request.auth != null
         && request.auth.token.agencyId is string
         && request.auth.token.role is string
+        && request.auth.token.firebase.sign_in_second_factor == 'totp'
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('active', true) != false
+        && request.auth.token.auth_time > get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('mfaResetAt', 0)
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.agencyId == request.auth.token.agencyId
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == request.auth.token.role;
     }

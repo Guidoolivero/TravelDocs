@@ -2,12 +2,12 @@
 //  Netlify Function: mfa-complete
 //  Se llama DESPUÉS de que el cliente enroló el factor TOTP vía
 //  Firebase Auth. Hace dos cosas:
-//    1) Genera 8 códigos de recuperación de un solo uso, los
-//       hashea (SHA-256 + salt) y los guarda en users/{uid}.
-//       Los devuelve en claro (se muestran una sola vez).
+//    1) Genera un codigo de recuperacion de un solo uso, lo
+//       hashea (SHA-256 + salt) y lo guarda en users/{uid}.
+//       Lo devuelve en claro una sola vez.
 //    2) Setea el custom claim `mfaEnrolled: true` (preservando
-//       agencyId/role) para que _auth.cjs deje pasar las demás
-//       Functions.
+//       agencyId/role) como marca informativa. El acceso requiere
+//       que Firebase certifique TOTP en la sesion.
 //
 //  Auth ligera: verifyAuth con requireMfa:false (el usuario aún
 //  no tiene el claim, justamente viene a setearlo).
@@ -63,41 +63,36 @@ exports.handler = async function handler(event) {
   const authResult = await verifyAuth(event, { requireMfa: false });
   if (!authResult.ok) return reply(authResult.status, { error: authResult.error });
 
-  const { uid } = authResult;
+  const { uid, authTime } = authResult;
 
   try {
     // Verificar que el usuario realmente enroló un factor TOTP en Firebase Auth.
     const userRecord = await auth().getUser(uid);
     const enrolled = (userRecord.multiFactor && userRecord.multiFactor.enrolledFactors) || [];
-    if (!enrolled.length) {
+    if (!enrolled.some(f => f.factorId === 'totp')) {
       return reply(400, { error: 'Todavía no enrolaste el autenticador.' });
     }
 
     // Setear claim mfaEnrolled:true preservando claims existentes.
     const existingClaims = userRecord.customClaims || {};
+
+    const userRef = db().collection('users').doc(uid);
+    const result = await db().runTransaction(async transaction => {
+      const userDoc = await transaction.get(userRef);
+      const user = userDoc.data() || {};
+      if (!userDoc.exists || (user.mfaResetAt != null && !(authTime > user.mfaResetAt))) return { stale: true };
+      const existingCodes = user.recoveryCodes || [];
+      if (existingCodes.length > 0) return { existing: true };
+
+      const code = genCode();
+      transaction.set(userRef, {
+        recoveryCodes: [hashCode(code)], updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return { recoveryCodes: [code] };
+    });
+    if (result.stale) return reply(401, { error: 'Tu sesion fue reseteada. Volve a ingresar.' });
     await auth().setCustomUserClaims(uid, { ...existingClaims, mfaEnrolled: true });
-
-    // Si el usuario ya tiene un código de recuperación (re-enrolamiento tras un
-    // reseteo normal), NO lo regeneramos: el que guardó sigue siendo válido.
-    // Solo se genera uno nuevo en el primer enrolamiento o después de un force-reset.
-    const userDoc = await db().collection('users').doc(uid).get();
-    const existingCodes = (userDoc.data() || {}).recoveryCodes || [];
-    if (existingCodes.length > 0) {
-      return reply(200, { existing: true });
-    }
-
-    // Primer enrolamiento (o post force-reset): generar 1 código de recuperación.
-    const code = genCode();
-    const hashed = [hashCode(code)];
-
-    // Guardar el hash en users/{uid}.recoveryCodes (write:false para el cliente;
-    // lo escribe el Admin SDK, que saltea firestore.rules).
-    await db().collection('users').doc(uid).set(
-      { recoveryCodes: hashed, updatedAt: admin.firestore.FieldValue.serverTimestamp() },
-      { merge: true }
-    );
-
-    return reply(200, { recoveryCodes: [code] });
+    return reply(200, result);
   } catch (err) {
     console.error('mfa-complete: error:', err?.message || err);
     return reply(500, { error: 'No se pudo completar el enrolamiento del 2FA.' });

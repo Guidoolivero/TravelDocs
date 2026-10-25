@@ -26,15 +26,20 @@ export const addReservation=async d=>{window.fixture.savedReservation=d;window.f
 export const deletePassenger=async()=>{},isNotified=async()=>true,markNotified=async()=>{},deleteReservation=async()=>{},deleteReservations=async()=>{},getGdsCities=async()=>[],saveGdsCities=async()=>{};`;
 await page.route('**/*',async route=>{
  const u=new URL(route.request().url());
+ const cors={'Access-Control-Allow-Origin':url,'Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Allow-Methods':'POST, GET, PATCH, OPTIONS'};
+ if(u.pathname.startsWith('/.netlify/')&&route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:cors});
  if(u.hostname==='www.gstatic.com'){
-  const body=u.pathname.endsWith('firebase-app.js')?'export const initializeApp=()=>({});':`const user={uid:'test',email:'test@example.invalid',getIdTokenResult:async()=>({claims:{iat:Math.floor(Date.now()/1000),auth_time:Math.floor(Date.now()/1000),role:'agent'}})};export const getAuth=()=>({currentUser:user}),onAuthStateChanged=(_,cb)=>setTimeout(()=>cb(user),20),signOut=async()=>{},multiFactor=()=>({enrolledFactors:[{}]});`;
+  const body=u.pathname.endsWith('firebase-app.js')?'export const initializeApp=()=>({});':`const user={uid:'test',email:'test@example.invalid',getIdToken:async()=> 'dummy',getIdTokenResult:async()=>({claims:{iat:Math.floor(Date.now()/1000),auth_time:Math.floor(Date.now()/1000),role:'owner',platformAdmin:true,firebase:{sign_in_second_factor:'totp'}}})};export const getAuth=()=>({currentUser:user}),onAuthStateChanged=(_,cb)=>setTimeout(()=>cb(user),20),signOut=async()=>{},multiFactor=()=>({enrolledFactors:[{}]});`;
   return route.fulfill({contentType:'application/javascript',body});
  }
  if(u.href==='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js') return route.fulfill({contentType:'application/javascript',body:await readFile(xlsxPath,'utf8')});
- if(u.origin!==url) return route.abort();
+ if(u.origin!==url&&!u.pathname.startsWith('/.netlify/')) return route.abort();
  if(['/js/sentry.js','/js/analytics.js'].includes(u.pathname)) return route.fulfill({contentType:'application/javascript',body:''});
  if(u.pathname==='/js/db.js')return route.fulfill({contentType:'application/javascript',body:stub});
- if(u.pathname.startsWith('/.netlify/')) return route.fulfill({contentType:'application/json',body:'{"ok":true}'});
+ if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial'}]})});
+ if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true}]})});
+ if(u.pathname.endsWith('/mfa-admin')) {await page.evaluate(body=>{window.fixture.mfaReset=body},route.request().postDataJSON());return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});}
+ if(u.pathname.startsWith('/.netlify/')) return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});
  return route.continue();
 });
 try{
@@ -52,8 +57,8 @@ try{
  await page.locator('#emergency-list button[title="Eliminar contacto"]').click();await page.evaluate(()=>window.savePassenger());
  assert.equal(await page.evaluate(()=>window.fixture.savedPassenger.emergencyContact.phone),'');
  await page.evaluate(()=>window.openEditReservation('pending'));
- assert.match(await page.locator('#res-pax-pending').innerText(),/BERALDI/);
- await page.locator('[data-add-pax="jose"]').click();
+ assert.equal(await page.locator('#res-pax-pending').innerText(),'');
+ assert.match(await page.locator('#res-pax-selected').innerText(),/BERALDI/);
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
@@ -63,6 +68,14 @@ try{
  await page.locator('#btn-import-save').click();
  const imported=await page.evaluate(()=>window.fixture.imported[0]);
  assert.equal(imported.ffn[0].number,'000123');assert.equal(imported.notes,'Observacion ficticia');assert.equal(imported.emergencyContact.phone,'+5490000000000');assert.equal(imported.asistencias[0].num,'V001');
+ await page.locator('#nav-admin').click();
+ await page.locator('[data-agency-edit="other"]').waitFor();
+ await page.locator('[data-admin-tab="users"]').click();
+ await page.locator('#admin-us-filter-agency').selectOption('other');
+ await page.locator('[data-user-mfa-reset="other-user"]').click({timeout:5000});
+ await page.locator('#confirm-ok-btn').click();
+ await page.waitForFunction(()=>window.fixture.mfaReset?.targetUid==='other-user');
+ assert.deepEqual(await page.evaluate(()=>window.fixture.mfaReset),{action:'force-reset',targetUid:'other-user'});
  assert.deepEqual(errors,[]);
- console.log('PASS browser: search, optional emergency roundtrip, pending linkage, real CSV parser to save; no external services');
+ console.log('PASS browser: search, optional emergency roundtrip, pending linkage, real CSV parser to save, platform MFA reset across agencies; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}
