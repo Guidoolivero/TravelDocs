@@ -3,12 +3,14 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Custom claims en el JWT (seteados por scripts/seed-trading-travel.mjs).
-    // El perfil vigente bloquea sesiones con claims anteriores a la desactivacion.
+    // El perfil vigente invalida claims anteriores a cambios de agencia o rol.
     function hasTenantClaims() {
       return request.auth != null
         && request.auth.token.agencyId is string
         && request.auth.token.role is string
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('active', true) != false;
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('active', true) != false
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.agencyId == request.auth.token.agencyId
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == request.auth.token.role;
     }
 
     function userAgency() {
@@ -62,12 +64,12 @@ service cloud.firestore {
 
       match /members/{memberId} {
         allow read: if isMemberOf(agencyId);
-        allow write: if isAdminOf(agencyId);
+        allow write: if false;
       }
 
       match /invites/{inviteId} {
         allow read: if isAdminOf(agencyId);
-        allow write: if isAdminOf(agencyId);
+        allow write: if false;
       }
 
       match /settings/{docId} {

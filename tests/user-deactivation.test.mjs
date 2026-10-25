@@ -16,11 +16,11 @@ function fixture({ active = true, missing = false, revoked = false } = {}) {
   const sdkAuth = {
     async verifyIdToken(token, checkRevoked) {
       if (revoked && checkRevoked) throw Object.assign(new Error('revoked'), { code: 'auth/id-token-revoked' });
-      return { uid: token, email: `${token}@test.com`, agencyId: 'agency', role: 'owner', mfaEnrolled: true };
+      return { uid: token, email: `${token}@test.com`, agencyId: 'agency', role: token === 'admin' ? 'owner' : 'agent', mfaEnrolled: true };
     },
     async getUser(uid) { return { email: `${uid}@test.com`, customClaims: { platformAdmin: uid === 'admin' } }; },
     async updateUser(uid, patch) { calls.push(['updateUser', uid, patch]); },
-    async setCustomUserClaims() {},
+    async setCustomUserClaims(uid, claims) { calls.push(['claims', uid, claims]); },
     async revokeRefreshTokens(uid) { calls.push(['revoke', uid]); },
   };
   function ref(path) {
@@ -51,6 +51,7 @@ function fixture({ active = true, missing = false, revoked = false } = {}) {
     docs, calls, sdkAuth,
     agency: (agencyId, body, actor = 'admin') => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: `/.netlify/functions/admin-api/agencies/${agencyId}`, headers: { authorization: `Bearer ${actor}` }, body: JSON.stringify(body) }),
     verify: () => load(new URL('../netlify/functions/_auth.cjs', import.meta.url)).verifyAuth({ headers: { authorization: 'Bearer user' } }),
+    editUser: body => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: '/.netlify/functions/admin-api/users/user', headers: { authorization: 'Bearer admin' }, body: JSON.stringify(body) }),
     patch: active => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: '/.netlify/functions/admin-api/users/user', headers: { authorization: 'Bearer admin' }, body: JSON.stringify({ active }) }),
   };
 }
@@ -134,9 +135,53 @@ test('platformAdmin conserva edicion de plan, nombre, branding y alertas', async
 for (const role of ['owner', 'admin', 'agent']) {
   test(`${role} sin platformAdmin no modifica agencias por API`, async () => {
     const f = fixture();
+    f.docs.set('users/user', { active: true, agencyId: 'agency', role });
     const verify = f.sdkAuth.verifyIdToken;
     f.sdkAuth.verifyIdToken = async (...args) => ({ ...await verify(...args), role });
     assert.equal((await f.agency('agency', { plan: 'pro' }, 'user')).statusCode, 403);
     assert.equal(f.docs.get('agencies/agency').plan, undefined);
   });
 }
+
+test('Functions rechaza el rol anterior tras una degradacion', async () => {
+  const f = fixture();
+  const verify = f.sdkAuth.verifyIdToken;
+  f.sdkAuth.verifyIdToken = async (...args) => ({ ...await verify(...args), role: 'owner' });
+  assert.equal((await f.verify()).status, 403);
+});
+test('Functions rechaza la agencia anterior despues de un traslado', async () => {
+  const f = fixture();
+  f.docs.set('users/user', { active: true, agencyId: 'other', role: 'agent' });
+  f.docs.set('agencies/other', { status: 'active' });
+  assert.equal((await f.verify()).status, 403);
+  const verify = f.sdkAuth.verifyIdToken;
+  f.sdkAuth.verifyIdToken = async (...args) => ({ ...await verify(...args), agencyId: 'other' });
+  const result = await f.verify();
+  assert.equal(result.ok, true);
+  assert.equal(result.agencyId, 'other');
+});
+test('Functions no autoriza un perfil sin agencia o con rol desconocido', async () => {
+  for (const profile of [{ role: 'agent' }, { agencyId: 'agency', role: 'superuser' }]) {
+    const f = fixture();
+    f.docs.set('users/user', { active: true, ...profile });
+    assert.equal((await f.verify()).status, 403);
+  }
+});
+
+test('platformAdmin sincroniza cambios de rol y el token anterior pierde acceso', async () => {
+  const f = fixture();
+  assert.equal((await f.editUser({ role: 'owner' })).statusCode, 200);
+  assert.equal(f.docs.get('users/user').role, 'owner');
+  assert.equal(f.docs.get('agencies/agency/members/user').role, 'owner');
+  assert.equal(f.calls.some(([op, uid, claims]) => op === 'claims' && uid === 'user' && claims.role === 'owner'), true);
+  assert.equal((await f.verify()).status, 403);
+  const verify = f.sdkAuth.verifyIdToken;
+  f.sdkAuth.verifyIdToken = async (...args) => ({ ...await verify(...args), role: 'owner' });
+  assert.equal((await f.verify()).ok, true);
+});
+test('Functions conserva el fallback al perfil para tokens sin claims de tenant', async () => {
+  const f = fixture();
+  const verify = f.sdkAuth.verifyIdToken;
+  f.sdkAuth.verifyIdToken = async (...args) => ({ ...await verify(...args), agencyId: undefined, role: undefined });
+  assert.equal((await f.verify()).ok, true);
+});

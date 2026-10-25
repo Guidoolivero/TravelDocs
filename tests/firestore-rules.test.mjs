@@ -15,6 +15,8 @@ const AGENCY_A = 'trading-travel';
 const AGENCY_B = 'agencia-piloto';
 const UID_A = 'user-a-uid';
 const UID_B = 'user-b-uid';
+const UID_ADMIN = 'admin-a-uid';
+const ROLE_UID = { agent: UID_A, admin: UID_ADMIN, owner: 'owner-a-uid' };
 
 let testEnv;
 
@@ -50,6 +52,10 @@ if (!HAS_EMULATOR) {
         active: true,
       });
 
+      for (const role of ['owner', 'admin']) {
+        await db.doc(`users/${ROLE_UID[role]}`).set({ agencyId: AGENCY_A, role, active: true });
+      }
+
       await db.collection('agencies').doc(AGENCY_A).set({ name: 'A', slug: AGENCY_A });
       await db.collection('agencies').doc(AGENCY_B).set({ name: 'B', slug: AGENCY_B });
 
@@ -80,6 +86,69 @@ if (!HAS_EMULATOR) {
   }
 
   describe('Firestore rules — aislamiento multi-tenant', () => {
+    it('membresias e invitaciones solo se escriben desde el backend', async () => {
+      for (const role of ['owner', 'admin', 'agent']) {
+        const uid = `member-${role}`;
+        await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ agencyId: AGENCY_A, role, active: true }));
+        const db = authAs(uid, AGENCY_A, role).firestore();
+        for (const collection of ['members', 'invites']) {
+          const ref = db.doc(`agencies/${AGENCY_A}/${collection}/${uid}`);
+          await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(ref.path).set({ role: 'agent', active: true }));
+          await assertFails(ref.update({ role: 'owner' }));
+          await assertFails(ref.delete());
+          await assertFails(db.doc(`agencies/${AGENCY_A}/${collection}/new-${uid}`).set({ role: 'owner' }));
+        }
+      }
+    });
+
+    it('token anterior al cambio de agencia pierde acceso y el renovado accede solo a la nueva', async () => {
+      const uid = 'transferred-user';
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ active: true, agencyId: AGENCY_B, role: 'agent' }));
+      const oldDb = authAs(uid, AGENCY_A, 'agent').firestore();
+      await assertFails(oldDb.collection(`agencies/${AGENCY_A}/passengers`).get());
+      await assertFails(oldDb.doc(`agencies/${AGENCY_A}/settings/gdsCities`).set({ items: [] }));
+      await assertFails(oldDb.collection(`agencies/${AGENCY_B}/passengers`).get());
+      const newDb = authAs(uid, AGENCY_B, 'agent').firestore();
+      await assertSucceeds(newDb.collection(`agencies/${AGENCY_B}/passengers`).get());
+      await assertFails(newDb.collection(`agencies/${AGENCY_A}/passengers`).get());
+    });
+
+    it('rol owner anterior no conserva permisos despues de bajar a agent', async () => {
+      const uid = 'demoted-user';
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ active: true, agencyId: AGENCY_A, role: 'agent' }));
+      const oldDb = authAs(uid, AGENCY_A, 'owner').firestore();
+      await assertFails(oldDb.collection(`agencies/${AGENCY_A}/passengers`).get());
+      await assertFails(oldDb.doc(`agencies/${AGENCY_A}/settings/alerts`).set({ email: 'other@test.com' }));
+      const newDb = authAs(uid, AGENCY_A, 'agent').firestore();
+      await assertSucceeds(newDb.collection(`agencies/${AGENCY_A}/passengers`).get());
+      await assertFails(newDb.doc(`agencies/${AGENCY_A}/settings/alerts`).set({ email: 'other@test.com' }));
+      await assertSucceeds(newDb.doc(`agencies/${AGENCY_A}/settings/gdsCities`).set({ items: [] }));
+    });
+
+    for (const changedField of ['agencyId', 'role']) {
+      it(`listener abierto deja de recibir datos cuando cambia ${changedField}`, { timeout: 15000 }, async () => {
+        const uid = `listener-change-${changedField}`;
+        await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ active: true, agencyId: AGENCY_A, role: 'owner' }));
+        const db = authAs(uid, AGENCY_A, 'owner').firestore();
+        let ready;
+        const firstSnapshot = new Promise(resolve => { ready = resolve; });
+        let unsubscribe;
+        const denied = new Promise(resolve => {
+          unsubscribe = db.collection(`agencies/${AGENCY_A}/passengers`).onSnapshot(ready, resolve);
+        });
+        try {
+          await firstSnapshot;
+          await testEnv.withSecurityRulesDisabled(async c => {
+            await c.firestore().doc(`users/${uid}`).update({ [changedField]: changedField === 'role' ? 'agent' : AGENCY_B });
+            await c.firestore().doc(`agencies/${AGENCY_A}/passengers/change-${changedField}`).set({ firstname: 'TEST' });
+          });
+          assert.equal((await denied).code, 'permission-denied');
+        } finally {
+          unsubscribe();
+        }
+      });
+    }
+
     it('usuario desactivado no lee ni escribe con claims antiguos de cualquier rol', async () => {
       await testEnv.withSecurityRulesDisabled(c => c.firestore().doc('users/disabled').set({ active: false }));
       for (const role of ['agent', 'admin', 'owner']) {
@@ -98,7 +167,7 @@ if (!HAS_EMULATOR) {
     });
 
     it('onSnapshot activo funciona y no entrega cambios tras desactivar el perfil', { timeout: 15000 }, async () => {
-      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc('users/listener').set({ active: true }));
+      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc('users/listener').set({ active: true, agencyId: AGENCY_A, role: 'agent' }));
       const db = authAs('listener', AGENCY_A, 'agent').firestore();
       let unsubscribe;
       let ready;
@@ -121,10 +190,12 @@ if (!HAS_EMULATOR) {
       const agencyId = 'suspended-agency';
       await testEnv.withSecurityRulesDisabled(async c => {
         await c.firestore().doc(`agencies/${agencyId}`).set({ status: 'suspended' });
-        await c.firestore().doc('users/suspended-member').set({ active: true });
+        for (const role of ['owner', 'admin', 'agent']) {
+          await c.firestore().doc(`users/suspended-${role}`).set({ active: true, agencyId, role });
+        }
       });
       for (const role of ['owner', 'admin', 'agent']) {
-        const db = authAs('suspended-member', agencyId, role).firestore();
+        const db = authAs(`suspended-${role}`, agencyId, role).firestore();
         await assertFails(db.doc(`agencies/${agencyId}`).get());
         await assertFails(db.doc(`agencies/${agencyId}`).update({ status: 'active' }));
         for (const collection of ['passengers', 'reservations', 'notifications', 'members', 'invites', 'settings']) {
@@ -134,15 +205,18 @@ if (!HAS_EMULATOR) {
         }
       }
       await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).update({ status: 'active' }));
-      const db = authAs('suspended-member', agencyId, 'agent').firestore();
+      const db = authAs('suspended-agent', agencyId, 'agent').firestore();
       await assertSucceeds(db.collection(`agencies/${agencyId}/passengers`).get());
       await assertSucceeds(db.doc(`agencies/${agencyId}/settings/gdsCities`).set({ items: [] }));
     });
 
     it('listener abierto no recibe nuevos pasajeros al suspender la agencia', { timeout: 15000 }, async () => {
       const agencyId = 'listener-agency';
-      await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set({ status: 'active' }));
-      const db = authAs(UID_A, agencyId, 'agent').firestore();
+      await testEnv.withSecurityRulesDisabled(async c => {
+        await c.firestore().doc(`agencies/${agencyId}`).set({ status: 'active' });
+        await c.firestore().doc('users/agency-listener').set({ agencyId, role: 'agent', active: true });
+      });
+      const db = authAs('agency-listener', agencyId, 'agent').firestore();
       let ready;
       const firstSnapshot = new Promise(resolve => { ready = resolve; });
       let unsubscribe;
@@ -176,7 +250,9 @@ if (!HAS_EMULATOR) {
       };
       await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set(original));
       for (const role of ['owner', 'admin', 'agent']) {
-        const ref = authAs(UID_A, agencyId, role).firestore().doc(`agencies/${agencyId}`);
+        const uid = `${agencyId}-${role}`;
+        await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ agencyId, role, active: true }));
+        const ref = authAs(uid, agencyId, role).firestore().doc(`agencies/${agencyId}`);
         await assertSucceeds(ref.get());
         for (const patch of [
           { plan: 'pro' }, { slug: 'otra' }, { memberCount: 999 }, { name: 'Otro nombre' },
@@ -195,7 +271,9 @@ if (!HAS_EMULATOR) {
       const agencyId = 'protected-status';
       await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`agencies/${agencyId}`).set({ status: 'active' }));
       for (const role of ['owner', 'admin']) {
-        const ref = authAs(UID_A, agencyId, role).firestore().doc(`agencies/${agencyId}`);
+        const uid = `${agencyId}-${role}`;
+        await testEnv.withSecurityRulesDisabled(c => c.firestore().doc(`users/${uid}`).set({ agencyId, role, active: true }));
+        const ref = authAs(uid, agencyId, role).firestore().doc(`agencies/${agencyId}`);
         await assertFails(ref.update({ status: 'suspended' }));
         await assertFails(ref.set({ name: 'Sin estado' }));
         await assertFails(ref.update({ name: 'Cambio directo' }));
@@ -354,7 +432,7 @@ if (!HAS_EMULATOR) {
 
     for (const role of ['owner', 'admin', 'agent']) {
       it(`${role} crea, edita y borra ciudades de su agencia`, async () => {
-        const db = authAs(UID_A, AGENCY_A, role).firestore();
+        const db = authAs(ROLE_UID[role], AGENCY_A, role).firestore();
         const ref = settingsDoc(db, AGENCY_A, 'gdsCities');
         await testEnv.withSecurityRulesDisabled(c => settingsDoc(c.firestore(), AGENCY_A, 'gdsCities').delete());
         await assertSucceeds(ref.set({ items: [{ id: 'city', title: 'Buenos Aires', code: 'BUE' }] }));
@@ -378,7 +456,7 @@ if (!HAS_EMULATOR) {
     });
 
     it('admin de A escribe otros docs de settings', async () => {
-      const db = authAs(UID_A, AGENCY_A, 'admin').firestore();
+      const db = authAs(UID_ADMIN, AGENCY_A, 'admin').firestore();
       await assertSucceeds(settingsDoc(db, AGENCY_A, 'alerts').set({ email: 'x@y.com' }));
     });
 

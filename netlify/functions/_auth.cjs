@@ -38,8 +38,6 @@ async function verifyAuth(event, { requireMfa = true } = {}) {
     const decoded = await admin.auth().verifyIdToken(match[1], true);
     const uid = decoded.uid;
     let email = (decoded.email || '').toLowerCase();
-    let agencyId = decoded.agencyId || null;
-    let role = decoded.role || null;
 
     const userSnap = await admin.firestore().collection('users').doc(uid).get();
     if (!userSnap.exists) {
@@ -50,15 +48,16 @@ async function verifyAuth(event, { requireMfa = true } = {}) {
       return { ok: false, status: 403, error: 'Cuenta desactivada.' };
     }
 
-    if (!agencyId || !role) {
-      agencyId = data.agencyId || null;
-      role = data.role || null;
-      if (!email) email = (data.email || '').toLowerCase();
+    const agencyId = data.agencyId;
+    const role = data.role;
+    if (typeof agencyId !== 'string' || !agencyId.trim() || !['owner', 'admin', 'agent'].includes(role)) {
+      return { ok: false, status: 403, error: 'Usuario sin agencia o rol valido.' };
     }
-
-    if (!agencyId || !role) {
-      return { ok: false, status: 403, error: 'Usuario sin agencia asignada.' };
+    if ((decoded.agencyId != null && decoded.agencyId !== agencyId) ||
+        (decoded.role != null && decoded.role !== role)) {
+      return { ok: false, status: 403, error: 'Tus permisos cambiaron. Volve a iniciar sesion.' };
     }
+    if (!email) email = (data.email || '').toLowerCase();
 
     const agencySnap = await admin.firestore().collection('agencies').doc(agencyId).get();
     if (!agencySnap.exists) {
