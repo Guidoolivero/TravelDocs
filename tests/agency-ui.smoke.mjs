@@ -39,9 +39,16 @@ await page.route('**/*',async route=>{
  if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial'}]})});
  if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true}]})});
  if(u.pathname.endsWith('/mfa-admin')) {await page.evaluate(body=>{window.fixture.mfaReset=body},route.request().postDataJSON());return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});}
+ if(u.pathname.endsWith('/gemini-scan')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({text:JSON.stringify({documentos:await page.evaluate(()=>window.fixture.scanDocuments)})})});
  if(u.pathname.startsWith('/.netlify/')) return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});
  return route.continue();
 });
+async function scanFixture(name) {
+ const response=page.waitForResponse(r=>r.url().endsWith('/gemini-scan'));
+ await page.locator('#scan-file').setInputFiles({name,mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nfixture')});
+ await response;
+ await page.waitForFunction(()=>document.getElementById('scan-status').textContent.includes('procesado'));
+}
 try{
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
  await page.locator('#global-search').fill('jose ber');
@@ -51,6 +58,22 @@ try{
  assert.equal(await page.locator('.asistencia-num').inputValue(),'V-ANA');
  await page.evaluate(()=>{window.closeModal('modal-passenger');window.openNewPassenger();});
  assert.equal(await page.locator('#asistencia-list .asistencia-row').count(),0,'Nuevo pasajero no hereda asistencia');
+ await page.evaluate(()=>{
+  window.fixture.passengers[0].visas=[{country:'USA',num:'V123',type:'T',exp:'2030-12-20',passport:'AA123'}];
+  window.fixture.scanDocuments=[{tipo:'VISA',apellido:'BERALDI',nombre:'JOSE',numero:'V123',pais_destino_visa:'USA'}];
+  window.openEdit('jose');
+ });
+ await scanFixture('visa.pdf');
+ assert.equal(await page.locator('.visa-exp').inputValue(),'2030-12-20','OCR parcial conserva vencimiento');
+ assert.equal(await page.locator('.visa-passport').inputValue(),'AA123','OCR parcial conserva pasaporte');
+ await page.evaluate(()=>{window.fixture.scanDocuments[0].fecha_vencimiento='2035-12-20';});
+ let confirmationCount=0;
+ page.once('dialog',async dialog=>{confirmationCount++;await dialog.dismiss();});
+ await scanFixture('visa-cancel.pdf');
+ assert.equal(confirmationCount,1);assert.equal(await page.locator('.visa-exp').inputValue(),'2030-12-20');
+ page.once('dialog',async dialog=>{confirmationCount++;await dialog.accept();});
+ await scanFixture('visa-accept.pdf');
+ assert.equal(confirmationCount,2);assert.equal(await page.locator('.visa-exp').inputValue(),'2035-12-20');
  await page.evaluate(()=>window.openEdit('jose'));
  await page.locator('#emergency-add-btn').click();
  await page.locator('.emergency-name').fill('Contacto de prueba');await page.locator('.emergency-phone').fill('+5490000000000');

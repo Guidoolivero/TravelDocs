@@ -2179,13 +2179,12 @@ function applyMappedToForm(mapped, { conservative, editMode, overrides }) {
       row.querySelector('.visa-country')?.value?.trim().toUpperCase() === (mapped.visa.country || '').toUpperCase()
     );
     if (sameCountry) {
-      // Actualizar la entrada existente del mismo país
-      sameCountry.querySelector('.visa-num').value       = mapped.visa.num       || '';
-      sameCountry.querySelector('.visa-issued-at').value = mapped.visa.issued_at || '';
-      sameCountry.querySelector('.visa-type').value      = mapped.visa.type      || 'T';
-      sameCountry.querySelector('.visa-passport').value  = mapped.visa.passport  || '';
-      sameCountry.querySelector('.visa-issue').value     = mapped.visa.issue     || '';
-      sameCountry.querySelector('.visa-exp').value       = mapped.visa.exp       || '';
+      setField(sameCountry.querySelector('.visa-num').id, mapped.visa.num, 'Visa numero');
+      setField(sameCountry.querySelector('.visa-issued-at').id, mapped.visa.issued_at, 'Visa lugar de emision');
+      setField(sameCountry.querySelector('.visa-type').id, mapped.visa.type, 'Visa tipo');
+      setField(sameCountry.querySelector('.visa-passport').id, mapped.visa.passport, 'Visa pasaporte');
+      setField(sameCountry.querySelector('.visa-issue').id, mapped.visa.issue, 'Visa emision');
+      setField(sameCountry.querySelector('.visa-exp').id, mapped.visa.exp, 'Visa vencimiento');
     } else {
       // País nuevo: agregar automáticamente una nueva entrada
       addVisaEntry(mapped.visa);
