@@ -9,7 +9,7 @@ import {
   initDB, setTenantContext, getUserAgency, getAgency, listenPassengers,
   addPassenger, addPassengersBatch, updatePassenger, deletePassenger, isNotified, markNotified,
   listenReservations, addReservation, updateReservation, deleteReservation, deleteReservations,
-  getGdsCities, saveGdsCities
+  getGdsCities, saveGdsCities, markReservationLegsNotified
 } from './db.js';
 import {
   getStoredAgencyId, storeAgencyId, clearStoredAgencyId, applyBranding, parseAgencyAlerts, emailjsParaAlta
@@ -190,8 +190,7 @@ async function checkAndSendUnifiedAlerts() {
     });
     await Promise.all([...porReserva.values()].map(({ r, idxs }) => {
       const piernas = storedPiernas(r);
-      idxs.forEach(i => { if (piernas[i]) piernas[i].notified = true; });
-      return updateReservation(r.id, { piernas });
+      return markReservationLegsNotified(r.id, idxs.map(i => piernas[i]).filter(Boolean));
     }));
   };
 

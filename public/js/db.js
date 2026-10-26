@@ -17,9 +17,11 @@ import {
   getDoc,
   setDoc,
   writeBatch,
+  runTransaction,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { storeAgencyId } from './tenant.js';
 import { snapshotChanged } from './snapshot.mjs';
+import { markNotifiedLegs } from './alert-core.mjs';
 
 let db;
 let agencyId = null;
@@ -248,6 +250,20 @@ export async function updateReservation(id, data) {
   return await updateDoc(reservationDoc(id), {
     ...patch,
     updatedAt: serverTimestamp()
+  });
+}
+
+export async function markReservationLegsNotified(id, sent) {
+  const ref = reservationDoc(id);
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const current = snap.data();
+    const legs = current.piernas?.length ? current.piernas : [
+      ...(current.fecha ? [{ fecha: current.fecha, checkin: !!current.checkinIda, notified: !!current.notifiedIda }] : []),
+      ...(current.fechaVuelta ? [{ fecha: current.fechaVuelta, checkin: !!current.checkinVuelta, notified: !!current.notifiedVuelta }] : []),
+    ].map(p => ({ ...p, compania: current.compania || '', reservaVuelo: current.reservaVuelo || '' }));
+    tx.update(ref, { piernas: markNotifiedLegs(legs, sent, current), updatedAt: serverTimestamp() });
   });
 }
 

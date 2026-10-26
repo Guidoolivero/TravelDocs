@@ -37,7 +37,7 @@ const { FieldValue, FieldPath } = require('firebase-admin/firestore');
 // el require de este módulo ESM al bundlear la function (mismo patrón que
 // gemini-travel.cjs con conocidos.mjs).
 const {
-  checkinAlertDue, REQUISITOS_DIAS, isBirthdayToday, anioART, collectEmailAlertCandidates, buildAlertEmail,
+  checkinAlertDue, REQUISITOS_DIAS, isBirthdayToday, anioART, collectEmailAlertCandidates, buildAlertEmail, markNotifiedLegs,
 } = require('../../public/js/alert-core.mjs');
 const { debeEnviarRequisitos, emailAviso, buildRequisitosEmail } = require('../../lib/requisitos-checkin.mjs');
 
@@ -131,13 +131,15 @@ async function marcarPiernas(db, agenciaRef, items) {
     if (!porReserva.has(key)) porReserva.set(key, { resId: x.resId, piernas: x.piernas, idxs: [] });
     porReserva.get(key).idxs.push(x.idx);
   });
-  await Promise.all([...porReserva.values()].map(({ resId, piernas, idxs }) => {
-    idxs.forEach(i => { if (piernas[i]) piernas[i].notified = true; });
-    return agenciaRef.collection('reservations').doc(resId).update({
-      piernas,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-  }));
+  await Promise.all([...porReserva.values()].map(({ resId, piernas, idxs }) => db.runTransaction(async tx => {
+    const ref = agenciaRef.collection('reservations').doc(resId);
+    const snap = await tx.get(ref);
+    if (!snap.exists) return;
+    const current = snap.data();
+    const sent = idxs.map(i => piernas[i]).filter(Boolean);
+    const legs = Array.isArray(current.piernas) && current.piernas.length ? current.piernas : piernasDe(current);
+    tx.update(ref, { piernas: markNotifiedLegs(legs, sent, current), updatedAt: FieldValue.serverTimestamp() });
+  })));
 }
 
 async function marcarReqs(agenciaRef, items) {

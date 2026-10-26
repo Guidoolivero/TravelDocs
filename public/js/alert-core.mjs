@@ -480,3 +480,11 @@ ${encabezadoSeccion('Cumpleaños de hoy', '')}
 
   return { subject, html };
 }
+// Solo marca el vuelo enviado; conserva cambios concurrentes y tramos nuevos.
+export function markNotifiedLegs(current, sent, reservation = {}) {
+  const key = p => JSON.stringify([p.fecha || '', p.vuelo || '', p.origen || '', p.destino || '',
+    p.compania || reservation.compania || '', p.reservaVuelo ?? reservation.reservaVuelo ?? '']);
+  const keys = new Set(sent.map(key));
+  return current.map(p => keys.has(key(p)) ? { ...p, notified: true } : p);
+}
+
