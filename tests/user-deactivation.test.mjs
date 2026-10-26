@@ -56,6 +56,26 @@ test('vincular una cuenta activa conserva el flujo normal', async () => {
   assert.equal(f.docs.get('users/user').active, true);
 });
 
+test('se puede eliminar un owner inactivo sin eliminar al owner activo restante', async () => {
+  const f = fixture();
+  f.docs.set('users/user', { agencyId: 'agency', role: 'owner', active: false });
+  f.docs.set('agencies/agency/members/user', { role: 'owner', active: false });
+  f.docs.set('agencies/agency/members/admin', { role: 'owner', active: true });
+  const response = await f.request('/users/user', { confirm: true }, 'DELETE');
+  assert.equal(response.statusCode, 200);
+  assert.equal(f.docs.has('users/user'), false);
+  assert.equal(f.docs.has('agencies/agency/members/admin'), true);
+  assert.equal(f.accounts.has('admin'), true);
+});
+
+test('la API sigue impidiendo eliminar al ultimo owner activo', async () => {
+  const f = fixture();
+  f.docs.set('users/user', { agencyId: 'agency', role: 'owner', active: true });
+  f.docs.set('agencies/agency/members/user', { role: 'owner', active: true });
+  assert.equal((await f.request('/users/user', { confirm: true }, 'DELETE')).statusCode, 409);
+  assert.equal(f.accounts.has('user'), true);
+});
+
 test('agencia suspendida rechaza Functions y la reactivacion restaura acceso', async () => {
   const f = fixture();
   f.docs.set('agencies/agency', { status: 'suspended' });

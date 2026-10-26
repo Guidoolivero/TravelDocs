@@ -29,12 +29,12 @@ function canDeleteAgency({ agencyCount, superAdminUid, superAdminMemberUids }) {
 //   reason: 'self'         → el super-admin se quiere eliminar a si mismo
 //           'last-owner'   → es el unico owner activo de su agencia
 //           'ok'
-function canDeleteUser({ targetUid, superAdminUid, targetRole, activeOwnerCount }) {
+function canDeleteUser({ targetUid, superAdminUid, targetRole, targetActive = true, activeOwnerCount }) {
   if (targetUid && targetUid === superAdminUid) {
     return { ok: false, reason: 'self', error: 'No podes eliminar tu propia cuenta.' };
   }
   // Contar solo owners activos: permite limpiar owners inactivos huerfanos.
-  if (targetRole === 'owner' && Number(activeOwnerCount) <= 1) {
+  if (targetRole === 'owner' && targetActive && Number(activeOwnerCount) <= 1) {
     return { ok: false, reason: 'last-owner', error: 'No se puede eliminar el unico owner de la agencia. Asigna otro owner primero.' };
   }
   return { ok: true, reason: 'ok' };

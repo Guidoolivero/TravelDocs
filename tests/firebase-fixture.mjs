@@ -35,6 +35,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
     async updateUser(uid, patch) { calls.push(['updateUser', uid, patch]); Object.assign(accounts.get(uid), patch); },
     async setCustomUserClaims(uid, claims) { calls.push(['claims', uid, claims]); accounts.get(uid).customClaims = structuredClone(claims); },
     async revokeRefreshTokens(uid) { calls.push(['revoke', uid]); },
+    async deleteUser(uid) { calls.push(['deleteUser', uid]); accounts.delete(uid); },
   };
   let transactionQueue = Promise.resolve();
   function mergeFields(old, patch) {
@@ -62,6 +63,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       },
       async set(value, options) { docs.set(path, mergeFields(options?.merge ? docs.get(path) : {}, value)); },
       async update(value) { docs.set(path, mergeFields(docs.get(path), value)); },
+      async delete() { docs.delete(path); },
       async add() {},
     };
   }

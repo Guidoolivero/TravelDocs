@@ -462,6 +462,7 @@ async function deleteUser(uid, event, adminAuth) {
     targetUid: uid,
     superAdminUid: adminAuth.uid,
     targetRole,
+    targetActive: data.active !== false,
     activeOwnerCount,
   });
   if (!verdict.ok) return reply(409, { error: verdict.error });

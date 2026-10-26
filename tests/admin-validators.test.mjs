@@ -57,9 +57,8 @@ describe('canDeleteUser', () => {
     assert.strictEqual(r.ok, true);
   });
 
-  it('aprueba borrar un owner inactivo aunque activeOwnerCount sea 1 (targetRole != owner)', () => {
-    // El target NO es owner (ej: admin inactivo) → no aplica la restricción de último owner.
-    const r = canDeleteUser({ targetUid: 'u2', superAdminUid: 'u1', targetRole: 'admin', activeOwnerCount: 1 });
+  it('aprueba borrar un owner inactivo aunque activeOwnerCount sea 1', () => {
+    const r = canDeleteUser({ targetUid: 'u2', superAdminUid: 'u1', targetRole: 'owner', targetActive: false, activeOwnerCount: 1 });
     assert.strictEqual(r.ok, true);
   });
 });
