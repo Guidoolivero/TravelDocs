@@ -89,6 +89,23 @@ try{
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
+ await page.evaluate(()=>{
+  window.showView('import');
+  window.fixture.scanDocuments=[{tipo:'VISA',apellido:'PRUEBA',nombre:'VISA',numero:'V123',pais_destino_visa:'USA',fecha_vencimiento:'2030-12-20'}];
+ });
+ await page.evaluate(()=>window.handleImportFiles({target:{files:[new File(['%PDF-1.4\nfixture'],'only-visa.pdf',{type:'application/pdf'})],value:''}}));
+ await page.locator('#import-review-wrap').waitFor({state:'visible'});
+ await page.locator('#btn-import-save').click();
+ assert.equal(await page.evaluate(()=>window.fixture.imported[0].visa1.num),'V123','Primer documento visa se guarda');
+ for(const tipo of ['ESTA','ASISTENCIA']) {
+  await page.evaluate(tipo=>{
+   window.showView('import');
+   window.fixture.scanDocuments=[{tipo,apellido:'PRUEBA',nombre:tipo,numero:'DOC001',fecha_vencimiento:'2030-12-20'}];
+   return window.handleImportFiles({target:{files:[new File(['%PDF-1.4\nfixture'],'documento.pdf',{type:'application/pdf'})],value:''}});
+  },tipo);
+  await page.locator('#import-review-wrap').waitFor({state:'visible'});await page.locator('#btn-import-save').click();
+  assert.equal(await page.evaluate(tipo=>tipo==='ASISTENCIA'?window.fixture.imported[0].asistencias[0].num:window.fixture.imported[0].visa1.num,tipo),'DOC001');
+ }
  await page.evaluate(()=>window.showView('import'));
  await page.locator('#import-excel-input').setInputFiles({name:'synthetic.csv',mimeType:'text/csv',buffer:Buffer.from('APELLIDO,NOMBRE,FECHA NAC,FFN AEROLINEA,FFN NUMERO,OBSERVACIONES,EMERGENCIA TELEFONO,ASISTENCIA COMPANIA,ASISTENCIA NUMERO\nPRUEBA,CSV,01/01/1980,AA,000123,Observacion ficticia,+5490000000000,TEST,V001')});
  await page.locator('#import-review-wrap').waitFor({state:'visible'});

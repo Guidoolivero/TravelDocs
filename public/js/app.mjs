@@ -2474,15 +2474,15 @@ function groupByPassenger(results) {
       };
       fill('lastname'); fill('firstname'); fill('dob'); fill('gender'); fill('nationality');
       fill('dni', true); fill('parg', true); fill('pext', true);
-      // Visa: agregar al primer slot libre
-      if (mapped.visa) {
-        if (!group.visa1?.num) group.visa1 = mapped.visa;
-        else if (!group.visa2?.num) group.visa2 = mapped.visa;
-      }
-      if (mapped.asistencia) {
-        if (!group.asistencias) group.asistencias = [];
-        group.asistencias.push(mapped.asistencia);
-      }
+    }
+    // El primer documento tambien debe usar el formato que guarda el import.
+    if (mapped.visa) {
+      if (!group.visa1?.num) group.visa1 = mapped.visa;
+      else if (!group.visa2?.num) group.visa2 = mapped.visa;
+    }
+    if (mapped.asistencia) {
+      if (!group.asistencias) group.asistencias = [];
+      group.asistencias.push(mapped.asistencia);
     }
   }
   return groups;
