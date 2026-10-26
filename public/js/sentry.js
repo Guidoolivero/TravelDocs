@@ -2,7 +2,7 @@
 // proyecto tradingdocs-browser. Sin session replay: la pantalla muestra
 // documentos. El bundle CDN tiene que incluir metrics
 // (bundle.tracing.logs.metrics): en tracing.min, Sentry.metrics es no-op.
-import { reportPageLoad } from './sentry-metrics.mjs';
+import { reportPageLoad, reportPageLog } from './sentry-metrics.mjs';
 
 Sentry.init({
   dsn: "https://46da90f904841667bb503d7296aef48c@o4512249968852992.ingest.us.sentry.io/4512250062766081",
@@ -18,6 +18,7 @@ Sentry.init({
 
 function emitLoadMetrics() {
   reportPageLoad(Sentry.metrics, performance, location.pathname);
+  reportPageLog(Sentry.logger, location.pathname);
 }
 
 if (document.readyState === 'complete') {

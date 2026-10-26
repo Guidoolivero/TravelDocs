@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { pageName, pageLoadMetrics, reportPageLoad } from '../public/js/sentry-metrics.mjs';
+import { pageName, pageLoadMetrics, reportPageLoad, reportPageLog } from '../public/js/sentry-metrics.mjs';
 
 describe('pageName', () => {
   it('login, landing y app segun el path', () => {
@@ -49,5 +49,19 @@ describe('reportPageLoad', () => {
     assert.equal(calls[1][2], 90);
     assert.equal(calls[1][3].unit, 'millisecond');
     assert.equal(calls[1][3].attributes.page, 'login');
+  });
+});
+
+describe('reportPageLog', () => {
+  it('manda un log info page.loaded con page, sin el path crudo', () => {
+    const calls = [];
+    const logger = { info: (msg, attrs) => calls.push([msg, attrs]) };
+    reportPageLog(logger, '/index.html');
+    assert.deepEqual(calls, [['page.loaded', { page: 'app' }]]);
+  });
+
+  it('no hace nada si el logger no esta', () => {
+    assert.equal(reportPageLog(null, '/login.html'), undefined);
+    assert.equal(reportPageLog({}, '/login.html'), undefined);
   });
 });

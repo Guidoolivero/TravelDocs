@@ -25,3 +25,9 @@ export function reportPageLoad(metricsApi, perf, pathname) {
   if (m.lcp != null) metricsApi.distribution('page.lcp', m.lcp, { unit: 'millisecond', attributes });
   if (m.load != null) metricsApi.distribution('page.load', m.load, { unit: 'millisecond', attributes });
 }
+
+// Log estructurado: mensaje estable + atributos planos. Sin path, email ni docs.
+export function reportPageLog(logger, pathname) {
+  if (!logger || typeof logger.info !== 'function') return;
+  logger.info('page.loaded', { page: pageName(pathname) });
+}
