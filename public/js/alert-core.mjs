@@ -487,4 +487,3 @@ export function markNotifiedLegs(current, sent, reservation = {}) {
   const keys = new Set(sent.map(key));
   return current.map(p => keys.has(key(p)) ? { ...p, notified: true } : p);
 }
-

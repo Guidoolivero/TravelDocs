@@ -1586,6 +1586,7 @@ function clearForm() {
   clearVisaList();
   clearEmergencyList();
   clearFFNList();
+  clearAsistenciaList();
 }
 
 function fillForm(p) {

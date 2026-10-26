@@ -47,6 +47,10 @@ try{
  await page.locator('#global-search').fill('jose ber');
  assert.match(await page.locator('#passengers-tbody').innerText(),/BERALDI/);
  await page.locator('#global-search').fill('ber jose');assert.match(await page.locator('#passengers-count').innerText(),/1 pasajero/);
+ await page.evaluate(()=>{window.fixture.passengers[0].asistencias=[{num:'V-ANA',compania:'TEST'}];window.openEdit('jose');});
+ assert.equal(await page.locator('.asistencia-num').inputValue(),'V-ANA');
+ await page.evaluate(()=>{window.closeModal('modal-passenger');window.openNewPassenger();});
+ assert.equal(await page.locator('#asistencia-list .asistencia-row').count(),0,'Nuevo pasajero no hereda asistencia');
  await page.evaluate(()=>window.openEdit('jose'));
  await page.locator('#emergency-add-btn').click();
  await page.locator('.emergency-name').fill('Contacto de prueba');await page.locator('.emergency-phone').fill('+5490000000000');
