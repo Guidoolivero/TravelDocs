@@ -17,6 +17,7 @@
 
 const { verifyAuth } = require('./_auth.cjs');
 const { recordUsage } = require('./_usage.cjs');
+const { createHash } = require('node:crypto');
 
 const { GoogleGenAI, HarmCategory, HarmBlockThreshold } = require('@google/genai');
 
@@ -768,7 +769,7 @@ const SYSTEM_REQUIREMENTS =
 //   - Análisis: clave = vuelo/origen/destino (o segmentos) + nacionalidad.
 //     La fecha NO entra en la clave: el análisis no depende de la fecha.
 //   - Verificación: clave = firma de la ruta (iatas+tipos) + nacionalidad;
-//     dos vuelos distintos con la misma ruta física comparten la entrada.
+//     aislada por agencia y contenido completo recibido, incluidos segmentos.
 // Solo se cachea lo confiable: análisis con paradas verificadas y
 // verificaciones web exitosas (si falló, la próxima consulta reintenta en
 // vivo y puede mejorar). Best-effort: un fallo de Firestore no rompe nada.
@@ -792,11 +793,9 @@ function cacheKeyAnalisis(payload, modoGDS) {
   return `v1_${vuelo}_${origen}_${destino}_${nacionalidad}`;
 }
 
-function cacheKeyVerificacion(ruta, nacionalidad) {
-  const firma = (ruta || []).map(s =>
-    `${(s.aeropuerto_iata || s.pais_codigo || s.ciudad || '?').toString().toUpperCase()}-${(s.tipo || '?').toString().toLowerCase()}`
-  ).join('_');
-  return `v1ver_${firma}_${sanitize(nacionalidad).toUpperCase()}`;
+function cacheKeyVerificacion(ruta, nacionalidad, agencyId, segmentos = []) {
+  const firma = createHash('sha256').update(JSON.stringify({ ruta, nacionalidad: sanitize(nacionalidad).toUpperCase(), segmentos })).digest('hex');
+  return `v2ver_${agencyId}_${firma}`;
 }
 
 // Devuelve el data cacheado si existe y no venció; null ante cualquier fallo.
@@ -883,9 +882,9 @@ exports.handler = async function handler(event) {
     const ruta = Array.isArray(payload.ruta) ? payload.ruta : [];
     if (!ruta.length) return reply(400, { error: 'La ruta es obligatoria en la fase verificación.' });
 
-    // Cache por firma de ruta: la refinación (URLs/costos verificados) depende
-    // de la ruta física + nacionalidad, no del número de vuelo. Hit = 0 tokens.
-    const vKey = cacheKeyVerificacion(ruta, nacionalidad);
+    // Nunca compartir una verificacion derivada del cliente con otra agencia
+    // ni con una consulta de contenido o contexto distintos.
+    const vKey = cacheKeyVerificacion(ruta, nacionalidad, auth.agencyId, payload.segmentos || []);
     const cachedV = await cacheRead(vKey);
     if (cachedV) {
       console.log(`gemini-travel: cache hit verificación (key=${vKey})`);

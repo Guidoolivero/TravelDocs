@@ -59,7 +59,11 @@ export function fixture({ active = true, missing = false, revoked = false, env =
           return { docs: snapshots, size: snapshots.length, forEach: fn => snapshots.forEach(fn) };
         }
         const data = structuredClone(docs.get(path));
-        return { id: path.split('/').at(-1), ref: ref(path), exists: docs.has(path), data: () => structuredClone(data) };
+        return { id: path.split('/').at(-1), ref: ref(path), exists: docs.has(path), data: () => {
+          const value = structuredClone(data);
+          if (value?.expiresAt instanceof Date) value.expiresAt = { toMillis: () => data.expiresAt.getTime() };
+          return value;
+        } };
       },
       async set(value, options) { docs.set(path, mergeFields(options?.merge ? docs.get(path) : {}, value)); },
       async update(value) { docs.set(path, mergeFields(docs.get(path), value)); },

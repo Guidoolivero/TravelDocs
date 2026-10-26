@@ -12,7 +12,7 @@ import {
   getGdsCities, saveGdsCities, markReservationLegsNotified
 } from './db.js';
 import {
-  getStoredAgencyId, storeAgencyId, clearStoredAgencyId, applyBranding, parseAgencyAlerts, emailjsParaAlta
+  storeAgencyId, clearStoredAgencyId, applyBranding, parseAgencyAlerts, emailjsParaAlta
 } from './tenant.js';
 import {
   docStatus, statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr,
