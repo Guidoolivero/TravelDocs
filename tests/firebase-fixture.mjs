@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 
 // Solo Firebase y observabilidad se simulan; los helpers de autorizacion son reales.
-export function fixture({ active = true, missing = false, revoked = false } = {}) {
+export function fixture({ active = true, missing = false, revoked = false, env = {}, modules = {} } = {}) {
   const docs = new Map([
     ['users/admin', { active: true, agencyId: 'agency', role: 'owner' }],
     ['users/user', { active, agencyId: 'agency', role: 'agent' }],
@@ -66,9 +66,11 @@ export function fixture({ active = true, missing = false, revoked = false } = {}
       if (id === 'firebase-admin') return admin;
       if (id === 'firebase-admin/firestore') return { FieldValue: { serverTimestamp: () => 1 } };
       if (id === './_sentry.cjs') return { wrapHandler: fn => fn };
-      return id.startsWith('.') ? load(new URL(id, url)) : nativeRequire(id);
+      if (Object.hasOwn(modules, id)) return modules[id];
+      return id.startsWith('.') && !id.endsWith('.mjs') ? load(new URL(id, url)) : nativeRequire(id);
     };
-    runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, process: { env: { FIREBASE_SERVICE_ACCOUNT: '{}', PLATFORM_SUPER_ADMIN_EMAILS: 'admin@test.com' } } }, { filename: url.pathname });
+    runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer,
+      process: { env: { FIREBASE_SERVICE_ACCOUNT: '{}', PLATFORM_SUPER_ADMIN_EMAILS: 'admin@test.com', ...env } } }, { filename: url.pathname });
     return module.exports;
   }
   return {

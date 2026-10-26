@@ -292,7 +292,7 @@ function groupSegmentos(segmentos) {
       destino: s.destino || '',
       compania: s.compania || '',
       reservaVuelo: s.reservaVuelo || null
-    }));
+    })).sort((a, b) => (ts(a.salida) ?? Infinity) - (ts(b.salida) ?? Infinity));
   if (!segs.length) return [];
 
   const piernas = [];
@@ -304,7 +304,7 @@ function groupSegmentos(segmentos) {
     // solo cuando AMBOS lados tienen el dato; vacio/null = desconocido, no corta).
     const distintaCompania = prev && s.compania && prev.compania && s.compania !== prev.compania;
     const distintaReserva = prev && s.reservaVuelo && prev.reservaVuelo && s.reservaVuelo !== prev.reservaVuelo;
-    if (prev && !distintaCompania && !distintaReserva && tSalida !== null && tLlegadaPrev !== null && (tSalida - tLlegadaPrev) < DIA_MS) {
+    if (prev && !distintaCompania && !distintaReserva && tSalida !== null && tLlegadaPrev !== null && tSalida >= tLlegadaPrev && (tSalida - tLlegadaPrev) < DIA_MS) {
       // escala: misma pierna (< 24h en tierra, misma aerolinea y reserva)
       if (s.origen) prev.escalas.push(s.origen);
       prev.destino = s.destino || prev.destino;
