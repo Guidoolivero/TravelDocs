@@ -21,7 +21,7 @@ let pCb,rCb;
 export const initDB=()=>{},setTenantContext=()=>{},getUserAgency=async()=> 'test',getAgency=async id=>{if(id!=='test')throw new Error('permission-denied');return {status:'active',name:'TEST',branding:{appName:'TEST'},alerts:{}}};
 export const listenPassengers=cb=>{pCb=cb;setTimeout(()=>cb(window.fixture.passengers),0)},listenReservations=cb=>{rCb=cb;setTimeout(()=>cb(window.fixture.reservations),0)};
 export const addPassenger=async d=>{window.fixture.savedPassenger=d;window.fixture.passengers.push({id:'new',...d});pCb(window.fixture.passengers);return {id:'new'}},updatePassenger=async(id,d)=>{window.fixture.savedPassenger=d;Object.assign(window.fixture.passengers.find(p=>p.id===id),d);pCb(window.fixture.passengers)};
-export const addPassengersBatch=async ds=>{window.fixture.imported=ds;if(window.fixture.failAfter!=null){const err=new Error('Firestore unavailable');err.savedIds=ds.slice(0,window.fixture.failAfter).map((_,i)=>'i'+i);delete window.fixture.failAfter;throw err;}return ds.map((_,i)=>'i'+i)};
+export const addPassengersBatch=async ds=>{window.fixture.imported=ds;if(window.fixture.failAfter!=null){const saved=ds.slice(0,window.fixture.failAfter).map((d,i)=>({id:'partial'+i,...d}));window.fixture.passengers.push(...saved);pCb(window.fixture.passengers);const err=new Error('Firestore unavailable');err.savedIds=saved.map(p=>p.id);delete window.fixture.failAfter;throw err;}return ds.map((_,i)=>'i'+i)};
 export const addReservation=async d=>{window.fixture.savedReservation=d;window.fixture.reservations.push({id:'newres',...d});rCb(window.fixture.reservations);return {id:'newres'}},updateReservation=async(id,d)=>{window.fixture.savedReservation=d;Object.assign(window.fixture.reservations.find(r=>r.id===id),d);rCb(window.fixture.reservations)};
 export const deletePassenger=async()=>{},isNotified=async()=>true,markNotified=async()=>{},markReservationLegsNotified=async()=>{},deleteReservation=async()=>{},deleteReservations=async()=>{},getGdsCities=async()=>[],saveGdsCities=async()=>{};`;
 await page.route('**/*',async route=>{
@@ -127,6 +127,7 @@ try{
  await page.locator('#import-review-wrap').waitFor({state:'visible'});await page.locator('#btn-import-save').click();
  assert.match(await page.locator('#toast-text').innerText(),/450 importado/);
  assert.match(await page.locator('#import-review-sub').innerText(),/1 pasajero/);
+ assert.equal(await page.evaluate(()=>window.fixture.passengers.filter(p=>p.id.startsWith('partial')).length),450);
  assert.equal(await page.locator('#btn-import-save').isEnabled(),true);
  await page.locator('#btn-import-save').click();
  assert.equal(await page.evaluate(()=>window.fixture.imported.length),1);
