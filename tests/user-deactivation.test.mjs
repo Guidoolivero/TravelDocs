@@ -37,6 +37,25 @@ test('fallo de Auth no informa exito ni modifica perfiles', async () => {
   assert.equal(f.docs.get('users/user').active, true);
 });
 
+test('vincular una cuenta desactivada pide reactivarla y no cambia perfiles ni password', async () => {
+  const f = fixture({ active: false });
+  f.accounts.get('user').disabled = true;
+  f.docs.set('agencies/agency/members/user', { active: false, role: 'agent' });
+  const response = await f.request('/users', { email: 'user@test.com', agencyId: 'agency', role: 'agent', password: 'new-password' }, 'POST');
+  assert.equal(response.statusCode, 409);
+  assert.match(JSON.parse(response.body).error, /reactiv/i);
+  assert.equal(f.docs.get('users/user').active, false);
+  assert.equal(f.docs.get('agencies/agency/members/user').active, false);
+  assert.equal(f.calls.length, 0);
+});
+
+test('vincular una cuenta activa conserva el flujo normal', async () => {
+  const f = fixture();
+  const response = await f.request('/users', { email: 'user@test.com', agencyId: 'agency', role: 'agent' }, 'POST');
+  assert.equal(response.statusCode, 200);
+  assert.equal(f.docs.get('users/user').active, true);
+});
+
 test('agencia suspendida rechaza Functions y la reactivacion restaura acceso', async () => {
   const f = fixture();
   f.docs.set('agencies/agency', { status: 'suspended' });

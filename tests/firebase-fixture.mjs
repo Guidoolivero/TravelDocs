@@ -27,6 +27,11 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       return structuredClone(tokens.get(token));
     },
     async getUser(uid) { return structuredClone(accounts.get(uid)); },
+    async getUserByEmail(email) {
+      const entry = [...accounts].find(([, account]) => account.email === email);
+      if (!entry) throw Object.assign(new Error('not found'), { code: 'auth/user-not-found' });
+      return { uid: entry[0], ...structuredClone(entry[1]) };
+    },
     async updateUser(uid, patch) { calls.push(['updateUser', uid, patch]); Object.assign(accounts.get(uid), patch); },
     async setCustomUserClaims(uid, claims) { calls.push(['claims', uid, claims]); accounts.get(uid).customClaims = structuredClone(claims); },
     async revokeRefreshTokens(uid) { calls.push(['revoke', uid]); },

@@ -227,6 +227,8 @@ async function createOrLinkUser(event, adminAuth) {
     }
   } else {
     // Usuario existente → verificar que no esté en otra agencia.
+    const account = await auth().getUser(uid);
+    if (account.disabled) return reply(409, { error: 'La cuenta esta desactivada. Usa Reactivar antes de vincularla.' });
     const userDoc = await db().collection('users').doc(uid).get();
     const existing = userDoc.data() || {};
     if (existing.agencyId && existing.agencyId !== agencyId) {
