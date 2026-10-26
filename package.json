@@ -49,6 +49,9 @@
     "firebase-admin": {
       "gaxios": {
         "uuid": "11.1.1"
+      },
+      "teeny-request": {
+        "uuid": "11.1.1"
       }
     }
   }
