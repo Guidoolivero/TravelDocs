@@ -8,6 +8,7 @@
 //    PATCH  /agencies/:agencyId          → editar agencia (branding, alerts, plan, status)
 //    DELETE /agencies/:agencyId          → eliminar agencia (cascada + Auth de miembros)
 //    GET    /agencies/:agencyId/members  → listar miembros de una agencia
+//    GET    /users                       → listar miembros de todas las agencias
 //    POST   /users                       → crear o vincular usuario
 //    PATCH  /users/:uid                  → editar usuario (rol, active, displayName, email, password)
 //    DELETE /users/:uid                  → eliminar usuario (Auth + users + members)
@@ -58,6 +59,7 @@ exports.handler = async function (event) {
 
     // ── USUARIOS ───────────────────────────────────────────
     if (segments[0] === 'users') {
+      if (method === 'GET' && segments.length === 1) return await listAllMembers();
       if (method === 'POST' && segments.length === 1) return await createOrLinkUser(event, adminAuth);
       if (method === 'PATCH' && segments.length === 2) return await updateUser(segments[1], event, adminAuth);
       if (method === 'DELETE' && segments.length === 2) return await deleteUser(segments[1], event, adminAuth);
@@ -93,6 +95,40 @@ function body(event) {
   }
 }
 
+// Timestamp de Firestore / Date / millis / {_seconds} → YYYY-MM-DD en ART.
+function createdAtIso(value) {
+  if (value == null || value === '') return '';
+  let ms;
+  if (typeof value.toMillis === 'function') ms = value.toMillis();
+  else if (typeof value.toDate === 'function') ms = value.toDate().getTime();
+  else if (typeof value === 'number') ms = value;
+  else if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    if (!Number.isFinite(parsed)) return '';
+    ms = parsed;
+  } else if (typeof value === 'object') {
+    const sec = value._seconds ?? value.seconds;
+    if (sec == null) return '';
+    ms = Number(sec) * 1000;
+  } else return '';
+  if (!Number.isFinite(ms)) return '';
+  return new Date(ms).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+}
+
+function serializeMember(doc, agencyId, agencyName) {
+  const m = doc.data() || {};
+  return {
+    uid: doc.id,
+    email: m.email || '',
+    displayName: m.displayName || '',
+    role: m.role || '',
+    active: m.active !== false,
+    agencyId,
+    agencyName: agencyName || agencyId,
+    createdAt: createdAtIso(m.createdAt || m.invitedAt),
+  };
+}
+
 // ============================================================
 //  Agencias
 // ============================================================
@@ -111,6 +147,7 @@ async function listAgencies() {
       memberCount: membersSnap.size,
       branding: data.branding || {},
       alerts: data.alerts || {},
+      createdAt: createdAtIso(data.createdAt),
     });
   }
   return reply(200, { agencies });
@@ -177,12 +214,21 @@ async function updateAgency(agencyId, event, adminAuth) {
 async function listMembers(agencyId) {
   const agencySnap = await db().collection('agencies').doc(agencyId).get();
   if (!agencySnap.exists) return reply(404, { error: 'Agencia no encontrada.' });
+  const agencyName = (agencySnap.data() || {}).name || agencyId;
 
   const snap = await db().collection('agencies').doc(agencyId).collection('members').get();
-  const members = snap.docs.map(d => {
-    const m = d.data() || {};
-    return { uid: d.id, email: m.email || '', displayName: m.displayName || '', role: m.role || '', active: m.active !== false };
-  });
+  const members = snap.docs.map(d => serializeMember(d, agencyId, agencyName));
+  return reply(200, { members });
+}
+
+async function listAllMembers() {
+  const agenciesSnap = await db().collection('agencies').get();
+  const members = [];
+  for (const doc of agenciesSnap.docs) {
+    const agencyName = (doc.data() || {}).name || doc.id;
+    const snap = await db().collection('agencies').doc(doc.id).collection('members').get();
+    for (const d of snap.docs) members.push(serializeMember(d, doc.id, agencyName));
+  }
   return reply(200, { members });
 }
 

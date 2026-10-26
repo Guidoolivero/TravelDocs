@@ -18,7 +18,7 @@ const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors
 const stub=`
 window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR'}]}]};
 let pCb,rCb;
-export const initDB=()=>{},setTenantContext=()=>{},getUserAgency=async()=> 'test',getAgency=async()=>({status:'active',name:'TEST',branding:{appName:'TEST'},alerts:{}});
+export const initDB=()=>{},setTenantContext=()=>{},getUserAgency=async()=> 'test',getAgency=async id=>{if(id!=='test')throw new Error('permission-denied');return {status:'active',name:'TEST',branding:{appName:'TEST'},alerts:{}}};
 export const listenPassengers=cb=>{pCb=cb;setTimeout(()=>cb(window.fixture.passengers),0)},listenReservations=cb=>{rCb=cb;setTimeout(()=>cb(window.fixture.reservations),0)};
 export const addPassenger=async d=>{window.fixture.savedPassenger=d;window.fixture.passengers.push({id:'new',...d});pCb(window.fixture.passengers);return {id:'new'}},updatePassenger=async(id,d)=>{window.fixture.savedPassenger=d;Object.assign(window.fixture.passengers.find(p=>p.id===id),d);pCb(window.fixture.passengers)};
 export const addPassengersBatch=async ds=>{window.fixture.imported=ds;if(window.fixture.failAfter!=null){const err=new Error('Firestore unavailable');err.savedIds=ds.slice(0,window.fixture.failAfter).map((_,i)=>'i'+i);delete window.fixture.failAfter;throw err;}return ds.map((_,i)=>'i'+i)};
@@ -36,8 +36,9 @@ await page.route('**/*',async route=>{
  if(u.origin!==url&&!u.pathname.startsWith('/.netlify/')) return route.abort();
  if(['/js/sentry.js','/js/analytics.js'].includes(u.pathname)) return route.fulfill({contentType:'application/javascript',body:''});
  if(u.pathname==='/js/db.js')return route.fulfill({contentType:'application/javascript',body:stub});
- if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial'}]})});
- if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true}]})});
+ if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial',createdAt:'2026-10-01'}]})});
+ if(u.pathname.endsWith('/admin-api/users')&&route.request().method()==='GET') return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',displayName:'Otro',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
+ if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
  if(u.pathname.endsWith('/mfa-admin')) {await page.evaluate(body=>{window.fixture.mfaReset=body},route.request().postDataJSON());return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});}
  if(u.pathname.endsWith('/gemini-scan')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({text:JSON.stringify({documentos:await page.evaluate(()=>window.fixture.scanDocuments)})})});
  if(u.pathname.startsWith('/.netlify/')) return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});
@@ -50,7 +51,9 @@ async function scanFixture(name) {
  await page.waitForFunction(()=>document.getElementById('scan-status').textContent.includes('procesado'));
 }
 try{
- await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
+ await page.addInitScript(()=>sessionStorage.setItem('agencyId','previous-agency'));
+ await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex',null,{timeout:5000});
+ assert.equal(await page.evaluate(()=>sessionStorage.getItem('agencyId')),'test','El perfil vigente reemplaza la agencia guardada');
  await page.locator('#global-search').fill('jose ber');
  assert.match(await page.locator('#passengers-tbody').innerText(),/BERALDI/);
  await page.locator('#global-search').fill('ber jose');assert.match(await page.locator('#passengers-count').innerText(),/1 pasajero/);

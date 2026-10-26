@@ -292,7 +292,7 @@ onAuthStateChanged(auth, async user => {
   _venceSesion = venceSesion(freshToken.claims, Date.now());
   if (await cerrarSiVencio()) return;
 
-  let tenantId = getStoredAgencyId() || await getUserAgency(user.uid);
+  const tenantId = await getUserAgency(user.uid);
   if (!tenantId) {
     clearStoredAgencyId();
     await signOut(auth);
@@ -4557,14 +4557,14 @@ window.setAdminTab = setAdminTab;
 async function loadAgencies() {
   const tbody = document.getElementById('admin-agencies-tbody');
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="6" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
   try {
     const json = await adminFetch('/agencies');
     _adminAgencies = json.agencies || [];
     renderAgenciesTable();
     populateAgencySelects();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
   }
 }
 
@@ -4572,7 +4572,7 @@ function renderAgenciesTable() {
   const tbody = document.getElementById('admin-agencies-tbody');
   if (!tbody) return;
   if (!_adminAgencies.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="padding:16px;color:var(--text3);">Sin agencias.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">Sin agencias.</td></tr>`;
     return;
   }
   tbody.innerHTML = _adminAgencies.map(a => `
@@ -4582,6 +4582,7 @@ function renderAgenciesTable() {
       <td>${planBadge(a.plan)}</td>
       <td>${statusBadgeAdmin(a.status)}</td>
       <td>${a.memberCount ?? 0}</td>
+      <td style="font-size:12px;white-space:nowrap;">${fmtDate(a.createdAt)}</td>
       <td style="text-align:right;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" data-agency-edit="${esc(a.id)}">Editar</button>
         ${a.status === 'suspended'
@@ -4606,9 +4607,10 @@ function populateAgencySelects() {
     if (prev) usAgency.value = prev;
   }
   if (filter) {
-    const prev = filter.value || _adminUsersFilter;
+    const prev = _adminUsersFilter;
     filter.innerHTML = opts(_adminAgencies, true);
-    filter.value = prev || (active[0] && active[0].id) || '';
+    const valid = [...filter.options].some(o => o.value === prev);
+    filter.value = valid ? prev : '';
     _adminUsersFilter = filter.value;
   }
 }
@@ -4775,17 +4777,15 @@ function loadUsersPanel() {
 async function loadMembers(agencyId) {
   const tbody = document.getElementById('admin-users-tbody');
   if (!tbody) return;
-  if (!agencyId) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;color:var(--text3);">Seleccioná una agencia.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
   try {
-    const json = await adminFetch('/agencies/' + encodeURIComponent(agencyId) + '/members');
+    const json = agencyId
+      ? await adminFetch('/agencies/' + encodeURIComponent(agencyId) + '/members')
+      : await adminFetch('/users');
     _adminMembers = json.members || [];
     renderUsersTable();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar usuarios.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar usuarios.')}</td></tr>`;
   }
 }
 
@@ -4793,19 +4793,21 @@ function renderUsersTable() {
   const tbody = document.getElementById('admin-users-tbody');
   if (!tbody) return;
   if (!_adminMembers.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;color:var(--text3);">Sin usuarios en esta agencia.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">${_adminUsersFilter ? 'Sin usuarios en esta agencia.' : 'Sin usuarios.'}</td></tr>`;
     return;
   }
   tbody.innerHTML = _adminMembers.map(m => `
     <tr>
       <td style="font-family:var(--mono);font-size:12px;">${esc(m.email)}</td>
       <td>${esc(m.displayName || '—')}</td>
+      <td>${esc(m.agencyName || m.agencyId || '—')}</td>
       <td>
         <select class="admin-role-select" data-user-role="${esc(m.uid)}" style="font-size:12px;">
           ${['owner','admin','agent'].map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join('')}
         </select>
       </td>
       <td>${m.active ? '<span style="color:var(--green);font-weight:500;">Activo</span>' : '<span style="color:var(--red);font-weight:500;">Inactivo</span>'}</td>
+      <td style="font-size:12px;white-space:nowrap;">${fmtDate(m.createdAt)}</td>
       <td style="text-align:right;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" data-user-edit="${esc(m.uid)}">Editar</button>
         ${m.active
