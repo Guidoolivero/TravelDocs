@@ -56,7 +56,7 @@ function buildUsagePatch({ kind, source }) {
     updatedAt: FieldValue.serverTimestamp(),
   };
   if (VALID_SOURCES.includes(source)) {
-    patch[`bySource.${source}`] = FieldValue.increment(1);
+    patch.bySource = { [source]: FieldValue.increment(1) };
   }
   return patch;
 }

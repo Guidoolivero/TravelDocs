@@ -563,7 +563,7 @@ function addDocToAgg(agg, data) {
   const bySrc = data.bySource || {};
   agg.scans += Number(data.scans) || 0;
   agg.travel += Number(data.travel) || 0;
-  agg.claudeCount += Number(bySrc.claude) || 0;
+  agg.claudeCount += (Number(bySrc.claude) || 0) + (Number(data['bySource.claude']) || 0);
 }
 
 function aggCost(agg, rates) {
