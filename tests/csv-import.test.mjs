@@ -19,3 +19,11 @@ test('campos opcionales ausentes no impiden importar y columnas desconocidas se 
   assert.deepEqual(p.emergencyContact, {name:'',relationship:'',phone:''});
   assert.equal(csvField('CONTRASENA'), undefined);
 });
+
+test('los vencimientos de dos digitos usan el siglo actual sin cambiar nacimientos', () => {
+  const p = excelRowToPassenger(['20DEC86', '20DEC30', '20/12/30', '20DEC30', 'AA123', '30123456'], { dob: 0, pargExp: 1, dniExp: 2, 'ASISTENCIA.1.fin': 3, pargNum: 4, dniNum: 5 });
+  assert.equal(p.dob, '1986-12-20');
+  assert.equal(p.parg.exp, '2030-12-20');
+  assert.equal(p.dni.exp, '2030-12-20');
+  assert.equal(p.asistencias[0].fin, '2030-12-20');
+});

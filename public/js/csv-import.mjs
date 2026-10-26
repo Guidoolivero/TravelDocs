@@ -60,14 +60,14 @@ const EXCEL_MONTHS = {
 function excelMonthToNum(name) {
   return EXCEL_MONTHS[String(name).toUpperCase().replace(/\./g, '')];
 }
-// Ano de 2 digitos -> 4 digitos (pivot: si es mayor al anno actual, es 19xx; sino 20xx)
-function expandYear(yy) {
+// Solo los nacimientos usan el ano actual como limite hacia el pasado.
+function expandYear(yy, isBirthDate) {
   if (yy.length === 4) return yy;
   const n = parseInt(yy, 10);
   const cur = new Date().getFullYear() % 100;
-  return String(n > cur ? 1900 + n : 2000 + n);
+  return String(isBirthDate && n > cur ? 1900 + n : 2000 + n);
 }
-function normalizeExcelDate(v) {
+function normalizeExcelDate(v, isBirthDate = false) {
   if (v == null || v === '') return '';
   if (v instanceof Date) {
     if (isNaN(v)) return '';
@@ -92,14 +92,14 @@ function normalizeExcelDate(v) {
   // dd/mm/yyyy numerico
   const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (m) {
-    const yy = expandYear(m[3]);
+    const yy = expandYear(m[3], isBirthDate);
     return `${yy}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
   }
   // GDS: ddMMMyy / ddMMMyyyy con / opcional (15DEC86, 25/DEC/76, 30dec2000)
   const g = s.match(/^(\d{1,2})\/?([A-Za-zÁÉÍÓÚáéíóú]{3,})\/?(\d{2,4})$/);
   if (g) {
     const mm = excelMonthToNum(g[2]);
-    if (mm) return `${expandYear(g[3])}-${String(mm).padStart(2, '0')}-${g[1].padStart(2, '0')}`;
+    if (mm) return `${expandYear(g[3], isBirthDate)}-${String(mm).padStart(2, '0')}-${g[1].padStart(2, '0')}`;
   }
   // Fecha larga en español: "4 de julio de 1997"
   const es = s.match(/^(\d{1,2})\s+de\s+([A-Za-zÁÉÍÓÚáéíóú]+)\s+de\s+(\d{4})$/);
@@ -128,7 +128,7 @@ export function excelRowToPassenger(row, fieldOf) {
 
   const lastname  = txt('lastname').toUpperCase();
   const firstname = txt('firstname').toUpperCase();
-  const dob       = normalizeExcelDate(raw('dob'));
+  const dob       = normalizeExcelDate(raw('dob'), true);
   const dniNum    = cleanNum(txt('dniNum'));
   const dniExp    = normalizeExcelDate(raw('dniExp'));
   const pargNum   = cleanNum(txt('pargNum'));
