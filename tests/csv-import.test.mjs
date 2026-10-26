@@ -27,3 +27,9 @@ test('los vencimientos de dos digitos usan el siglo actual sin cambiar nacimient
   assert.equal(p.dni.exp, '2030-12-20');
   assert.equal(p.asistencias[0].fin, '2030-12-20');
 });
+
+test('los vencimientos historicos de dos digitos no se convierten en documentos futuros', t => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-26T12:00:00Z') });
+  const p = excelRowToPassenger(['20DEC99', 'AA123'], { pargExp: 0, pargNum: 1 });
+  assert.equal(p.parg.exp, '1999-12-20');
+});

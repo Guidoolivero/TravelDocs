@@ -60,12 +60,15 @@ const EXCEL_MONTHS = {
 function excelMonthToNum(name) {
   return EXCEL_MONTHS[String(name).toUpperCase().replace(/\./g, '')];
 }
-// Solo los nacimientos usan el ano actual como limite hacia el pasado.
+// Nacimientos hacia el pasado; documentos en el siglo mas cercano (hasta 50 anos).
 function expandYear(yy, isBirthDate) {
   if (yy.length === 4) return yy;
   const n = parseInt(yy, 10);
-  const cur = new Date().getFullYear() % 100;
-  return String(isBirthDate && n > cur ? 1900 + n : 2000 + n);
+  const current = new Date().getFullYear();
+  let year = Math.floor(current / 100) * 100 + n;
+  if (year > current + (isBirthDate ? 0 : 50)) year -= 100;
+  if (!isBirthDate && year < current - 50) year += 100;
+  return String(year);
 }
 function normalizeExcelDate(v, isBirthDate = false) {
   if (v == null || v === '') return '';
