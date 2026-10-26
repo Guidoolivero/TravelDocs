@@ -76,7 +76,7 @@ jobs:
       - run: npm run test:rules:emulator
 
   mfa-ui:
-    name: MFA en navegador (servicios simulados)
+    name: MFA y flujos funcionales en navegador (servicios simulados)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
@@ -95,6 +95,10 @@ jobs:
           key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: node node_modules/playwright-core/cli.js install --with-deps chromium
       - run: node tests/mfa-ui.smoke.mjs
+      - run: curl --fail --retry 3 https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js --output /tmp/agency-xlsx.min.js
+      - run: node tests/agency-ui.smoke.mjs
+        env:
+          XLSX_QA_PATH: /tmp/agency-xlsx.min.js
 
   deploy:
     name: Deploy a produccion (Netlify)
