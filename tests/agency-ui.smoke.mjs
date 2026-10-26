@@ -21,7 +21,7 @@ let pCb,rCb;
 export const initDB=()=>{},setTenantContext=()=>{},getUserAgency=async()=> 'test',getAgency=async()=>({status:'active',name:'TEST',branding:{appName:'TEST'},alerts:{}});
 export const listenPassengers=cb=>{pCb=cb;setTimeout(()=>cb(window.fixture.passengers),0)},listenReservations=cb=>{rCb=cb;setTimeout(()=>cb(window.fixture.reservations),0)};
 export const addPassenger=async d=>{window.fixture.savedPassenger=d;window.fixture.passengers.push({id:'new',...d});pCb(window.fixture.passengers);return {id:'new'}},updatePassenger=async(id,d)=>{window.fixture.savedPassenger=d;Object.assign(window.fixture.passengers.find(p=>p.id===id),d);pCb(window.fixture.passengers)};
-export const addPassengersBatch=async ds=>{window.fixture.imported=ds;return ds.map((_,i)=>'i'+i)};
+export const addPassengersBatch=async ds=>{window.fixture.imported=ds;if(window.fixture.failAfter!=null){const err=new Error('Firestore unavailable');err.savedIds=ds.slice(0,window.fixture.failAfter).map((_,i)=>'i'+i);delete window.fixture.failAfter;throw err;}return ds.map((_,i)=>'i'+i)};
 export const addReservation=async d=>{window.fixture.savedReservation=d;window.fixture.reservations.push({id:'newres',...d});rCb(window.fixture.reservations);return {id:'newres'}},updateReservation=async(id,d)=>{window.fixture.savedReservation=d;Object.assign(window.fixture.reservations.find(r=>r.id===id),d);rCb(window.fixture.reservations)};
 export const deletePassenger=async()=>{},isNotified=async()=>true,markNotified=async()=>{},markReservationLegsNotified=async()=>{},deleteReservation=async()=>{},deleteReservations=async()=>{},getGdsCities=async()=>[],saveGdsCities=async()=>{};`;
 await page.route('**/*',async route=>{
@@ -118,6 +118,16 @@ try{
  const deduplicated=await page.evaluate(()=>window.fixture.imported);
  assert.equal(deduplicated.length,2,'Omite duplicado del archivo y pasajero existente sin descartar homonimos');
  assert.deepEqual(deduplicated.map(p=>p.dni.num),['30123456','40123456']);
+ await page.evaluate(()=>{window.showView('import');window.fixture.failAfter=450;});
+ const rows=Array.from({length:451},(_,i)=>`TEST${i},IMPORT,01/01/1980,${30000000+i}`).join('\n');
+ await page.locator('#import-excel-input').setInputFiles({name:'partial.csv',mimeType:'text/csv',buffer:Buffer.from('APELLIDO,NOMBRE,FECHA NAC,DNI\n'+rows)});
+ await page.locator('#import-review-wrap').waitFor({state:'visible'});await page.locator('#btn-import-save').click();
+ assert.match(await page.locator('#toast-text').innerText(),/450 importado/);
+ assert.match(await page.locator('#import-review-sub').innerText(),/1 pasajero/);
+ assert.equal(await page.locator('#btn-import-save').isEnabled(),true);
+ await page.locator('#btn-import-save').click();
+ assert.equal(await page.evaluate(()=>window.fixture.imported.length),1);
+ assert.equal(await page.evaluate(()=>window.fixture.imported[0].lastname),'TEST450');
  await page.locator('#nav-admin').click();
  await page.locator('[data-agency-edit="other"]').waitFor();
  await page.locator('[data-admin-tab="users"]').click();

@@ -2615,9 +2615,12 @@ window.saveImportedPassengers = async function() {
   let ok = 0, skipped = 0, fail = 0;
   // Armar la lista de pasajeros a guardar (mismo filtro que antes, client-side)
   const toSave = [];
+  const queued = [];
+  let pending = [];
   for (const g of importGroups) {
     if (!g.lastname && !g.firstname) { fail++; continue; }
     if (findDuplicateInDB(g) || findDuplicateMatch(g, null, toSave)) { skipped++; continue; }
+    queued.push(g);
     toSave.push({
       lastname: (g.lastname || '').toUpperCase(),
       firstname: (g.firstname || '').toUpperCase(),
@@ -2646,14 +2649,23 @@ window.saveImportedPassengers = async function() {
     }
   } catch (err) {
     console.error('Error importando pasajeros masivo (batch):', err);
-    fail += toSave.length;
+    ok = err.savedIds?.length || 0;
+    fail += toSave.length - ok;
+    pending = queued.slice(ok);
   }
 
   const parts = [];
   if (ok)      parts.push(`${ok} importado(s)`);
   if (skipped) parts.push(`${skipped} ya existían (omitidos)`);
   if (fail)    parts.push(`${fail} con errores`);
-  showToast(`✓ ${parts.join(' · ')}`);
+  showToast(parts.join(' · '), fail > 0);
+  if (pending.length) {
+    importGroups = pending;
+    renderImportReview();
+    btn.disabled = false;
+    btn.textContent = 'Reintentar pendientes';
+    return;
+  }
   resetImport();
   showView('passengers');
 };

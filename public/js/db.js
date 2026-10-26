@@ -143,6 +143,7 @@ export async function addPassengersBatch(items) {
   for (let i = 0; i < items.length; i += CHUNK) {
     const batch = writeBatch(db);
     const slice = items.slice(i, i + CHUNK);
+    const batchIds = [];
     for (const data of slice) {
       const ref = doc(col);
       batch.set(ref, {
@@ -150,9 +151,15 @@ export async function addPassengersBatch(items) {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      ids.push(ref.id);
+      batchIds.push(ref.id);
     }
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (error) {
+      error.savedIds = ids;
+      throw error;
+    }
+    ids.push(...batchIds);
   }
   return ids;
 }

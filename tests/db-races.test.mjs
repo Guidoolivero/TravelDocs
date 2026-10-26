@@ -15,3 +15,22 @@ test('la marca del email del cliente conserva check-in, tramos nuevos y datos ac
   assert.equal(stored.piernas[0].extra, 'conservar');
   assert.equal(stored.piernas.length, 2);
 });
+
+test('una importacion parcial informa solo los IDs de los bloques confirmados', async () => {
+  let nextId = 0, commits = 0;
+  const persisted = [];
+  const api = dbFixture({ getFirestore: () => ({}), collection: () => 'passengers', doc: () => ({ id: String(++nextId) }),
+    writeBatch: () => {
+      const pending = [];
+      return { set: (ref, data) => pending.push([ref.id, data]), commit: async () => {
+        if (++commits === 2) throw new Error('Firestore unavailable');
+        persisted.push(...pending);
+      } };
+    },
+  });
+  await assert.rejects(api.addPassengersBatch(Array.from({ length: 901 }, (_, i) => ({ lastname: `TEST${i}` }))), error => {
+    assert.equal(error.savedIds?.length, 450);
+    assert.equal(persisted.length, 450);
+    return true;
+  });
+});
