@@ -2496,6 +2496,7 @@ function renderImportReview() {
   sub.textContent = `${importGroups.length} pasajero(s) detectado(s)`;
 
   let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+  const reviewed = [...passengers];
   importGroups.forEach((g, idx) => {
     const docs = [];
     if (g.parg?.num) docs.push(`Pas. ARG ${esc(g.parg.num)}`);
@@ -2512,7 +2513,8 @@ function renderImportReview() {
     }
 
     const warn = !g.lastname || !g.firstname || !g.dob;
-    const isDup = !!findDuplicateInDB(g);
+    const isDup = !!findDuplicateMatch(g, null, reviewed);
+    if (!isDup && (g.lastname || g.firstname)) reviewed.push(g);
     html += `
     <div class="card" style="padding:16px 20px;${isDup ? 'border-left:3px solid #9ca3af;opacity:0.7;' : warn ? 'border-left:3px solid #f59e0b;' : ''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
@@ -2560,7 +2562,7 @@ function normDupName(v) {
   return stripDiacritics((v || '').toUpperCase().replace(/\./g, '').replace(/\s+/g, ' ').trim());
 }
 
-function findDuplicateMatch(g, excludeId = null) {
+function findDuplicateMatch(g, excludeId = null, candidates = passengers) {
   const pargNum = normScanNumber(g.parg?.num || '');
   const pextNum = normScanNumber(g.pext?.num || '');
   const dniNum  = normScanNumber(g.dni?.num  || '');
@@ -2569,12 +2571,12 @@ function findDuplicateMatch(g, excludeId = null) {
   const first   = normDupName(g.firstname || '');
   const dob     = g.dob || '';
 
-  const original = excludeId ? passengers.find(p => p.id === excludeId) : null;
+  const original = excludeId ? candidates.find(p => p.id === excludeId) : null;
   const origParg = normScanNumber(original?.parg?.num || '');
   const origPext = normScanNumber(original?.pext?.num || '');
   const origDni  = normScanNumber(original?.dni?.num  || '');
 
-  for (const p of passengers) {
+  for (const p of candidates) {
     if (excludeId && p.id === excludeId) continue;
 
     const existParg = normScanNumber(p.parg?.num || '');
@@ -2615,7 +2617,7 @@ window.saveImportedPassengers = async function() {
   const toSave = [];
   for (const g of importGroups) {
     if (!g.lastname && !g.firstname) { fail++; continue; }
-    if (findDuplicateInDB(g)) { skipped++; continue; }
+    if (findDuplicateInDB(g) || findDuplicateMatch(g, null, toSave)) { skipped++; continue; }
     toSave.push({
       lastname: (g.lastname || '').toUpperCase(),
       firstname: (g.firstname || '').toUpperCase(),

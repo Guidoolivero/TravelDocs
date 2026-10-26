@@ -112,6 +112,12 @@ try{
  await page.locator('#btn-import-save').click();
  const imported=await page.evaluate(()=>window.fixture.imported[0]);
  assert.equal(imported.ffn[0].number,'000123');assert.equal(imported.notes,'Observacion ficticia');assert.equal(imported.emergencyContact.phone,'+5490000000000');assert.equal(imported.asistencias[0].num,'V001');
+ await page.evaluate(()=>window.showView('import'));
+ await page.locator('#import-excel-input').setInputFiles({name:'duplicates.csv',mimeType:'text/csv',buffer:Buffer.from('APELLIDO,NOMBRE,FECHA NAC,DNI\nPEREZ,ANA,01/01/1980,30123456\nPEREZ,ANA,01/01/1980,30123456\nPEREZ,ANA,01/01/1990,40123456\nBERALDI,JOSE,01/01/1980,')});
+ await page.locator('#import-review-wrap').waitFor({state:'visible'});await page.locator('#btn-import-save').click();
+ const deduplicated=await page.evaluate(()=>window.fixture.imported);
+ assert.equal(deduplicated.length,2,'Omite duplicado del archivo y pasajero existente sin descartar homonimos');
+ assert.deepEqual(deduplicated.map(p=>p.dni.num),['30123456','40123456']);
  await page.locator('#nav-admin').click();
  await page.locator('[data-agency-edit="other"]').waitFor();
  await page.locator('[data-admin-tab="users"]').click();
