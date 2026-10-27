@@ -14,11 +14,19 @@ export async function buildFrontend({ source = path.join(root, 'public'), output
     hash.update(file.replaceAll(path.sep, '/')).update('\0').update(await readFile(path.join(js, file))).update('\0');
   }
   const version = 'v-' + hash.digest('hex').slice(0, 16);
-  // shortcut: se publica la version actual; pestanas antiguas deben recargarse si piden un modulo diferido tras otro deploy.
   await rm(output, { recursive: true, force: true });
   await cp(source, output, { recursive: true });
   await mkdir(path.join(output, 'js', version), { recursive: true });
   await cp(js, path.join(output, 'js', version), { recursive: true });
+  // URLs /js/*.js viejas: reexportan este grafo. Si no, un db.js nuevo
+  // importaba alert-core.mjs cacheado sin el export y el login se caia.
+  for (const file of files) {
+    const sourceFile = await readFile(path.join(js, file), 'utf8');
+    if (!/^\s*(import|export)\b/m.test(sourceFile)) continue;
+    const rel = file.replaceAll(path.sep, '/');
+    const up = '../'.repeat(rel.split('/').length - 1) || './';
+    await writeFile(path.join(output, 'js', file), `export * from '${up}${version}/${rel}';\n`);
+  }
   for (const file of await readdir(output)) {
     if (!file.endsWith('.html')) continue;
     const target = path.join(output, file);

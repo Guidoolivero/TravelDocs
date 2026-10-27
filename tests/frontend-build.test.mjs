@@ -26,6 +26,13 @@ test('cada HTML e import estatico o diferido carga una misma version; cambiar un
     const login = await import(pathToFileURL(path.join(output, urls[0])).href);
     assert.equal(login.value, 1);
     assert.equal((await login.lazy()).value, 1);
+    const version = urls[0].match(/\/js\/(v-[a-f0-9]{16})\//)[1];
+    assert.equal(await readFile(path.join(output, 'js/login.js'), 'utf8'), `export * from './${version}/login.js';\n`);
+    assert.equal(await readFile(path.join(output, 'js/core.mjs'), 'utf8'), `export * from './${version}/core.mjs';\n`);
+    assert.equal(await readFile(path.join(output, 'js/analytics.js'), 'utf8'), 'window.analyticsLoaded = true;');
+    const legacy = await import(pathToFileURL(path.join(output, 'js/login.js')).href);
+    assert.equal(legacy.value, 1);
+    assert.equal((await legacy.lazy()).value, 1);
     await assert.rejects(readFile(path.join(output, 'private.txt')), { code: 'ENOENT' });
     await buildFrontend({ source, output });
     assert.equal(await readFile(path.join(output, 'login.html'), 'utf8'), html, 'Sin cambios se conserva la misma version');
