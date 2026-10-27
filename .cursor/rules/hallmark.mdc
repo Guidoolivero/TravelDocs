@@ -1,0 +1,13 @@
+---
+description: Hallmark anti-slop UI for TravelDocs. Always on for HTML/CSS/visible UI.
+alwaysApply: true
+---
+
+# Hallmark
+
+Read `.agents/skills/hallmark/SKILL.md` before changing visible UI. Claude, Grok, Codex and Cursor all load that copy.
+
+- New pages, landing, marketing: full Hallmark flow, then `node .agents/skills/hallmark/scripts/sloplint.mjs --render` if Node is available. Fix every FAIL.
+- Existing app (`index.html`, `css/main.css`, dashboard, forms): apply Floor and Reflex gates on the surface you touch. Do not restyle the whole SPA unless the user names a redesign.
+- Keep Spanish UI copy. Do not invent metrics, testimonials or passenger data.
+- IATA SSR/FOID strings stay as they are.
