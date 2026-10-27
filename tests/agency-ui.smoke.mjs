@@ -6,11 +6,12 @@ import assert from 'node:assert/strict';
 const root=fileURLToPath(new URL('../',import.meta.url)).replace(/\/$/,'');
 // Prueba local: Firebase, Functions, email y telemetria quedan aislados.
 // XLSX_QA_PATH apunta a una copia local del mismo bundle CDN usado por la app.
+const publicDir=process.env.PUBLIC_DIR || root+'/public';
 const xlsxPath=process.env.XLSX_QA_PATH;
 if(!xlsxPath) throw new Error('Indicá XLSX_QA_PATH con el bundle xlsx@0.18.5');
 const require=createRequire(root+'/package.json');
 const {chromium}=require('playwright-core');
-const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;const data=await readFile(root+'/public'+(path==='/'?'/index.html':path));res.setHeader('Content-Type',path.endsWith('.mjs')||path.endsWith('.js')?'application/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(data);}catch{res.statusCode=404;res.end();}});
+const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;const data=await readFile(publicDir+(path==='/'?'/index.html':path));res.setHeader('Content-Type',path.endsWith('.mjs')||path.endsWith('.js')?'application/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(data);}catch{res.statusCode=404;res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':undefined),headless:true});
@@ -34,8 +35,8 @@ await page.route('**/*',async route=>{
  }
  if(u.href==='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js') return route.fulfill({contentType:'application/javascript',body:await readFile(xlsxPath,'utf8')});
  if(u.origin!==url&&!u.pathname.startsWith('/.netlify/')) return route.abort();
- if(['/js/sentry.js','/js/analytics.js'].includes(u.pathname)) return route.fulfill({contentType:'application/javascript',body:''});
- if(u.pathname==='/js/db.js')return route.fulfill({contentType:'application/javascript',body:stub});
+ if(/\/(sentry|analytics)\.js$/.test(u.pathname)) return route.fulfill({contentType:'application/javascript',body:''});
+ if(u.pathname.endsWith('/db.js'))return route.fulfill({contentType:'application/javascript',body:stub});
  if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial',createdAt:'2026-10-01'}]})});
  if(u.pathname.endsWith('/admin-api/users')&&route.request().method()==='GET') return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',displayName:'Otro',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
  if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});

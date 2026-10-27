@@ -1,10 +1,11 @@
 // Prueba de navegador local: Firebase, QR y Functions se simulan; no usa credenciales.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-const root = new URL('../public/', import.meta.url);
+const root = process.env.PUBLIC_DIR ? pathToFileURL(process.env.PUBLIC_DIR + '/') : new URL('../public/', import.meta.url);
 const server = createServer(async (req, res) => {
   try {
     const path = new URL(req.url, 'http://localhost').pathname;
@@ -37,10 +38,10 @@ try {
       if (url.href.startsWith('https://cdn.jsdelivr.net/npm/qrcode')) return js('export default {toCanvas:async()=>{}};');
       if (url.pathname === '/.netlify/functions/mfa-complete') return route.fulfill({ contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '{"recoveryCodes":["TEST-RECOVERY-CODE"]}' });
       if (url.origin !== origin) return route.abort();
-      if (['/js/sentry.js', '/js/analytics.js'].includes(url.pathname)) return js('');
+      if (/\/(sentry|analytics)\.js$/.test(url.pathname)) return js('');
       if (url.pathname === '/index.html') return route.fulfill({ contentType: 'text/html', body: '<p>Ingreso validado</p>' });
-      if (url.pathname === '/js/db.js') return js('export const initDB=()=>{},getUserAgency=async()=> "agency",getAgency=async()=>{window.agencyReads=(window.agencyReads||0)+1;return {status:"active"};};');
-      if (url.pathname === '/js/tenant.js') return js('export const storeAgencyId=()=>{},clearStoredAgencyId=()=>{},getStoredAgencyId=()=>null,applyBranding=()=>{};');
+      if (url.pathname.endsWith('/db.js')) return js('export const initDB=()=>{},getUserAgency=async()=> "agency",getAgency=async()=>{window.agencyReads=(window.agencyReads||0)+1;return {status:"active"};};');
+      if (url.pathname.endsWith('/tenant.js')) return js('export const storeAgencyId=()=>{},clearStoredAgencyId=()=>{},getStoredAgencyId=()=>null,applyBranding=()=>{};');
       return route.continue();
     });
     await page.goto(origin + '/login.html');

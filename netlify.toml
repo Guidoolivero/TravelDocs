@@ -1,6 +1,7 @@
 [build]
-  # Solo public/ se sirve: docs/, tests/ y scripts/ tienen datos personales.
-  publish = "public"
+  # Copia generada exclusivamente desde public/; nunca incluye docs/ ni tests/.
+  command = "npm run build:frontend"
+  publish = ".netlify/site"
   functions = "netlify/functions"
 
 [build.environment]
@@ -17,7 +18,7 @@
 # sube los source maps y deja el zip sin re-bundlear (asi el debug id coincide).
 # El deploy tiene que ser `netlify deploy --prod`, sin --no-build.
 [context.production.build]
-  command = "node scripts/bundle-functions.mjs"
+  command = "npm run build:frontend && node scripts/bundle-functions.mjs"
   functions = "netlify/functions-dist"
 
 [context.production.functions]

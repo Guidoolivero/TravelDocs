@@ -94,11 +94,15 @@ jobs:
           path: ~/.cache/ms-playwright
           key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - run: npm run build:frontend
       - run: node tests/mfa-ui.smoke.mjs
+        env:
+          PUBLIC_DIR: ${{ github.workspace }}/.netlify/site
       - run: curl --fail --retry 3 https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js --output /tmp/agency-xlsx.min.js
       - run: node tests/agency-ui.smoke.mjs
         env:
           XLSX_QA_PATH: /tmp/agency-xlsx.min.js
+          PUBLIC_DIR: ${{ github.workspace }}/.netlify/site
 
   deploy:
     name: Deploy a produccion (Netlify)
