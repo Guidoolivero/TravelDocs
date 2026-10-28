@@ -10,6 +10,9 @@ Sentry.init({
   integrations: [Sentry.browserTracingIntegration()],
   tracesSampleRate: location.hostname === "localhost" || location.hostname === "127.0.0.1" ? 1.0 : 0.1,
   tracePropagationTargets: ["localhost", /^\//],
+  // Outlook/Office inyecta esto en Chrome y rechaza una Promise con un string.
+  // No es codigo nuestro (sin stack, landing, solo fetch de Ads).
+  ignoreErrors: [/Object Not Found Matching Id:\d+, MethodName:update, ParamCount:\d+/],
   dataCollection: {
     userInfo: false,
     httpBodies: [],
