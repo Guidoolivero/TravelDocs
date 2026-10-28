@@ -54,7 +54,26 @@ test('igual si el PNR viene en una sola linea', () => {
 test('E AA/QSLTFP es localizador de segmento, no un apellido', () => {
   assert.equal(isAirlineLocatorName('E AA', 'QSLTFP'), true);
   assert.equal(isAirlineLocatorName('AA', 'QSLTFP'), true);
+  assert.equal(isAirlineLocatorName('E IB', 'KRBJJ'), true);
+  assert.equal(isAirlineLocatorName('LA', 'AB12CD'), true);
+  assert.equal(isAirlineLocatorName('G3', 'XYZ123'), true);
   assert.equal(isAirlineLocatorName('BALDO', 'ALICIA TERESA'), false);
+});
+
+test('el corte de vuelos vale para cualquier cia, no solo AA o AR', () => {
+  const cases = [
+    ['IB 600', 'E  IB/KRBJJ'],
+    ['LA345', 'E  LA/AB12CD'],
+    ['G3 1234', 'E  G3/XYZ123'],
+  ];
+  for (const [vuelo, loc] of cases) {
+    const pnr = `BALDO/ALICIA TERESA   2.BERALDI/JOSE PEDRO\n  3  ${vuelo} I 18JAN 1 EZEMAD HK2  2135 0455  19JAN  ${loc}`;
+    assert.deepEqual(
+      parsePnrPassengers(pnr).map(p => `${p.apellido}/${p.nombre}`),
+      ['BALDO/ALICIA TERESA', 'BERALDI/JOSE PEDRO'],
+      vuelo
+    );
+  }
 });
 
 test('el PNR de Beraldi + D Imperio enlaza las dos fichas', () => {

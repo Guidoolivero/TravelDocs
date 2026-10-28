@@ -1,7 +1,7 @@
 // Nombres de un PNR Amadeus pegado. No usa IA: Gemini a veces toma la D de
 // "2.D IMPERIO" como si fuera parte del numero de linea y deja solo IMPERIO.
-// Corta antes de la primera linea de vuelo (AA900 o AA 900). Si no, el
-// sufijo "E AA/QSLTFP" (e-ticket + localizador) se lee como un pasajero.
+// Corta antes de la primera linea de vuelo (cualquier cia: AA 900, IB600, G3 12).
+// Si no, el sufijo "E AA/QSLTFP" (e-ticket + localizador) se lee como un pasajero.
 
 const FLIGHT = /(?:^|\s)\d+\s+[A-Z0-9]{2}\s*\d{1,4}\b/i;
 
