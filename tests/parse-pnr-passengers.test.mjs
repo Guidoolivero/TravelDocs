@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parsePnrPassengers } from '../public/js/parse-pnr-passengers.mjs';
+import { parsePnrPassengers, isAirlineLocatorName } from '../public/js/parse-pnr-passengers.mjs';
 import { matchItineraryPassengers } from '../public/js/pending-passengers.mjs';
 
 test('conserva la D de D IMPERIO despues del numero de pasajero', () => {
@@ -31,6 +31,30 @@ test('conserva D apostrofe y no toma el localizador AR/GLLXHV como pasajero', ()
     "D'IMPERIO/HERNAN MATIAS",
     'GAGLIARDI/PABLO RICARDO'
   ]);
+});
+
+test('AA 900 con espacio no convierte E AA/QSLTFP en pasajero ni se come a Beraldi', () => {
+  const pnr = `BALDO/ALICIA TERESA   2.BERALDI/JOSE PEDRO
+  3  AA 900 I 18JAN 1 EZEMIA HK2  2135 0455  19JAN  E  AA/QSLTFP
+  4  AA 931 R 31JAN 7 MIAEZE HK2  2015 0725  01FEB  E  AA/QSLTFP`;
+  assert.deepEqual(parsePnrPassengers(pnr).map(p => `${p.apellido}/${p.nombre}`), [
+    'BALDO/ALICIA TERESA',
+    'BERALDI/JOSE PEDRO'
+  ]);
+});
+
+test('igual si el PNR viene en una sola linea', () => {
+  const pnr = 'BALDO/ALICIA TERESA   2.BERALDI/JOSE PEDRO  3  AA 900 I 18JAN 1 EZEMIA HK2  2135 0455  19JAN  E  AA/QSLTFP  4  AA 931 R 31JAN 7 MIAEZE HK2  2015 0725  01FEB  E  AA/QSLTFP';
+  assert.deepEqual(parsePnrPassengers(pnr).map(p => `${p.apellido}/${p.nombre}`), [
+    'BALDO/ALICIA TERESA',
+    'BERALDI/JOSE PEDRO'
+  ]);
+});
+
+test('E AA/QSLTFP es localizador de segmento, no un apellido', () => {
+  assert.equal(isAirlineLocatorName('E AA', 'QSLTFP'), true);
+  assert.equal(isAirlineLocatorName('AA', 'QSLTFP'), true);
+  assert.equal(isAirlineLocatorName('BALDO', 'ALICIA TERESA'), false);
 });
 
 test('el PNR de Beraldi + D Imperio enlaza las dos fichas', () => {

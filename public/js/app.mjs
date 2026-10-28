@@ -1,5 +1,5 @@
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
-import { parsePnrPassengers } from './parse-pnr-passengers.mjs';
+import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers.mjs';
 import { csvField, excelRowToPassenger } from './csv-import.mjs';
 import { matchesPassenger } from './passenger-search.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -3445,7 +3445,9 @@ window.saveReservation = async function() {
 // Busca cada pasajero del PNR en la base (passengers en memoria) por
 // apellido + primer nombre. Devuelve { encontrados: [ids], noEncontrados: [nombre] }.
 function matchPnrPasajeros(pasajeros) {
-  const previous = _resPendingPax.map(p => ({ apellido: p.lastname, nombre: p.firstname }));
+  const previous = _resPendingPax
+    .map(p => ({ apellido: p.lastname, nombre: p.firstname }))
+    .filter(p => !isAirlineLocatorName(p.apellido, p.nombre));
   const result = matchItineraryPassengers([...previous, ...(pasajeros || [])], passengers);
   _resPendingPax = mergePendingPassengers([], result.pending);
   return { encontrados: result.ids, noEncontrados: result.pending.map(p => `${p.lastname}, ${p.firstname}`) };
