@@ -3464,6 +3464,19 @@ function fileToBase64(file) {
   });
 }
 
+// Menos de 24 h en tierra = escala (no destino). 24 h o mas = multi destino.
+function etiquetaTipoViaje(tipo, piernas) {
+  const escIata = [...new Set((piernas || []).flatMap(p => p.escalas || []).filter(Boolean))];
+  if (tipo === 'round-trip') {
+    return escIata.length
+      ? `Ida y vuelta. Escala en ${escIata.join(', ')} (menos de 24 h).`
+      : 'Ida y vuelta.';
+  }
+  if (tipo === 'multi-city') return 'Multi destino. 24 h o más en un punto cuenta como destino.';
+  if (tipo === 'one-way') return 'Solo ida.';
+  return '';
+}
+
 // Aplica al formulario del check-in los datos extraídos (de un PNR pegado o de
 // un e-ticket en PDF): setea el PNR, arma los tramos, matchea pasajeros contra
 // la base y arma el HTML de resumen. Devuelve { html } para que el llamador lo
@@ -3507,6 +3520,8 @@ window.applyInterpretedReservation = function(d) {
   const totalPax = (d.pasajeros || []).length;
   let html = `<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;">`;
   html += `<div style="margin-bottom:4px;"><strong>${totalPax}</strong> pasajero(s) · <strong>${encontrados.length}</strong> asociado(s) a la base</div>`;
+  const tipoLinea = etiquetaTipoViaje(d.tipo, d.piernas);
+  if (tipoLinea) html += `<div style="color:var(--text3);margin-bottom:4px;">${esc(tipoLinea)}</div>`;
   if (d.notas) html += `<div style="color:var(--text3);margin-bottom:6px;">${esc(d.notas)}</div>`;
   if (noEncontrados.length) {
     html += `<div style="color:var(--text3);margin-top:4px;">Sin ficha para ${esc(noEncontrados.join(', '))}. Buscalas abajo o guardá el check-in con el nombre del PNR.</div>`;

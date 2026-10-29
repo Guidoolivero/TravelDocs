@@ -78,3 +78,26 @@ test('cuatro e-tickets del mismo itinerario no duplican tramos', async () => {
   assert.equal(data.piernas.length, 2);
   assert.equal(data.tipo, 'round-trip');
 });
+
+test('menos de 24h en Lima es escala; 24h o mas es multi destino', async () => {
+  const lim23h = { ...arubaIda2, fecha_salida: '2026-12-25T12:09', fecha_llegada: '2026-12-25T17:30' };
+  const lim24h = { ...arubaIda2, fecha_salida: '2026-12-25T12:10', fecha_llegada: '2026-12-25T17:30' };
+  const rt = await pnrFixture({ ticket: [arubaIda1, lim23h, arubaVuelta1, arubaVuelta2] })
+    .invoke('pnr-checkin', { pdfs: ['ticket'] });
+  const multi = await pnrFixture({ ticket: [arubaIda1, lim24h, arubaVuelta1, arubaVuelta2] })
+    .invoke('pnr-checkin', { pdfs: ['ticket'] });
+  const dataRt = JSON.parse(rt.body).data;
+  const dataMulti = JSON.parse(multi.body).data;
+  assert.equal(dataRt.tipo, 'round-trip');
+  assert.deepEqual(dataRt.piernas.map(p => [p.origen, p.destino, p.escalas]), [
+    ['EZE', 'AUA', ['LIM']],
+    ['AUA', 'AEP', ['LIM']],
+  ]);
+  assert.equal(dataMulti.tipo, 'multi-city');
+  assert.equal(dataMulti.piernas.length, 3);
+  assert.deepEqual(dataMulti.piernas.map(p => [p.origen, p.destino]), [
+    ['EZE', 'LIM'],
+    ['LIM', 'AUA'],
+    ['AUA', 'AEP'],
+  ]);
+});

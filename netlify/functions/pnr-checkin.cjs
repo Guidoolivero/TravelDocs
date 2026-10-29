@@ -9,8 +9,9 @@
 //    - reservaVuelo (codigo de reserva de la aerolinea, ej. KRBJJ
 //      de "IB/KRBJJ", distinto del PNR de Amadeus)
 //  La IA extrae los segmentos del PNR; el codigo los agrupa en piernas
-//  (un check-in por pierna) separando cuando el gap entre la llegada de
-//  un segmento y la salida del siguiente es >= 24hs (stopover).
+//  (un check-in por pierna). Menos de 24 h en tierra = escala (no destino).
+//  A partir de 24 h esa ciudad abre otra pierna y el viaje pasa a multi
+//  destino. tipoDePiernas clasifica sobre esas piernas, nunca sobre escalas.
 //
 //  Variables de entorno en Netlify:
 //    GEMINI_API_KEY       — requerida
@@ -268,7 +269,9 @@ function parsePnrJson(raw) {
 // Una pierna = un check-in. Dos segmentos consecutivos son la misma
 // pierna (escala) si entre la LLEGADA de uno y la SALIDA del siguiente
 // hay menos de 24hs. Si hay 24hs o mas, son piernas separadas (cada
-// vuelo necesita su propio check-in). Los gaps son invariantes en la
+// vuelo necesita su propio check-in) y esa ciudad cuenta como destino.
+// tipoDePiernas clasifica sobre las piernas: una escala no es multi destino.
+// Los gaps son invariantes en la
 // zona horaria porque ambas fechas estan en hora Argentina naive.
 // Excepcion: un segmento de OTRA aerolinea (o con otro codigo de
 // reserva de aerolinea) nunca se funde como escala, aunque conecte en
@@ -348,6 +351,10 @@ function metro(iata) {
   return METRO[c] || c;
 }
 
+// Corre DESPUES de groupSegmentos. Las escalas (< 24 h) ya van dentro de
+// la pierna y no cuentan como destino. 24 h o mas en un punto = otra
+// pierna = multi-city, salvo ida y vuelta (2 piernas, vuelve al metro
+// de origen: EZE/AEP/EPA = BUE).
 function tipoDePiernas(piernas) {
   if (piernas.length <= 1) return 'one-way';
   if (piernas.length === 2 && piernas[0].origen && metro(piernas[1].destino) === metro(piernas[0].origen)) return 'round-trip';
