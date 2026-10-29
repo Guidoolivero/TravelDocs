@@ -281,6 +281,19 @@ function ts(fecha) {
   return isNaN(t) ? null : t;
 }
 
+function horaSentinel(fecha) {
+  return /T00:01$/.test(fecha || '') || /T23:59$/.test(fecha || '');
+}
+
+function mismaReserva(a, b) {
+  const x = String(a || '').toUpperCase();
+  const y = String(b || '').toUpperCase();
+  if (!x || !y) return true;
+  if (x === y) return true;
+  // "LAEBUOFH" y "EBUOFH" son el mismo localizador (prefijo de cia).
+  return x.endsWith(y) || y.endsWith(x);
+}
+
 function groupSegmentos(segmentos) {
   const segs = (Array.isArray(segmentos) ? segmentos : [])
     .filter(s => s && s.fecha_salida)
@@ -303,8 +316,15 @@ function groupSegmentos(segmentos) {
     // Otro check-in si cambia la aerolinea o el codigo de reserva (se compara
     // solo cuando AMBOS lados tienen el dato; vacio/null = desconocido, no corta).
     const distintaCompania = prev && s.compania && prev.compania && s.compania !== prev.compania;
-    const distintaReserva = prev && s.reservaVuelo && prev.reservaVuelo && s.reservaVuelo !== prev.reservaVuelo;
-    if (prev && !distintaCompania && !distintaReserva && tSalida !== null && tLlegadaPrev !== null && tSalida >= tLlegadaPrev && (tSalida - tLlegadaPrev) < DIA_MS) {
+    const distintaReserva = prev && !mismaReserva(s.reservaVuelo, prev.reservaVuelo);
+    const encadena = prev && s.origen && prev.destino === s.origen;
+    const conexionHoraria = tSalida !== null && tLlegadaPrev !== null
+      && tSalida >= tLlegadaPrev && (tSalida - tLlegadaPrev) < DIA_MS;
+    // Gemini, sin hora, pone 00:01/23:59. El mismo dia se solapa y no entra
+    // en conexionHoraria; si el aeropuerto encadena, igual es escala.
+    const conexionSinHora = encadena && horaSentinel(prev && prev._tLlegada) && horaSentinel(s.salida)
+      && tSalida !== null && tLlegadaPrev !== null && Math.abs(tSalida - tLlegadaPrev) < DIA_MS;
+    if (prev && !distintaCompania && !distintaReserva && (conexionHoraria || conexionSinHora)) {
       // escala: misma pierna (< 24h en tierra, misma aerolinea y reserva)
       if (s.origen) prev.escalas.push(s.origen);
       prev.destino = s.destino || prev.destino;
@@ -320,9 +340,17 @@ function groupSegmentos(segmentos) {
   return piernas.map(({ _tLlegada, ...p }) => p);
 }
 
+// EZE/AEP/EPA son Buenos Aires: ida por Ezeiza y vuelta a Aeroparque sigue
+// siendo round-trip, no multi-city.
+const METRO = { EZE: 'BUE', AEP: 'BUE', EPA: 'BUE' };
+function metro(iata) {
+  const c = String(iata || '').toUpperCase();
+  return METRO[c] || c;
+}
+
 function tipoDePiernas(piernas) {
   if (piernas.length <= 1) return 'one-way';
-  if (piernas.length === 2 && piernas[0].origen && piernas[1].destino === piernas[0].origen) return 'round-trip';
+  if (piernas.length === 2 && piernas[0].origen && metro(piernas[1].destino) === metro(piernas[0].origen)) return 'round-trip';
   return 'multi-city';
 }
 
