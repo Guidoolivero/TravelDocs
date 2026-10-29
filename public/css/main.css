@@ -209,6 +209,33 @@ textarea { resize: vertical; min-height: 72px; }
 .copy-btn:hover { background: var(--surface2); color: var(--text); }
 .copy-btn.copied { background: var(--green-bg); color: var(--green); border-color: transparent; }
 
+.ssr-gds-words { display: flex; gap: 14px; align-items: center; }
+.ssr-gds-word {
+  background: none; border: none; padding: 0;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--text3); cursor: pointer;
+}
+.ssr-gds-word.is-on { color: var(--text); font-weight: 600; }
+.ssr-item {
+  background: var(--surface2); border-radius: 8px;
+  padding: 10px 12px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
+}
+.ssr-cmd {
+  font-size: 11.5px; font-family: var(--mono); color: var(--text);
+  word-break: break-all;
+}
+.ssr-carrier-slot {
+  display: inline-block; width: 2.4ch; margin: 0; padding: 0;
+  border: none; border-bottom: 1px solid var(--border2);
+  background: transparent; font-family: var(--mono); font-size: inherit;
+  color: var(--accent); text-align: center; text-transform: uppercase;
+}
+.ssr-carrier-name {
+  display: inline-block; margin-left: 8px;
+  font-size: 12px; color: var(--text3); font-family: inherit;
+}
+
 /* ===== CIUDADES GDS ===== */
 .gds-cities-list { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
 .gds-city-card {

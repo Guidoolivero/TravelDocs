@@ -16,10 +16,21 @@ const ALPHA2 = {
 };
 function alpha2(c) { return ALPHA2[String(c || '').toUpperCase()] || String(c || '').substring(0, 2); }
 
-const DEFAULT_CTX = { gds: 'amadeus', pnum: '1', snum: '1', infPnum: '2' };
+const DEFAULT_CTX = { gds: 'amadeus', pnum: '1', snum: '1', infPnum: '2', carrier: '' };
 let _ctx = { ...DEFAULT_CTX };
 
 function getGDS() { return _ctx.gds; }
+function amadeusCarrier() {
+  const c = String(_ctx.carrier || '').trim().toUpperCase();
+  return /^[A-Z0-9]{2}$/.test(c) ? c : 'YY';
+}
+
+// Parte SRDOCO{cia}HK1-... para el slot editable de 2 letras en la ficha.
+export function splitAmadeusDoco(value) {
+  const m = String(value || '').match(/^(SRDOCO)([A-Z0-9]{2})(HK1-.*)$/);
+  if (!m) return null;
+  return { head: m[1], carrier: m[2], tail: m[3] };
+}
 function getPnum() { return _ctx.pnum; }
 function getSnum() { return _ctx.snum; }
 function getInfPnum() { return _ctx.infPnum; }
@@ -143,7 +154,8 @@ export function generateSRFOID(p, type) {
 }
 
 // ── SRDOCO / DOCO (visa) ────────────────────────────────────
-//  Amadeus: SRDOCOYYHK1-{lugar}-V-{num}-{lugar}-{emi2d}-{pais}/P{n}          (2 dígitos, sin venc)
+//  Amadeus: SRDOCO{cia}HK1-{lugar}-V-{num}-{lugar}-{emi2d}-{pais}/P{n}
+//           cia = 2 letras IATA (LA, AV) o YY si no hay cia
 //  Sabre:   3DOCO{seg}/{nacionalidad}/V/{num}/{lugarEmi}/{emi4d}/{pais}//{venc4d}-{pax}  (lugarNac=nacionalidad)
 //  Galileo: SI.DOCO*{lugar}/V/{num}/{lugar}/{emi2d}/{pais}                    (sin pax, sin venc)
 export function generateSRDOCO(p, visa) {
@@ -159,7 +171,7 @@ export function generateSRDOCO(p, visa) {
   if (g === 'galileo') {
     return `SI.DOCO*${issuedAt}/V/${visa.num}/${issuedAt}/${fmtDateGDS(visa.issue)}/${visa.country}`;
   }
-  return `SRDOCOYYHK1-${issuedAt}-V-${visa.num}-${issuedAt}-${fmtDateGDS(visa.issue)}-${visa.country}${paxSuffix()}`;
+  return `SRDOCO${amadeusCarrier()}HK1-${issuedAt}-V-${visa.num}-${issuedAt}-${fmtDateGDS(visa.issue)}-${visa.country}${paxSuffix()}`;
 }
 
 // ── SRCTCE / CTCE (email de contacto) ───────────────────────
@@ -306,7 +318,8 @@ export function buildSSRStrings(p, pnum = '1', snum = '1', infantPassenger = nul
     gds: opts.gds || DEFAULT_CTX.gds,
     pnum: pnum || DEFAULT_CTX.pnum,
     snum: snum || DEFAULT_CTX.snum,
-    infPnum: opts.infPnum || DEFAULT_CTX.infPnum
+    infPnum: opts.infPnum || DEFAULT_CTX.infPnum,
+    carrier: opts.carrier || DEFAULT_CTX.carrier
   };
   const g = _ctx.gds;
   const items = [];

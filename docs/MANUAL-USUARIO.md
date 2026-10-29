@@ -281,8 +281,9 @@ Detalles importantes del escaneo:
 
 En el detalle del pasajero, abajo, esta la tarjeta **"Strings SSR"**. Ahi el sistema arma automaticamente los comandos listos para pegar en el GDS, segun la documentacion cargada del pasajero.
 
-1. En el desplegable **GDS** (arriba a la derecha de la tarjeta) elegi tu sistema: **Amadeus** o **Sabre**. La lista de strings se regenera al instante para el formato elegido, y el sistema recuerda tu eleccion para la proxima vez.
-2. La lista muestra un string por cada dato disponible. Por ejemplo, para un pasajero con pasaporte argentino, DNI, visa de USA, email y celular:
+1. Arriba a la derecha de la tarjeta estan **Amadeus**, **Sabre** y **Galileo**. Elegi el sistema: la lista se arma en ese formato y el sistema recuerda cual usaste.
+2. En el string de visa de Amadeus, el `YY` del medio (entre SRDOCO y HK1) se puede cambiar por el codigo de la aerolinea (`LA`, `AV`, etc.). El comando queda listo para pegar, por ejemplo `SRDOCOLAHK1-...`. En Sabre no hace falta: `3DOCO` no lleva cia. La ultima cia tambien se recuerda, aunque el vuelo todavia no este cargado.
+3. La lista muestra un string por cada dato disponible. Por ejemplo, para un pasajero con pasaporte argentino, DNI, visa de USA, email y celular:
    - **NM** con el nombre completo (formato GDS).
    - **SRDOCS / DOCS** del pasaporte argentino.
    - **SRDOCS / DOCS** del pasaporte extranjero (si tiene).
@@ -293,7 +294,7 @@ En el detalle del pasajero, abajo, esta la tarjeta **"Strings SSR"**. Ahi el sis
    - **SRCTCM / CTCM** con el celular.
    - **FSR** con el CUIT/CUIL.
    - **FFN** de cada programa de viajero frecuente.
-3. Hace click en **copiar** (boton a la derecha de cada string) y pegalo directamente en el GDS.
+4. Hace click en **copiar** (boton a la derecha de cada string) y pegalo directamente en el GDS.
 
 > Los formatos SSR/FOID son estandares IATA: no se modifican. Si un string sale mal, revisa que los datos del pasajero esten bien cargados.
 

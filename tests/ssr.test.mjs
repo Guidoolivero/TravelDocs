@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSSRStrings } from '../public/js/ssr.js';
+import { buildSSRStrings, splitAmadeusDoco } from '../public/js/ssr.js';
 
 // Busca el item de email (CTCE) para el GDS dado
 function ctceItem(p, gds) {
@@ -103,6 +103,43 @@ describe('CTCE — codificacion IATA de email (@ → //, _ → .., - → ./)', (
 
   it('Galileo omite CTCE', () => {
     assert.equal(ctceItem({ email: 'sanmar_33@hotmail.com' }, 'galileo'), undefined);
+  });
+});
+
+describe('SRDOCO — prefijo de aerolinea en Amadeus', () => {
+  const P_VISA = {
+    lastname: 'PEREZ', firstname: 'ANA', nationality: 'ARG',
+    visas: [{ country: 'USA', num: 'V4784660', issued_at: 'BUENOS AIRES ARG', issue: '2025-02-13', exp: '2035-02-10' }]
+  };
+  function doco(gds, carrier) {
+    return buildSSRStrings(P_VISA, '1', '1', null, { gds, carrier })
+      .find(s => s.label.includes('Visa USA'));
+  }
+
+  it('sin cia sigue emitiendo YY', () => {
+    assert.equal(doco('amadeus').value,
+      'SRDOCOYYHK1-BUENOS AIRES ARG-V-V4784660-BUENOS AIRES ARG-13FEB25-USA/P1');
+  });
+
+  it('LA y AV reemplazan YY en Amadeus', () => {
+    assert.equal(doco('amadeus', 'LA').value,
+      'SRDOCOLAHK1-BUENOS AIRES ARG-V-V4784660-BUENOS AIRES ARG-13FEB25-USA/P1');
+    assert.equal(doco('amadeus', 'AV').value,
+      'SRDOCOAVHK1-BUENOS AIRES ARG-V-V4784660-BUENOS AIRES ARG-13FEB25-USA/P1');
+  });
+
+  it('Sabre no incluye la cia en 3DOCO', () => {
+    const withLa = doco('sabre', 'LA').value;
+    const without = doco('sabre').value;
+    assert.equal(withLa, without);
+    assert.equal(withLa.startsWith('3DOCO'), true);
+    assert.equal(withLa.includes('LAHK'), false);
+  });
+
+  it('splitAmadeusDoco separa el slot de 2 letras', () => {
+    const parts = splitAmadeusDoco('SRDOCOLAHK1-BUENOS AIRES ARG-V-V4784660-BUENOS AIRES ARG-13FEB25-USA/P1');
+    assert.deepEqual(parts, { head: 'SRDOCO', carrier: 'LA', tail: 'HK1-BUENOS AIRES ARG-V-V4784660-BUENOS AIRES ARG-13FEB25-USA/P1' });
+    assert.equal(splitAmadeusDoco('3DOCO1/ARG/V/V4784660'), null);
   });
 });
 

@@ -20,7 +20,7 @@ import {
   asistenciaBadge
 } from './utils.js';
 import { checkinAlertDue, requisitosAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje, reservationStale, isBirthdayToday, anioART, buildAlertEmail as buildAlertEmailHtml } from './alert-core.mjs';
-import { buildSSRStrings, generateNM } from './ssr.js';
+import { buildSSRStrings, generateNM, splitAmadeusDoco } from './ssr.js';
 import { programaFfn } from './ffn-programs.mjs';
 import { nombreAerolinea } from './airlines.mjs';
 import { fromStorage, addCity, updateCity, saveCity, editCity, removeCity, persistable, copyValue } from './gds-cities.mjs';
@@ -1045,30 +1045,86 @@ function updateAlertBadge() {
 }
 
 // ==================== DETALLE PASAJERO ====================
-// GDS elegido para generar strings SSR en el perfil del pasajero (persiste la última elección)
+// GDS y cia de visa: ultima eleccion en este navegador (no van al check-in).
 function currentSSRGds() { return localStorage.getItem('td_ssr_gds') || 'amadeus'; }
+function currentSSRCarrier() {
+  const c = String(localStorage.getItem('td_ssr_carrier') || '').toUpperCase();
+  return /^[A-Z0-9]{2}$/.test(c) ? c : '';
+}
 
-// Render de la lista de strings SSR para un GDS dado (usado en openDetail y al cambiar el select)
-function renderSSRItems(p, gds) {
-  const items = buildSSRStrings(p, '1', '1', null, { gds }).filter(s => s.value);
+function ssrGdsWordsHtml(gds) {
+  return [
+    ['amadeus', 'Amadeus'],
+    ['sabre', 'Sabre'],
+    ['galileo', 'Galileo']
+  ].map(([id, label]) =>
+    `<button type="button" class="ssr-gds-word${gds === id ? ' is-on' : ''}" data-ssr-gds="${id}">${label}</button>`
+  ).join('');
+}
+
+function renderSSRItems(p, gds, carrier) {
+  const items = buildSSRStrings(p, '1', '1', null, { gds, carrier }).filter(s => s.value);
   if (!items.length) return '<div style="font-size:13px;color:var(--text3);">Sin documentos cargados.</div>';
-  return items.map(s => `<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+  return items.map(s => {
+    const parts = gds === 'amadeus' && s.label.includes('Visa') ? splitAmadeusDoco(s.value) : null;
+    let codeHtml = `<code class="ssr-cmd">${esc(s.value)}</code>`;
+    let rowAttrs = '';
+    if (parts) {
+      const name = parts.carrier !== 'YY' ? nombreAerolinea(parts.carrier) : '';
+      rowAttrs = ` data-ssr-doco-row data-ssr-head="${escStr(parts.head)}" data-ssr-tail="${escStr(parts.tail)}"`;
+      codeHtml = `<code class="ssr-cmd">${esc(parts.head)}<input class="ssr-carrier-slot" data-ssr-carrier maxlength="2" spellcheck="false" value="${escStr(parts.carrier)}" aria-label="Codigo de aerolinea">${esc(parts.tail)}</code>`
+        + `<span class="ssr-carrier-name" data-ssr-carrier-name>${esc(name)}</span>`;
+    }
+    return `<div class="ssr-item"${rowAttrs}>
       <div>
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">${esc(s.label)}</div>
-        <code style="font-size:11.5px;font-family:var(--mono);color:var(--text);word-break:break-all;">${esc(s.value)}</code>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;">${esc(s.label)}</div>
+        ${codeHtml}
         ${s.label.includes('Email') && p.email && /[_-]/.test(p.email) ? '<div style="font-size:10px;color:var(--text3);margin-top:3px;">Email codificado para GDS (_ → .. y - → ./, estándar IATA).</div>' : ''}
       </div>
       <button class="copy-btn" style="flex-shrink:0;" data-copy-ssr="${escStr(s.value)}" data-no-row-action="true">copiar</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-// Cambiar el GDS del selector: persiste y re-renderiza solo la lista SSR del modal abierto
+function bindSSRCarrierSlots() {
+  document.querySelectorAll('[data-ssr-carrier]').forEach(inp => {
+    inp.addEventListener('input', onSSRCarrierInput);
+  });
+}
+
+function onSSRCarrierInput(e) {
+  const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 2);
+  e.target.value = raw;
+  if (raw.length === 2) localStorage.setItem('td_ssr_carrier', raw);
+  else if (raw.length === 0) localStorage.removeItem('td_ssr_carrier');
+  const carrier = raw.length === 2 ? raw : (raw.length === 0 ? 'YY' : (currentSSRCarrier() || 'YY'));
+  const name = carrier !== 'YY' ? (nombreAerolinea(carrier) || '') : '';
+  document.querySelectorAll('[data-ssr-carrier]').forEach(inp => {
+    if (inp !== e.target && raw.length === 2) inp.value = raw;
+  });
+  document.querySelectorAll('[data-ssr-doco-row]').forEach(row => {
+    const value = `${row.dataset.ssrHead}${carrier}${row.dataset.ssrTail}`;
+    const btn = row.querySelector('[data-copy-ssr]');
+    if (btn) btn.dataset.copySsr = value;
+    const note = row.querySelector('[data-ssr-carrier-name]');
+    if (note) note.textContent = name;
+  });
+}
+
+function refreshSSRList() {
+  const p = passengers.find(x => x.id === window._detailPassengerId);
+  const list = document.getElementById('ssr-items-list');
+  if (!p || !list) return;
+  list.innerHTML = renderSSRItems(p, currentSSRGds(), currentSSRCarrier());
+  bindSSRCarrierSlots();
+}
+
 window.changeSSRGds = function(value) {
   localStorage.setItem('td_ssr_gds', value);
-  const p = passengers.find(x => x.id === window._detailPassengerId);
-  if (!p) return;
-  const list = document.getElementById('ssr-items-list');
-  if (list) list.innerHTML = renderSSRItems(p, value);
+  document.querySelectorAll('[data-ssr-gds]').forEach(btn => {
+    btn.classList.toggle('is-on', btn.dataset.ssrGds === value);
+  });
+  refreshSSRList();
 };
 
 window.openDetail = function(id, opts = {}) {
@@ -1076,6 +1132,7 @@ window.openDetail = function(id, opts = {}) {
   if (!p) return;
   const flags = passengerDetailFlags(opts.from);
   const gds = currentSSRGds();
+  const carrier = currentSSRCarrier();
 
   window._detailPassengerId = p.id;
   document.getElementById('detail-title').textContent = `${p.lastname}, ${p.firstname}`;
@@ -1157,23 +1214,18 @@ window.openDetail = function(id, opts = {}) {
       ${flags.includeSSR ? `<div class="card">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <span class="card-title">Strings SSR</span>
-          <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;">GDS
-            <select id="ssr-gds-select" class="ssr-gds-select">
-              <option value="amadeus"${gds === 'amadeus' ? ' selected' : ''}>Amadeus</option>
-              <option value="sabre"${gds === 'sabre' ? ' selected' : ''}>Sabre</option>
-              <option value="galileo"${gds === 'galileo' ? ' selected' : ''}>Galileo</option>
-            </select>
-          </label>
+          <div class="ssr-gds-words">${ssrGdsWordsHtml(gds)}</div>
         </div>
         <div class="card-body" style="padding:14px 16px;">
-          <div id="ssr-items-list" style="display:flex;flex-direction:column;gap:8px;">${renderSSRItems(p, gds)}</div>
+          <div id="ssr-items-list" style="display:flex;flex-direction:column;gap:8px;">${renderSSRItems(p, gds, carrier)}</div>
         </div>
       </div>` : ''}
       </div></div>`;
   document.getElementById('detail-body').innerHTML = html;
-  // Listener por JS (no inline) — el CSP bloquea onchange="..." en el HTML
-  const gdsSelect = document.getElementById('ssr-gds-select');
-  if (gdsSelect) gdsSelect.addEventListener('change', () => window.changeSSRGds(gdsSelect.value));
+  document.querySelectorAll('[data-ssr-gds]').forEach(btn => {
+    btn.addEventListener('click', () => window.changeSSRGds(btn.dataset.ssrGds));
+  });
+  bindSSRCarrierSlots();
   openModal('modal-detail');
 };
 
