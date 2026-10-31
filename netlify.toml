@@ -5,7 +5,7 @@
   functions = "netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
   # Misma apiKey que public/js/config.js — usada por netlify/functions/_auth.js
   FIREBASE_API_KEY = "AIzaSyBBqUsxjkLx2RMNQ7ivIINX0kAznlICyHc"
 
@@ -32,3 +32,12 @@
 # ALERTS_CRON_OFF=1 como env var en el otro site para no duplicar envíos.
 [functions."send-alerts"]
   schedule = "0 12 * * *"
+
+# El renderer PDF conserva sus assets y modulos ESM originales.
+[functions."billing-pdf"]
+  node_bundler = "esbuild"
+  external_node_modules = ["@facturas/pdf", "@sentry/node"]
+
+[context.production.functions."billing-pdf"]
+  node_bundler = "esbuild"
+  external_node_modules = ["@facturas/pdf"]

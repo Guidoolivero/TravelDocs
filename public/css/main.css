@@ -717,3 +717,13 @@ textarea { resize: vertical; min-height: 72px; }
 @keyframes adminFade { from { opacity: 0; } to { opacity: 1; } }
 .admin-role-select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: inherit; cursor: pointer; }
 #admin-ag-slug:disabled { background: var(--surface2); color: var(--text3); cursor: not-allowed; }
+
+/* Facturador de homologacion: usa los controles y tokens del admin existente. */
+#admin-billing-fields { margin-top: 24px; }
+#admin-billing-fields p { margin: 8px 0 16px; color: var(--text2); line-height: 1.5; }
+#admin-billing-history { margin-top: 24px; }
+#admin-billing-history th { text-transform: none; letter-spacing: normal; }
+#admin-billing-fields input,
+#admin-billing-fields select { border-color: var(--text2); transition: border-color 0.15s; }
+#admin-billing-fields input:focus-visible,
+#admin-billing-fields select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

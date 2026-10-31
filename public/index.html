@@ -620,6 +620,18 @@
                 <input type="text" id="admin-ag-emailjs-tpl" value="template_jwdgrsr" style="font-family:var(--mono);">
               </div>
             </div>
+            <section id="admin-billing-fields" hidden aria-labelledby="admin-billing-title">
+              <h3 id="admin-billing-title">Facturacion de prueba (opcional)</h3>
+              <p>Podes guardar datos incompletos. Completar la ficha habilita el mes correspondiente; guardar no emite una factura.</p>
+              <div class="form-grid">
+                <div class="form-group"><label for="admin-bill-taxId">CUIT</label><input id="admin-bill-taxId" type="text" inputmode="numeric" maxlength="13"></div>
+                <div class="form-group"><label for="admin-bill-legalName">Razon social</label><input id="admin-bill-legalName" type="text" maxlength="240"></div>
+                <div class="form-group"><label for="admin-bill-address">Domicilio fiscal</label><input id="admin-bill-address" type="text" maxlength="240"></div>
+                <div class="form-group"><label for="admin-bill-condition">Condicion frente al IVA</label><select id="admin-bill-condition"><option value="">Sin completar</option><option value="responsable_inscripto">Responsable inscripto</option><option value="monotributo">Monotributista</option><option value="exento">Exento</option><option value="consumidor_final">Consumidor final</option></select></div>
+                <div class="form-group"><label for="admin-bill-currency">Moneda</label><select id="admin-bill-currency"><option value="">Sin completar</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dolares (USD, pago en USD)</option></select></div>
+                <div class="form-group"><label for="admin-bill-amount">Precio mensual</label><input id="admin-bill-amount" type="text" inputmode="decimal" placeholder="100,00" aria-describedby="admin-bill-price-help"><small id="admin-bill-price-help">Sin separador de miles. Los cambios rigen desde el mes siguiente.</small></div>
+              </div>
+            </section>
             <div style="display:flex;gap:10px;margin-top:16px;">
               <button class="btn btn-primary" id="admin-ag-save">Crear agencia</button>
               <button class="btn btn-ghost" id="admin-ag-cancel" style="display:none;">Cancelar edición</button>
@@ -637,6 +649,11 @@
               <tbody id="admin-agencies-tbody"></tbody>
             </table>
           </div>
+        </div>
+        <div class="card" id="admin-billing-history" hidden>
+          <div class="card-header"><span class="card-title">Facturas de homologacion</span><button class="btn btn-ghost btn-sm" id="admin-billing-refresh">Actualizar</button></div>
+          <div class="card-body"><p>Comprobantes de prueba, sin valor fiscal. Ultimas 100 facturas. El envio se hace manualmente.</p><p id="admin-billing-message" role="status"></p></div>
+          <div class="table-wrap"><table><thead><tr><th>Receptor</th><th>Mes</th><th>Importe</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="admin-billing-tbody"></tbody></table></div>
         </div>
       </div>
 

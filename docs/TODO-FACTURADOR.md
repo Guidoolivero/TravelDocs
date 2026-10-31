@@ -1,220 +1,150 @@
 # TODO del facturador TravelDocs
 
-Fecha: 2026-10-30.
-Estado: preparacion y plan; implementacion pendiente.
+Actualizado: 2026-10-31.
+Estado: circuito manual implementado y probado en homologacion; pendiente revision
+humana y preparacion de un entorno navegable con Firebase aislado.
 Rama: `codex/facturador`.
-Base: `origin/main`, commit `05dccb1b6059ecc2a0e58b805876f0e8453cfa94`.
-Worktree: `/Users/guidoolivero/.codex/worktrees/facturador/DocTravel`.
+Base: `05dccb1b6059ecc2a0e58b805876f0e8453cfa94`.
 
-## Alcance y limites de esta etapa
+## Alcance
 
-Trabajar solo en el facturador, sin subagentes. La instruccion del usuario para
-esta tarea reemplaza la pauta general del repositorio de hacer push a main.
-No hacer merge ni push a main, ni deploy de produccion. Tampoco cambiar datos,
-reglas, secretos o configuracion de los servicios de produccion.
+Trabajar solo en este worktree, sin subagentes. No hacer push o merge a main,
+ni deploy de produccion. Esta instruccion del usuario reemplaza la pauta general
+del repositorio de publicar cada cambio en main.
 
-Una rama separada no aisla Firebase, ARCA, Netlify ni los correos. Usar emuladores,
-datos ficticios y homologacion. No copiar .env, keys ni certificados de produccion
-al worktree. No ejecutar seeds o migraciones contra las agencias reales.
-No subir los PDFs ni los datos fiscales personales de los adjuntos al repositorio.
+Las pruebas usan datos ficticios, Firestore emulado y ARCA homologacion. Los
+certificados, claves, PDFs y datos fiscales personales quedan fuera del repo.
+Una rama o un preview no aislan Firebase ni los correos por si solos.
 
-Al retomar: leer este documento, verificar rama/worktree y git status, y actualizar
-las casillas con evidencia. Preguntar cuando una decision de negocio no este
-resuelta. No tratar una propuesta del asistente como confirmacion del usuario.
+## Reglas confirmadas
 
-## Reglas confirmadas por el usuario
+- 30 dias gratuitos desde la fecha de creacion, en hora de Argentina. Activa
+  no significa facturable. Si la prueba termina el dia 1, puede facturarse ese
+  mes; si termina otro dia, comienza el siguiente, sin prorrateo.
+- Ficha fiscal opcional y guardable incompleta. Completarla habilita el siguiente
+  inicio de mes, respetando la prueba; guardar nunca emite. Sin retroactivos.
+- Reactivacion y cambios de precio desde el mes siguiente. El precio anterior
+  se conserva para una factura pendiente del mes actual.
+- Precio fijo por agencia, sin adicionales por uso. ARS o USD; los USD se pagan
+  en USD a la caja de ahorro en USD del emisor.
+- Factura C como monotributista; condicion IVA del receptor por separado.
+- Mes del servicio igual al mes de emision. Desde, Hasta y vencimiento son un
+  solo dia: la fecha de emision, como en los cuatro comprobantes revisados.
+- Suspension o eliminacion bloquean nuevas emisiones y conservan historial.
+- Primera etapa manual: vista previa, confirmacion, PDF y envio por el usuario.
+  Automatizacion y correo quedan para despues de validar este circuito.
 
-- Las agencias tienen 30 dias gratuitos. La fecha de creacion se muestra en el
-  panel de administracion; verificar el campo persistido que la respalda.
-- La agencia puede estar activa durante la prueba: activa no significa facturable.
-- Se factura el servicio del mismo mes, al comienzo de ese mes.
-- Si la prueba termina el dia 20, el primer mes facturable es el siguiente.
-  Los dias entre el fin de prueba y ese mes no se cobran proporcionalmente.
-- Si la prueba termina el dia 1, se factura ese mismo mes.
-- Ejemplo confirmado: fin de prueba el 20 de noviembre, datos completados el
-  29 de noviembre, primera factura en los primeros dias habiles de diciembre.
-- Cada agencia tiene un precio fijo; no incluir adicionales por uso.
-- Datos fiscales y precio opcionales al crear o editar. Se puede guardar una ficha
-  incompleta. Completar los datos habilita la facturacion cuando corresponda,
-  sin emitir automaticamente en el momento de guardar.
-- Una agencia suspendida o eliminada deja de recibir nuevas facturas.
-- Primera version: emision manual desde el admin, PDF descargable y envio manual.
-- Automatizacion de emision y envio por email: etapas posteriores, una vez validado
-  el circuito manual. No activarlas durante esta etapa.
-- Transitar paga USD 100 en USD a la caja de ahorro en USD del emisor.
-- Emision local como monotributista: Factura C; la condicion fiscal del receptor
-  se registra por separado. No aplicar IVA discriminado como si el emisor fuera RI.
+## 0. Aislamiento
 
-## Decisiones abiertas
+- [x] Worktree separado y rama `codex/facturador`; checkout original preservado.
+- [x] Workflow de deploy condicionado a main; ningun push ni deploy ejecutado.
+- [x] Bloqueo de facturacion salvo ARCA test y Firebase de pruebas configurado.
+- [x] Emulador demo-billing y navegador con servicios interceptados.
+- [ ] Preparar Firebase y administradores de prueba para un preview navegable.
+  El frontend conserva su configuracion existente; no usarlo contra produccion.
 
-No bloquean preparar el entorno y el plan; si bloquean la regla correspondiente.
+## 1. Explorar lo existente
 
-- [ ] Precisar vencimiento de pago y confirmar periodo de servicio mensual con el
-  contador. No copiar el periodo de un solo dia de los PDFs sin validarlo.
-- [ ] Definir que ocurre si los datos se completan DESPUES de que comenzo el primer
-  mes facturable. El ejemplo confirmado del 29 de noviembre no resuelve ese caso.
-  No emitir retroactivos ni acumular meses automaticamente.
-- [ ] Definir reactivacion de agencias suspendidas y vigencia de cambios de precio.
-  No cobrar automaticamente meses suspendidos.
-- [ ] Antes del cron: precisar que dia habil y horario, calendario de feriados y
-  tratamiento de pendientes fuera de esa fecha. No asumir que lunes a viernes
-  equivale siempre a dia habil argentino.
-- [ ] Confirmar disponibilidad de credenciales de homologacion y entorno de datos
-  de prueba cuando llegue la etapa de integracion. No solicitar secretos por chat.
+- [x] Revisar CRUD de agencias, permisos, fechas y eliminacion.
+- [x] Reutilizar adminFetch, confirmacion, tablas y estilos del admin existente.
+- [x] Aplicar TDD, ponytail, seguridad, Hallmark de app existente y humanizer.
+- [x] Revisar Node, empaquetado de Functions y workflow.
+- [ ] Reindexar grafo: pendiente por rechazo de revision automatica al posible
+  envio del repositorio privado a un destino no verificado. Revision local hecha;
+  no se intento eludir el bloqueo.
 
-## 0. Preparacion y aislamiento
+## 2. SDK y homologacion
 
-- [x] Revisar checkout original y preservar trabajo ajeno.
-- [x] Actualizar referencia origin/main sin modificar la rama main.
-- [x] Crear worktree separado y rama codex/facturador desde origin/main.
-- [x] Vincular el worktree a esta chat.
-- [x] Registrar decisiones y preguntas del usuario en este TODO.
-- [x] Revisar workflow: el deploy de GitHub Actions esta condicionado a main.
-- [ ] Revisar configuracion efectiva de previews antes de publicar cualquier rama.
-- [ ] Preparar emuladores/datos ficticios; comprobar que ningun test escribe en prod.
+- [x] Fijar `facturas` y `@facturas/pdf` en 0.25.2; Node 22.
+- [x] Certificado, clave y autorizacion wsfe de homologacion verificados fuera del repo.
+- [x] Consultar tipos, numeracion y cotizacion; punto 1 verificado por emision.
+  El listado de puntos devuelve vacio en homologacion; no se creo punto real.
+- [x] Usar store persistente para WSAA; resuelto `coe.alreadyAuthenticated` al
+  renovar el ticket. No alternar stores vacios con el mismo certificado.
+- [x] Facturas C ARS/USD 1 y 2 autorizadas y recuperadas sin duplicar.
+- [x] Notas C totales 1 y 2 autorizadas contra esos comprobantes de prueba.
+- [x] Concurrencia con claves repetidas: solo facturas 3 y 4.
+- [x] Servicio implementado + Firestore local + ARCA + PDF: facturas 5 y 6,
+  ARS/USD, doble confirmacion sin duplicados.
 
-Verificacion: checkout original intacto, diff propio limitado al facturador,
-ninguna emision real ni deploy. Un preview por si solo no es un entorno aislado.
+## 3. Elegibilidad y fechas
 
-## 1. Explorar lo existente, sin implementar todavia
+- [x] Tests rojos antes de implementar reglas de fechas, precios y validaciones.
+- [x] 30 dias, dia 1/dia 20, meses cortos, bisiesto, cambio de ano y zona ART.
+- [x] Cinco agencias activas gratuitas no habilitadas para facturar.
+- [x] Bloqueos por ficha incompleta, fecha desconocida, suspension y eliminacion.
+- [x] Vigencia mensual de ficha, reactivacion y precio; sin recuperar meses.
+- [x] Separar mes del servicio de fecha de emision y mostrar estado en admin.
 
-- [ ] Leer skills aplicables: codebase-memory, ponytail, TDD, seguridad y Hallmark
-  antes de tocar respectivamente codigo, logica, permisos o UI.
-- [ ] Usar MCP del grafo para localizar alta/edicion/listado/baja de agencias,
-  requirePlatformAdmin, fechas de creacion y estado de agencia. Indexar si falta.
-- [ ] Verificar campo/tipo/zona horaria de fecha de creacion y politica de eliminacion.
-- [ ] Identificar validadores, componentes del admin y tests que se pueden reutilizar.
-- [ ] Comprobar empaquetado local, preview y produccion: Node, CommonJS/ESM,
-  bundle-functions y workflows. Mantener el alcance en los cambios necesarios.
+## 4. Ficha fiscal privada
 
-Verificacion: mapa de archivos reales y contrato de datos; no basarse solo en AGENTS.md.
+- [x] Coleccion privada `billingProfiles`, separada de agencias.
+- [x] CUIT con verificador, razon social, domicilio, condicion, moneda y centavos.
+- [x] Alta y edicion sin ficha o con datos parciales; guardar no emite.
+- [x] Rutas protegidas por administrador de plataforma.
+- [x] Owner, admin y agent sin lectura/escritura directa a colecciones fiscales.
+- [x] Reactivacion al mes siguiente y ficha nueva al recrear un slug eliminado.
 
-## 2. Compatibilidad del SDK y homologacion
+## 5. Persistencia y recuperacion
 
-- [ ] Verificar version publicada de facturas y fijarla exactamente; revisar changelog.
-- [ ] Probar Node >=22 y carga ESM en el empaquetado real sin reescribir otras functions.
-- [ ] Preparar certificado de homologacion via WSASS y autorizacion wsfe fuera del repo.
-- [ ] Verificar punto de venta de prueba. Para monotributo corresponde el sistema
-  Factura Electronica - Monotributo - Web Services, no RECE de responsable inscripto.
-- [ ] Ejecutar diagnostico check en test; consultar numeracion, no asumir inicio en 1.
-- [ ] Emitir prueba controlada en homologacion con datos ficticios, nunca en production.
-- [ ] Mantener credenciales solo en servidor, entorno explicito y rechazo si falta.
-- [ ] Aislar entorno, CUIT emisor, punto de venta, store y tickets WSAA de produccion.
+- [x] Adaptador ArcaStore Firestore: add atomico, locks, renovacion, lease vencido,
+  liberacion por propietario y cancelacion. ARCA fuera de transacciones.
+- [x] Secuencia fiscal compartida coordinada por el SDK; tickets persistidos.
+- [x] Obligacion mensual unica e intentos rechazados archivados por separado.
+- [x] Solicitud y datos aprobados guardados antes de enviar; confirmacion por intento.
+- [x] Recuperar antes de reenviar; reintento explicito solo con not_found.
+- [x] Bloquear blocked/failed/superseded/aborted/incomplete, cambios de datos,
+  emisor/punto cambiado y suspension concurrente.
+- [x] Corte despues del CAE o fallo de persistencia recuperan sin segunda emision.
+- [x] Consultar un borrador nunca lo emite; confirmacion vieja no autoriza otro intento.
+- [x] Historial conservado al eliminar agencia; snapshots para reproducir PDF.
 
-Verificacion: prueba sin valor fiscal y bundle ejecutable; sin credenciales reales en cliente/logs.
-
-## 3. Elegibilidad y fechas (TDD)
-
-- [ ] Escribir tests y verlos fallar antes de implementar las reglas.
-- [ ] Calcular 30 dias gratuitos y primer mes facturable en hora de Argentina.
-- [ ] Cubrir meses de distinta longitud, febrero bisiesto, cambio de ano y limites horarios.
-- [ ] Cubrir cinco agencias activas en prueba: ninguna facturable, aun con ficha completa.
-- [ ] Cubrir fin de prueba el dia 1 y el dia 20; ejemplo noviembre/diciembre confirmado.
-- [ ] Separar mes facturado de fecha efectiva de emision, que puede ser un dia habil posterior.
-- [ ] Bloquear con datos incompletos, fecha desconocida, suspension o eliminacion.
-- [ ] Resolver casos abiertos antes de escribir sus expectativas definitivas.
-- [ ] Mostrar motivo concreto: en prueba, datos incompletos, habilitada desde,
-  pendiente del mes, facturada, suspendida o requiere revision.
-
-Verificacion: tests rojos antes del cambio minimo y verdes despues.
-
-## 4. Ficha fiscal privada y admin
-
-- [ ] Definir documento privado separado del documento de agencia legible por miembros.
-- [ ] Guardar CUIT/documento segun receptor, razon social, condicion IVA, domicilio,
-  moneda y precio fijo con validaciones; no confundir plan de producto con importe.
-- [ ] Permitir alta/edicion con ficha vacia o parcial; informar campos faltantes.
-- [ ] Habilitar al completar datos validos respetando prueba/estado/mes; guardar no emite.
-- [ ] Verificar autenticacion y permisos de administrador de plataforma en cada ruta.
-- [ ] Probar que owner/admin/agent de una agencia no acceden ni modifican esos datos.
-- [ ] Mostrar fechas y estado de facturacion en listado y detalle del admin.
-- [ ] Probar reglas en emulador y evitar filtrar datos mediante respuestas de la API.
-
-Verificacion: alta actual sigue funcionando sin datos fiscales y aislamiento probado.
-
-## 5. Persistencia, numeracion y recuperacion (TDD)
-
-- [ ] Evaluar adaptador Firestore del contrato ArcaStore antes de prometerlo terminado;
-  no agregar otra base de datos sin una necesidad comprobada.
-- [ ] Probar add atomico y withLock entre procesos, renovacion, vencimiento,
-  liberacion por propietario y cancelacion. No llamar ARCA dentro de callbacks
-  de transacciones Firestore que puedan reejecutarse.
-- [ ] Coordinar secuencia por entorno/emisor/punto de venta/tipo, no por agencia.
-- [ ] Persistir tickets WSAA segun contrato del SDK para instancias serverless.
-- [ ] Separar obligacion mensual unica de intentos fiscales inmutables.
-- [ ] Guardar input exacto, clave, reserva y evidencia antes/durante la emision.
-- [ ] Manejar authorized, rejected, indeterminate y conflict, mas errores lanzados.
-- [ ] Recuperar antes de reemitir; distinguir not_found, blocked y superseded.
-- [ ] Permitir intento corregido tras rechazo confirmado sin duplicar la obligacion.
-- [ ] No borrar reservas ni evidencia fiscal con la eliminacion de una agencia.
-- [ ] Guardar snapshot de emisor/receptor, items, precio, fechas, moneda, cotizacion,
-  CAE, vencimiento, cabecera, QR y observaciones para reproduccion fiel del PDF.
-
-Verificacion: doble clic, dos instancias, dos agencias, corte despues del CAE,
-fallo al persistir, lock vencido y reintento con precio editado no duplican facturas.
-Una reserva indeterminada puede bloquear otras agencias de la misma secuencia.
+Limites: un intento incierto de otro dia o con datos cambiados requiere revision
+manual. Tambien requiere revision un corte antes de que el SDK guarde la reserva,
+si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 6. Emision manual y PDF
 
-- [ ] Preparar solicitud Factura C, servicios, importe entero en centavos y mes correcto.
-- [ ] Para USD pagado en USD: configurar cancelacion en misma moneda, consultar
-  cotizacion fiscal aplicable y guardar valor/fecha/fuente. No usar un dolar mensual libre.
-- [ ] Mostrar preview al administrador con receptor, periodo, moneda, importe y cotizacion.
-- [ ] Confirmar manualmente y volver a comprobar elegibilidad en servidor al emitir.
-- [ ] Congelar contenido aprobado: cambios concurrentes requieren nueva revision.
-- [ ] Descargar PDF completo con CAE/QR; evaluar buildVoucherDocument y @facturas/pdf.
-- [ ] Regenerar PDF desde snapshot sin emitir otra factura; no depender de Mis Comprobantes.
-- [ ] Preparar y probar nota de credito en homologacion y procedimiento de correccion.
-- [ ] Revisar visualmente factura ARS y USD, datos obligatorios, importes y paginacion.
+- [x] Factura C de servicios, importe exacto, fechas de un dia y mes actual.
+- [x] USD pagado en USD con cotizacion ARCA guardada en el snapshot.
+- [x] Vista previa, confirmacion y revalidacion transaccional antes de emitir.
+- [x] Historial y PDF autorizado con CAE/QR; descarga sin volver a emitir.
+- [x] Verificacion visual de PDFs ficticios ARS/USD y generacion con ARCA real test.
+- [x] Renderer como dependencia externa: verificada carga del artefacto Netlify.
+- [x] Procedimiento de correccion documentado; notas de credito probadas con SDK.
+  No se agrego interfaz de notas de credito en esta etapa.
 
-Verificacion: vista previa coincide con autorizado y PDF; fallo del PDF no reemite.
+## 7. Verificacion y entrega
 
-## 7. Validacion completa y entrega para revision
+- [x] Suite general: 434 pruebas aprobadas en Node 22.
+- [x] Emulador de facturacion: 16 pruebas aprobadas (store y servicio).
+- [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
+- [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.
+- [x] Navegador facturador: ficha parcial, prueba gratuita, importe, confirmacion y PDF.
+- [x] Build de frontend, bundle Functions y carga del renderer PDF verificados.
+- [x] Revision local de seguridad y ponytail del diff.
+- [x] Hallmark aplicado al area tocada. El chequeo global sigue con fallos previos
+  de la app; no se restileo el producto para resolverlos.
+- [x] Guia de operacion y limites: `docs/FACTURADOR-HOMOLOGACION.md`.
+- [x] Guardar commit local solo en `codex/facturador`.
+- [ ] Revision visual del usuario en entorno aislado antes de publicar.
 
-- [ ] Tests unitarios de negocio y adaptador; fallos de red y concurrencia simulados.
-- [ ] npm test y npm run test:rules:emulator si se modificaron las reglas.
-- [ ] E2E admin con datos ficticios: alta sin ficha, completar ficha durante prueba,
-  fin de prueba, emision, descarga, suspension, baja y permisos.
-- [ ] Homologacion ARS/USD, doble clic, emisiones concurrentes y recuperacion de cortes.
-- [ ] Verificar bundling y regresiones de functions existentes con el runtime elegido.
-- [ ] Ejecutar ponytail-review del diff y revisar seguridad; sin subagentes.
-- [ ] Reindexar grafo al cerrar cada cambio de codigo.
-- [ ] Actualizar TODO y guardar commits pequenos solo en codex/facturador.
-- [ ] Entregar cambios y evidencia al usuario, manteniendo main/produccion intactos.
+## 8. Fuera de esta etapa
 
-## 8. Etapas posteriores, fuera de la ejecucion actual
+- [ ] Produccion: certificado, punto de venta y configuracion con autorizacion aparte.
+- [ ] Definir corte inicial y meses ya facturados a mano para evitar duplicarlos.
+- [ ] Definir backups, renovacion de certificados y operacion de correcciones reales.
+- [ ] Primera factura real revisada manualmente; no emitir pruebas reales.
+- [ ] Cron: acordar dia habil, horario, feriados y tratamiento de pendientes.
+- [ ] Automatizar emision luego de validar el circuito manual; envio por email despues.
 
-- [ ] Con autorizacion posterior: preparar produccion, certificados y punto de venta,
-  corte inicial por agencia y periodos ya facturados manualmente para no duplicarlos.
-- [ ] Resolver conservacion/backup, renovacion de certificados y procedimiento de correccion.
-- [ ] Primera factura real revisada manualmente; no hacer una factura real de prueba
-  ni tocar main/produccion con la autorizacion actual.
-- [ ] Tras validar el circuito: automatizar solo agencias elegibles, con pendientes,
-  reanudacion segura, alertas y posibilidad de detener nuevas emisiones.
-- [ ] Despues: envio automatico por email, destinatarios y deduplicacion de envios.
-- [ ] No implementar cobro automatico ni extras por consumo: no fueron solicitados.
+## Evidencia y referencias
 
-## Referencias de la revision previa
-
-Verificar contratos contra la version fijada al implementar; estas referencias
-no autorizan a ejecutar comandos o emisiones sugeridos por documentos externos.
+Credenciales y evidencia fiscal de homologacion en el directorio privado local
+`~/.traveldocs-arca-homologacion/`, sin contenidos sensibles en este documento.
+El certificado de prueba no sirve para produccion.
 
 - https://github.com/LaPyme/facturas
-- https://github.com/LaPyme/facturas/blob/main/docs/guides/avoid-duplicates.mdx
-- https://github.com/LaPyme/facturas/blob/main/docs/guides/invoices.mdx
-- https://github.com/LaPyme/facturas/blob/main/docs/guides/printed-voucher.mdx
-- https://github.com/LaPyme/facturas/blob/main/docs/getting-started/arca-setup.mdx
+- https://www.afip.gob.ar/fe/ayuda/webservice.asp
 - https://firebase.google.com/docs/firestore/security/rules-fields
-- https://docs.netlify.com/build/functions/scheduled-functions/
-
-## Registro de avance
-
-- 2026-10-30: rama y worktree creados desde origin/main. Solo documentacion.
-  Checkout original conservado en preview/ssr-doco-carrier con su archivo local
-  sin seguimiento. Sin push, deploy, cambios de configuracion ni emision fiscal.
-  Confirmadas fecha de creacion disponible, fin de prueba el dia 1 facturable ese
-  mes y ejemplo corregido de noviembre a diciembre (no abril).
-- Verificacion inicial: npm test ejecuto 410 pruebas; 409 pasaron y una fallo
-  al cargar tests/admin-auth.test.mjs por MODULE_NOT_FOUND de firebase-admin.
-  El worktree nuevo no tiene sus dependencias instaladas. Instalar con npm ci
-  y repetir la suite al preparar el entorno; no se modifico logica para este plan.
+- https://docs.netlify.com/build/functions/overview/

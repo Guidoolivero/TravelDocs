@@ -23,6 +23,9 @@ const { requirePlatformAdmin, initAdmin } = require('./_platform-admin.cjs');
 const { findUidByEmail, linkUserToAgency } = require('./lib/tenant-helpers.cjs');
 const { canDeleteAgency, canDeleteUser, validateUserPatch } = require('./lib/admin-validators.cjs');
 
+const { validateBillingProfile, billingStatus, billingRecord } = require('./lib/billing.cjs');
+const { assertBillingSandbox, billingEnabled } = require('./lib/billing-config.cjs');
+
 const SLUG_RE = /^[a-z0-9-]{3,40}$/;
 const VALID_ROLES = ['owner', 'admin', 'agent'];
 const VALID_PLANS = ['trial', 'starter', 'pro'];
@@ -72,6 +75,7 @@ exports.handler = async function (event) {
 
     return reply(404, { error: 'Ruta no encontrada.' });
   } catch (err) {
+    if ([400, 409, 503].includes(err.status)) return reply(err.status, { error: err.message });
     console.error('admin-api: error no manejado:', err?.message || err);
     return reply(500, { error: 'Error interno del servidor.' });
   }
@@ -138,6 +142,8 @@ async function listAgencies() {
   for (const doc of snap.docs) {
     const data = doc.data() || {};
     const membersSnap = await db().collection('agencies').doc(doc.id).collection('members').get();
+    const record = billingEnabled() ? (await db().collection('billingProfiles').doc(doc.id).get()).data() || {} : undefined;
+    const billing = record ? record.profile || {} : undefined;
     agencies.push({
       id: doc.id,
       name: data.name || '',
@@ -148,14 +154,18 @@ async function listAgencies() {
       branding: data.branding || {},
       alerts: data.alerts || {},
       createdAt: createdAtIso(data.createdAt),
+      ...(billing ? { billing, billingStatus: billingStatus({ ...data, createdOn: createdAtIso(data.createdAt) }, billing, createdAtIso(Date.now()), record.enabledOn) } : {}),
     });
   }
-  return reply(200, { agencies });
+  return reply(200, { agencies, billingEnabled: billingEnabled() });
 }
 
 async function createAgency(event, adminAuth) {
   const b = body(event);
   if (!b) return reply(400, { error: 'Body inválido (JSON requerido).' });
+
+  if (b.billing !== undefined) assertBillingSandbox();
+  const billing = b.billing === undefined ? undefined : validateBillingProfile(b.billing);
 
   const slug = (b.slug || '').trim().toLowerCase();
   if (!SLUG_RE.test(slug)) return reply(400, { error: 'Slug inválido. 3-40 chars: a-z, 0-9, guiones.' });
@@ -177,7 +187,12 @@ async function createAgency(event, adminAuth) {
     updatedAt: FieldValue.serverTimestamp(),
   };
 
-  await db().collection('agencies').doc(slug).set(doc);
+  await db().runTransaction(async tx => {
+    const ref = db().collection('agencies').doc(slug);
+    if ((await tx.get(ref)).exists) throw Object.assign(new Error('La agencia ya existe.'), { status: 409 });
+    tx.set(ref, doc);
+    if (billingEnabled()) tx.set(db().collection('billingProfiles').doc(slug), billingRecord(billing || {}, null, createdAtIso(Date.now())));
+  });
   await audit(adminAuth, 'create-agency', { agencyId: slug });
   return reply(200, { ok: true, agencyId: slug });
 }
@@ -186,6 +201,8 @@ async function updateAgency(agencyId, event, adminAuth) {
   const b = body(event);
   if (!b) return reply(400, { error: 'Body inválido (JSON requerido).' });
 
+  if (b.billing !== undefined) assertBillingSandbox();
+  const billing = b.billing === undefined ? undefined : validateBillingProfile(b.billing);
   const ref = db().collection('agencies').doc(agencyId);
   const snap = await ref.get();
   if (!snap.exists) return reply(404, { error: 'Agencia no encontrada.' });
@@ -206,7 +223,17 @@ async function updateAgency(agencyId, event, adminAuth) {
   if (b.branding !== undefined) patch.branding = sanitizeBranding(b.branding);
   if (b.alerts !== undefined) patch.alerts = sanitizeAlerts(b.alerts);
 
-  await ref.set(patch, { merge: true });
+  await db().runTransaction(async tx => {
+    const current = await tx.get(ref);
+    if (!current.exists) throw Object.assign(new Error('Agencia no encontrada.'), { status: 409 });
+    const reactivated = billingEnabled() && current.data().status !== 'active' && patch.status === 'active';
+    const billingRef = db().collection('billingProfiles').doc(agencyId);
+    const previous = billing !== undefined || reactivated ? (await tx.get(billingRef)).data() : undefined;
+    tx.set(ref, patch, { merge: true });
+    if (billing !== undefined || reactivated) {
+      tx.set(billingRef, billingRecord(billing ?? previous?.profile ?? {}, reactivated ? { ...previous, enabledOn: null } : previous, createdAtIso(Date.now())));
+    }
+  });
   await audit(adminAuth, 'update-agency', { agencyId, changes: Object.keys(patch) });
   return reply(200, { ok: true });
 }
