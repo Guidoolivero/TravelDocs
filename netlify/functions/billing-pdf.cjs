@@ -18,7 +18,7 @@ exports.handler = async event => {
     const invoice = snap.data();
     if (invoice.status !== 'authorized') return reply(409, { error: 'La factura todavia no esta autorizada.' });
     const doc = buildVoucherDocument({ voucher: invoice.outcome.voucher, items: invoice.input.items,
-      issuer: invoice.issuer, receiver: { name: invoice.receiver.legalName, address: invoice.receiver.address },
+      issuer: { ...invoice.issuer, tradeName: 'TravelDocs' }, receiver: { name: invoice.receiver.legalName, address: invoice.receiver.address },
       observations: invoice.outcome.authorization?.observations || [], saleConditions: 'Transferencia bancaria' });
     const { renderVoucherPdf } = require('@facturas/pdf');
     const pdf = await renderVoucherPdf(doc, { notes: 'HOMOLOGACION - SIN VALOR FISCAL' });

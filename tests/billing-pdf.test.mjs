@@ -2,10 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fixture } from './firebase-fixture.mjs';
+import { renderVoucherPdf } from '@facturas/pdf';
 const env = { BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185' };
 for (const currency of ['ARS', 'USD']) {
   test(`PDF ${currency} se reproduce desde snapshot autorizado sin emitir`, async () => {
-    const f = fixture({ env });
+    let printedIssuer;
+    const f = fixture({ env, modules: { '@facturas/pdf': { renderVoucherPdf(doc, options) {
+      printedIssuer = doc.issuer;
+      return renderVoucherPdf(doc, options);
+    } } } });
     const id = 'a'.repeat(64);
     const invoice = {
       status: 'authorized',
@@ -23,6 +28,9 @@ for (const currency of ['ARS', 'USD']) {
     f.docs.set('billingInvoices/' + id, invoice);
     const response = await f.invoke('billing-pdf', { invoiceId: id });
     assert.equal(response.statusCode, 200, response.body);
+    assert.equal(printedIssuer.tradeName, 'TravelDocs');
+    assert.equal(printedIssuer.legalName, invoice.issuer.legalName);
+    assert.equal(printedIssuer.taxId, invoice.issuer.taxId);
     const result = JSON.parse(response.body), pdf = Buffer.from(result.pdf, 'base64');
     assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
     assert.match(result.filename, /^prueba-factura-C-/);
