@@ -66,6 +66,11 @@ Una rama o un preview no aislan Firebase ni los correos por si solos.
 - [x] Concurrencia con claves repetidas: solo facturas 3 y 4.
 - [x] Servicio implementado + Firestore local + ARCA + PDF: facturas 5 y 6,
   ARS/USD, doble confirmacion sin duplicados.
+- [x] 2026-11-01: homologacion con datos fiscales del emisor y de Valdes/Transitar
+  tomados de los PDFs previos. C ARS 60.000 y USD 100 autorizadas, numeros 7 y 8
+  del punto de prueba 1. Doble confirmacion sin duplicados; PDFs revisados.
+  Fechas de elegibilidad sembradas solo en emulador; no se consultaron ni cambiaron
+  las fichas o estados de las agencias de produccion.
 
 ## 3. Elegibilidad y fechas
 

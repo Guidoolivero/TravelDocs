@@ -100,6 +100,13 @@ prueba antes de habilitar el facturador. No se preparo ni publico ese deploy.
   rechazo corregido y suspension concurrente. El test de navegador cubre ficha
   parcial, importes, cinco agencias gratuitas, confirmacion y descarga sin reemision.
 
+El 1 de noviembre de 2026 se repitio la prueba con los datos fiscales del emisor
+y de Valdes/Transitar tomados de sus comprobantes anteriores: ARS 60.000 y USD 100.
+ARCA test autorizo los numeros 7 y 8; doble confirmacion con el mismo numero
+y PDFs revisados. Se usaron registros aislados con elegibilidad de prueba en
+el emulador. Esto no valida las fechas o los saldos de las agencias reales.
+Los PDFs y snapshots con datos fiscales se conservan localmente y no se versionan.
+
 Comandos sin acceso a produccion:
 
 ```sh
