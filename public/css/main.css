@@ -200,7 +200,7 @@ textarea { resize: vertical; min-height: 72px; }
 
 /* ===== TABS ===== */
 .tabs { display: flex; gap: 2px; background: var(--surface2); padding: 4px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; width: fit-content; }
-.tab { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); background: none; border: none; font-family: inherit; transition: all 0.15s; }
+.tab { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); background: none; border: none; font-family: inherit; transition: color 0.15s, background-color 0.15s, box-shadow 0.15s; }
 .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .tab:hover:not(.active) { color: var(--text); }
 
@@ -710,7 +710,7 @@ textarea { resize: vertical; min-height: 72px; }
    ADMINISTRACIÓN (super-admin)
    ============================================================ */
 .admin-tabs { display: flex; gap: 2px; background: var(--surface2); padding: 4px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; width: fit-content; }
-.admin-tab-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); background: none; border: none; font-family: inherit; transition: all 0.15s; }
+.admin-tab-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); background: none; border: none; font-family: inherit; transition: color 0.15s, background-color 0.15s, box-shadow 0.15s; }
 .admin-tab-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .admin-tab-btn:hover:not(.active) { color: var(--text); }
 .admin-panel { animation: adminFade .15s ease; }
@@ -727,3 +727,15 @@ textarea { resize: vertical; min-height: 72px; }
 #admin-billing-fields select { border-color: var(--text2); transition: border-color 0.15s; }
 #admin-billing-fields input:focus-visible,
 #admin-billing-fields select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.admin-tabs { max-width: 100%; flex-wrap: wrap; }
+.admin-tab-btn:focus-visible,
+#admin-billing-fields summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#admin-billing-fields { border-top: 1px solid var(--border); padding-top: 16px; }
+#admin-billing-fields summary { width: fit-content; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text); padding: 4px 0; }
+#admin-billing-fields[open] summary { margin-bottom: 12px; }
+#admin-panel-billing th { text-transform: none; letter-spacing: normal; }
+@media (prefers-reduced-motion: reduce) {
+  #admin-panel-billing { animation: none; }
+  .admin-tab-btn { transition: none; }
+}

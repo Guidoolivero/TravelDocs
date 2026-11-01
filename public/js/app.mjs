@@ -4566,7 +4566,8 @@ function setAdminTab(tab) {
   document.getElementById('admin-panel-agencies').style.display = tab === 'agencies' ? '' : 'none';
   document.getElementById('admin-panel-users').style.display = tab === 'users' ? '' : 'none';
   document.getElementById('admin-panel-usage').style.display = tab === 'usage' ? '' : 'none';
-  if (tab === 'agencies') loadAgencies();
+  document.getElementById('admin-panel-billing').style.display = tab === 'billing' ? '' : 'none';
+  if (tab === 'agencies' || tab === 'billing') loadAgencies();
   else if (tab === 'users') loadUsersPanel();
   else if (tab === 'usage') initUsagePanel();
 }
@@ -4577,17 +4578,27 @@ async function loadAgencies() {
   const tbody = document.getElementById('admin-agencies-tbody');
   if (!tbody) return;
   tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
+  const billingBody = document.getElementById('admin-billing-agencies-tbody');
+  billingBody.innerHTML = '<tr><td colspan="3">Cargando agencias...</td></tr>';
   try {
     const json = await adminFetch('/agencies');
     _adminAgencies = json.agencies || [];
     _adminBillingEnabled = json.billingEnabled === true;
     document.getElementById('admin-billing-fields').hidden = !_adminBillingEnabled;
+    document.querySelector('[data-admin-tab="billing"]').hidden = !_adminBillingEnabled;
     document.getElementById('admin-billing-history').hidden = !_adminBillingEnabled;
-    if (_adminBillingEnabled) loadBillingInvoices();
+    if (_adminBillingEnabled) {
+      document.getElementById('admin-billing-agencies-tbody').innerHTML = _adminAgencies.map(a => `<tr>
+        <td>${esc(a.name || a.id)}</td><td>${esc(billingStatusLabel(a.billingStatus))}</td>
+        <td>${a.billingStatus.state === 'ready' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(a.id)}">Facturar</button>` : ''}</td>
+      </tr>`).join('') || '<tr><td colspan="3">Sin agencias.</td></tr>';
+      if (_adminTab === 'billing') loadBillingInvoices();
+    }
     renderAgenciesTable();
     populateAgencySelects();
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
+    billingBody.innerHTML = `<tr><td colspan="3">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
   }
 }
 
@@ -4674,7 +4685,6 @@ function renderAgenciesTable() {
       <td style="font-size:12px;white-space:nowrap;">${fmtDate(a.createdAt)}</td>
       <td style="text-align:right;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" data-agency-edit="${esc(a.id)}">Editar</button>
-        ${a.billingStatus?.state === 'ready' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(a.id)}">Facturar</button>` : ''}
         ${a.status === 'suspended'
           ? `<button class="btn btn-ghost btn-sm" data-agency-activate="${esc(a.id)}">Reactivar</button>`
           : `<button class="btn btn-ghost btn-sm" data-agency-suspend="${esc(a.id)}">Suspender</button>`}
@@ -4756,6 +4766,7 @@ async function handleAgencyLogoChange(e) {
 }
 
 function fillAgencyForm(a) {
+  document.getElementById('admin-billing-fields').open = false;
   for (const key of ['taxId', 'legalName', 'address', 'condition', 'currency']) {
     document.getElementById('admin-bill-' + key).value = a.billing?.[key] || '';
   }

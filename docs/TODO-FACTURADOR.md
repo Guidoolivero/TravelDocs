@@ -1,6 +1,6 @@
 # TODO del facturador TravelDocs
 
-Actualizado: 2026-10-31.
+Actualizado: 2026-11-01.
 Estado: circuito manual implementado y probado en homologacion; pendiente revision
 del panel y preparacion de un entorno navegable con Firebase aislado.
 Rama: `codex/facturador`.
@@ -131,7 +131,10 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] Demo local interactiva abierta en Chrome aislado: cinco agencias gratuitas y
   dos listas, ARS/USD; sin conexiones a servicios reales. CRUD con fixture en memoria;
   emision simulada rotulada y descarga PDF comprobadas antes de entregar la ventana.
-- [ ] Revision del panel por el usuario en esa demo. No sustituye una prueba completa
+- [x] Ajuste solicitado por el usuario: datos fiscales en desplegable nativo cerrado
+  por defecto, pestaña Facturacion junto a Uso y gasto, emision e historial en ella.
+  Prueba de teclado, guardado parcial, confirmacion y descarga aprobadas.
+- [ ] Revision del panel actualizado por el usuario en esa demo. No sustituye una prueba completa
   con Firebase aislado y ARCA homologacion desde el navegador antes de publicar.
 
 ## 8. Fuera de esta etapa
