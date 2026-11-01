@@ -36,7 +36,7 @@ exports.handler = async event => {
     const client = createArcaClient({ taxId: issuer.taxId, certificatePem: process.env.ARCA_CERTIFICATE_PEM, privateKeyPem: process.env.ARCA_PRIVATE_KEY_PEM, environment: 'test', store, timeout: 15000, retries: 0, logger: { disabled: true } });
     const service = createBillingService({ db, client, store, issuer, salesPoint, abortSignal,
       today: () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date()) });
-    const result = body.action === 'preview' ? await service.preview(body.agencyId)
+    const result = body.action === 'preview' ? await service.preview(body.agencyId, { saleCondition: body.saleCondition })
       : body.action === 'get' ? await service.get(body.invoiceId)
       : await service.issue(body.invoiceId, body.digest, { retry: body.action === 'retry', recoverOnly: body.action === 'recover' });
     return reply(200, result);

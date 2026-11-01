@@ -19,9 +19,12 @@ exports.handler = async event => {
     if (invoice.status !== 'authorized') return reply(409, { error: 'La factura todavia no esta autorizada.' });
     const doc = buildVoucherDocument({ voucher: invoice.outcome.voucher, items: invoice.input.items,
       issuer: { ...invoice.issuer, tradeName: 'TravelDocs' }, receiver: { name: invoice.receiver.legalName, address: invoice.receiver.address },
-      observations: invoice.outcome.authorization?.observations || [], saleConditions: 'Transferencia bancaria' });
+      observations: invoice.outcome.authorization?.observations || [], saleConditions: invoice.receiver.saleCondition || 'Transferencia bancaria' });
     const { renderVoucherPdf } = require('@facturas/pdf');
-    const pdf = await renderVoucherPdf(doc, { notes: 'HOMOLOGACION - SIN VALOR FISCAL' });
+    const pdf = await renderVoucherPdf(doc, {
+      theme: { accentColor: '#1a3a5c', textColor: '#243b53', mutedColor: '#52677a', borderColor: '#bfd5e3' },
+      notes: 'HOMOLOGACION - SIN VALOR FISCAL'
+    });
     return reply(200, { pdf: Buffer.from(pdf).toString('base64'), filename: `prueba-factura-C-${doc.number}.pdf` });
   } catch (err) {
     return reply(err.status === 503 ? 503 : 500, { error: err.status === 503 ? err.message : 'No se pudo generar el PDF. La factura guardada se conserva; no volver a emitir.' });

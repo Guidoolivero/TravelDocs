@@ -33,7 +33,7 @@ await page.route('**/*', async route => {
     if (u.pathname.endsWith('/billing-api')) {
       const body = route.request().postDataJSON();
       if (body.action === 'list') return json({ invoices: previews ? [draft] : [] });
-      if (body.action === 'preview') { previews++; return json(draft); }
+      if (body.action === 'preview') { previews++; draft.receiver.saleCondition = body.saleCondition; return json(draft); }
       if (body.action === 'issue') { issues++; draft.status = 'authorized'; return json(draft); }
     }
     return json({ ok: true });
@@ -61,21 +61,27 @@ try {
   await page.waitForFunction(() => document.querySelector('#admin-agency-edit-id').value === '');
   assert.equal(saved.billing.legalName, 'Agencia ficticia');
   assert.equal(saved.billing.amount, null);
+  assert.equal(saved.billing.saleCondition, 'Transferencia bancaria');
   await page.locator('[data-agency-edit="prueba-0"]').click();
   await page.locator('#admin-billing-fields summary').click();
+  await page.locator('#admin-bill-saleCondition').selectOption('Cuenta corriente');
   await page.locator('#admin-bill-amount').fill('100,25');
   await page.locator('#admin-ag-save').click();
   await page.waitForFunction(() => document.querySelector('#admin-agency-edit-id').value === '');
   assert.equal(saved.billing.amount, 10025);
+  assert.equal(saved.billing.saleCondition, 'Cuenta corriente');
   agencies[0].billingStatus.state = 'ready';
   assert.equal(await page.locator('#admin-billing-history').isVisible(), false);
   await page.locator('[data-admin-tab="billing"]').click();
   await page.locator('#admin-panel-billing').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#admin-panel-agencies').isVisible(), false);
+  await page.locator('[data-billing-condition="prueba-0"]').selectOption('Cheque');
   await page.locator('[data-billing-preview="prueba-0"]').click();
   await page.locator('#modal-confirm.open').waitFor();
   assert.equal(issues, 0);
   assert.match(await page.locator('#confirm-text').innerText(), /Agencia ficticia/);
+  assert.match(await page.locator('#confirm-text').innerText(), /Concepto: Servicios/);
+  assert.match(await page.locator('#confirm-text').innerText(), /Condicion de venta: Cheque/);
   await page.locator('#confirm-ok-btn').click();
   await page.locator('[data-billing-pdf]').waitFor();
   assert.equal(issues, 1);

@@ -6,16 +6,17 @@ import { renderVoucherPdf } from '@facturas/pdf';
 const env = { BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185' };
 for (const currency of ['ARS', 'USD']) {
   test(`PDF ${currency} se reproduce desde snapshot autorizado sin emitir`, async () => {
-    let printedIssuer;
+    let printedIssuer, printedSaleCondition;
     const f = fixture({ env, modules: { '@facturas/pdf': { renderVoucherPdf(doc, options) {
       printedIssuer = doc.issuer;
+      printedSaleCondition = doc.saleConditions;
       return renderVoucherPdf(doc, options);
     } } } });
     const id = 'a'.repeat(64);
     const invoice = {
       status: 'authorized',
       issuer: { legalName: 'Emisor ficticio', address: 'Calle Prueba 100', taxId: '20123456786', condition: 'monotributo', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' },
-      receiver: { legalName: 'Agencia ficticia', address: 'Calle Prueba 200' },
+      receiver: { legalName: 'Agencia ficticia', address: 'Calle Prueba 200', ...(currency === 'USD' ? { saleCondition: 'Cuenta corriente' } : {}) },
       input: { items: [{ description: 'Servicio TravelDocs - 2026-11', quantity: 1, amount: 10000, unitPrice: '100.00' }] },
       outcome: { kind: 'authorized', voucher: {
         voucherType: 11, voucherClass: 'C', salesPoint: 1, number: 1, date: '2026-11-02', cae: '12345678901234', caeExpiry: '2026-11-12',
@@ -28,6 +29,7 @@ for (const currency of ['ARS', 'USD']) {
     f.docs.set('billingInvoices/' + id, invoice);
     const response = await f.invoke('billing-pdf', { invoiceId: id });
     assert.equal(response.statusCode, 200, response.body);
+    assert.equal(printedSaleCondition, currency === 'USD' ? 'Cuenta corriente' : 'Transferencia bancaria');
     assert.equal(printedIssuer.tradeName, 'TravelDocs');
     assert.equal(printedIssuer.legalName, invoice.issuer.legalName);
     assert.equal(printedIssuer.taxId, invoice.issuer.taxId);

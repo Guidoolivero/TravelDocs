@@ -631,6 +631,7 @@
                 <div class="form-group"><label for="admin-bill-condition">Condicion frente al IVA</label><select id="admin-bill-condition"><option value="">Sin completar</option><option value="responsable_inscripto">Responsable inscripto</option><option value="monotributo">Monotributista</option><option value="exento">Exento</option><option value="consumidor_final">Consumidor final</option></select></div>
                 <div class="form-group"><label for="admin-bill-currency">Moneda</label><select id="admin-bill-currency"><option value="">Sin completar</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dolares (USD, pago en USD)</option></select></div>
                 <div class="form-group"><label for="admin-bill-amount">Precio mensual</label><input id="admin-bill-amount" type="text" inputmode="decimal" placeholder="100,00" aria-describedby="admin-bill-price-help"><small id="admin-bill-price-help">Sin separador de miles. Los cambios rigen desde el mes siguiente.</small></div>
+                <div class="form-group"><label for="admin-bill-saleCondition">Condicion de venta habitual</label><select id="admin-bill-saleCondition"></select></div>
               </div>
             </details>
             <div style="display:flex;gap:10px;margin-top:16px;">
@@ -658,7 +659,7 @@
       <div id="admin-panel-billing" class="admin-panel" style="display:none;">
         <div class="card">
           <div class="card-header"><span class="card-title">Facturacion por agencia</span></div>
-          <div class="table-wrap"><table><thead><tr><th>Agencia</th><th>Estado de facturacion</th><th>Acciones</th></tr></thead><tbody id="admin-billing-agencies-tbody"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Agencia</th><th>Estado de facturacion</th><th>Condicion para esta factura</th><th>Acciones</th></tr></thead><tbody id="admin-billing-agencies-tbody"></tbody></table></div>
         </div>
         <div class="card" id="admin-billing-history" hidden>
           <div class="card-header"><span class="card-title">Facturas de homologacion</span><button class="btn btn-ghost btn-sm" id="admin-billing-refresh">Actualizar</button></div>

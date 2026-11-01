@@ -739,3 +739,6 @@ textarea { resize: vertical; min-height: 72px; }
   #admin-panel-billing { animation: none; }
   .admin-tab-btn { transition: none; }
 }
+
+.billing-sale-condition { max-width: 220px; padding: 7px 10px; border: 1px solid var(--text2); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; }
+.billing-sale-condition:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

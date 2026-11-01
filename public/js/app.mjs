@@ -1,4 +1,4 @@
-import { parsePrice } from './billing-form.mjs';
+import { parsePrice, SALE_CONDITIONS } from './billing-form.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
 import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers.mjs';
 import { csvField, excelRowToPassenger } from './csv-import.mjs';
@@ -4527,6 +4527,7 @@ window.resetImport = function() {
 let _adminTab = 'agencies';
 let _adminAgencies = [];
 let _adminBillingEnabled = false;
+document.getElementById('admin-bill-saleCondition').innerHTML = SALE_CONDITIONS.map(value => `<option>${esc(value)}</option>`).join('');
 let _adminMembers = [];
 let _adminUsersFilter = '';
 
@@ -4579,7 +4580,7 @@ async function loadAgencies() {
   if (!tbody) return;
   tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
   const billingBody = document.getElementById('admin-billing-agencies-tbody');
-  billingBody.innerHTML = '<tr><td colspan="3">Cargando agencias...</td></tr>';
+  billingBody.innerHTML = '<tr><td colspan="4">Cargando agencias...</td></tr>';
   try {
     const json = await adminFetch('/agencies');
     _adminAgencies = json.agencies || [];
@@ -4590,15 +4591,16 @@ async function loadAgencies() {
     if (_adminBillingEnabled) {
       document.getElementById('admin-billing-agencies-tbody').innerHTML = _adminAgencies.map(a => `<tr>
         <td>${esc(a.name || a.id)}</td><td>${esc(billingStatusLabel(a.billingStatus))}</td>
+        <td><select class="billing-sale-condition" aria-label="Condicion de venta de ${esc(a.name || a.id)}" data-billing-condition="${esc(a.id)}">${SALE_CONDITIONS.map(value => `<option${value === (a.billing.saleCondition || SALE_CONDITIONS[0]) ? ' selected' : ''}>${esc(value)}</option>`).join('')}</select></td>
         <td>${a.billingStatus.state === 'ready' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(a.id)}">Facturar</button>` : ''}</td>
-      </tr>`).join('') || '<tr><td colspan="3">Sin agencias.</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="4">Sin agencias.</td></tr>';
       if (_adminTab === 'billing') loadBillingInvoices();
     }
     renderAgenciesTable();
     populateAgencySelects();
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
-    billingBody.innerHTML = `<tr><td colspan="3">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
+    billingBody.innerHTML = `<tr><td colspan="4">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
   }
 }
 
@@ -4626,7 +4628,8 @@ async function loadBillingInvoices() {
 
 async function previewBilling(agencyId) {
   try {
-    const invoice = await billingRequest({ action: 'preview', agencyId });
+    const saleCondition = document.querySelector(`[data-billing-condition="${CSS.escape(agencyId)}"]`)?.value;
+    const invoice = await billingRequest({ action: 'preview', agencyId, saleCondition });
     if (invoice.status !== 'draft') { await loadBillingInvoices(); return; }
     confirmBilling(invoice, 'issue');
   } catch (err) { showToast(err.error || 'No se pudo preparar la factura.', true); }
@@ -4635,7 +4638,7 @@ async function previewBilling(agencyId) {
 function confirmBilling(invoice, action) {
   showConfirmDialog({
     title: 'Confirmar factura C de prueba',
-    message: `${invoice.receiver.legalName}, CUIT ${invoice.receiver.taxId}. ${invoice.receiver.address}. Condicion: ${invoice.receiver.condition}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
+    message: `${invoice.receiver.legalName}, CUIT ${invoice.receiver.taxId}. ${invoice.receiver.address}. Condicion: ${invoice.receiver.condition}. Concepto: Servicios. Condicion de venta: ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
     subtext: `Desde, hasta y vencimiento: ${fmtDate(invoice.input.date)}. ${invoice.quotation ? `Cotizacion ARCA: ${invoice.quotation.rate}, fecha ${invoice.quotation.date}. Pago en USD.` : ''} Sin valor fiscal.`,
     confirmLabel: action === 'retry' ? 'Confirmar reintento' : 'Emitir prueba',
     onConfirm: () => runBilling(action, invoice),
@@ -4767,6 +4770,7 @@ async function handleAgencyLogoChange(e) {
 
 function fillAgencyForm(a) {
   document.getElementById('admin-billing-fields').open = false;
+  document.getElementById('admin-bill-saleCondition').value = a.billing?.saleCondition || SALE_CONDITIONS[0];
   for (const key of ['taxId', 'legalName', 'address', 'condition', 'currency']) {
     document.getElementById('admin-bill-' + key).value = a.billing?.[key] || '';
   }
@@ -4819,7 +4823,7 @@ async function submitAgencyForm() {
   };
 
   if (_adminBillingEnabled) {
-    payload.billing = {};
+    payload.billing = { saleCondition: document.getElementById('admin-bill-saleCondition').value };
     for (const key of ['taxId', 'legalName', 'address', 'condition', 'currency']) payload.billing[key] = document.getElementById('admin-bill-' + key).value.trim();
     try {
       const amount = document.getElementById('admin-bill-amount').value.trim();

@@ -36,12 +36,12 @@ function invalid(message) {
   return Object.assign(new Error(message), { status: 400 });
 }
 
-const { parsePrice } = require('../../../public/js/billing-form.mjs');
+const { parsePrice, SALE_CONDITIONS } = require('../../../public/js/billing-form.mjs');
 
 function validateBillingProfile(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw invalid('Ficha fiscal invalida.');
   const result = {};
-  const fields = ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount'];
+  const fields = ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount', 'saleCondition'];
   for (const [key, value] of Object.entries(input)) {
     if (!fields.includes(key)) throw invalid('Campo fiscal no permitido.');
     if (key === 'amount') {
@@ -61,6 +61,7 @@ function validateBillingProfile(input) {
   }
   if (result.condition && !['responsable_inscripto', 'monotributo', 'exento', 'consumidor_final'].includes(result.condition)) throw invalid('Condicion IVA invalida.');
   if (result.currency && !['ARS', 'USD'].includes(result.currency)) throw invalid('Moneda invalida.');
+  if (result.saleCondition !== undefined && !SALE_CONDITIONS.includes(result.saleCondition)) throw invalid('Condicion de venta invalida.');
   return result;
 }
 
@@ -85,7 +86,7 @@ module.exports.billingRecord = billingRecord;
 
 function billingProfileForPeriod(record, period) {
   const price = (record.prices || []).filter(p => p.period <= period).sort((a, b) => b.period.localeCompare(a.period))[0];
-  return { ...record.profile, amount: price?.amount ?? null, currency: price?.currency ?? '' };
+  return { saleCondition: SALE_CONDITIONS[0], ...record.profile, amount: price?.amount ?? null, currency: price?.currency ?? '' };
 }
 module.exports.billingProfileForPeriod = billingProfileForPeriod;
 

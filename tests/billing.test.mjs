@@ -64,6 +64,7 @@ test('solicitud C usa precio del mes, servicio de un dia y bloquea retroactivos'
   const agency = { status: 'active', createdOn: '2026-01-01' };
   const invoice = billingInvoice({ agency, record, period: '2026-11', today: '2026-11-02', salesPoint: 1 });
   assert.equal(invoice.issuer, 'monotributo');
+  assert.equal(invoice.concept, 'services');
   assert.equal(invoice.items[0].amount, 6000000);
   assert.equal(invoice.items[0].unitPrice, '60000.00');
   assert.deepEqual(invoice.service, { from: '2026-11-02', to: '2026-11-02', dueDate: '2026-11-02' });
@@ -81,4 +82,12 @@ test('USD exige cotizacion ARCA y cancelacion en la misma moneda', async () => {
   assert.equal(input.exchangeRate, '1500');
   assert.equal(input.items[0].amount, 10000);
   assert.throws(() => billingInvoice({ ...args, quotation: { currencyId: 'DOL', rate: 0, date: '20261030' } }));
+});
+
+test('condicion de venta valida una opcion y conserva transferencia por defecto', async () => {
+  const { validateBillingProfile, billingProfileForPeriod } = await import('../netlify/functions/lib/billing.cjs');
+  assert.equal(billingProfileForPeriod({}, '2026-11').saleCondition, 'Transferencia bancaria');
+  assert.equal(validateBillingProfile({ saleCondition: 'Cuenta corriente' }).saleCondition, 'Cuenta corriente');
+  assert.throws(() => validateBillingProfile({ saleCondition: 'Inventada' }));
+  assert.throws(() => validateBillingProfile({ saleCondition: ['Contado', 'Cheque'] }));
 });

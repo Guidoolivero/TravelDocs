@@ -18,6 +18,9 @@ ni se modificaron las agencias reales.
   vencimiento llevan el dia de emision, por decision del usuario.
 - Todas son facturas C de un monotributista. En USD se indica pago en USD y se
   consulta la cotizacion en ARCA. El precio del plan se guarda en centavos.
+  El concepto es siempre Servicios. La cotizacion usada se ve en la confirmacion
+  y el PDF; las respuestas del entorno test no se toman como cotizaciones de
+  produccion. No se carga una cotizacion manual en la ficha.
 - Suspender o eliminar una agencia impide nuevas emisiones. Sus comprobantes
   autorizados y los intentos fiscales se conservan fuera del documento de agencia.
 
@@ -25,8 +28,13 @@ ni se modificaron las agencias reales.
 
 1. Crear o editar una agencia y completar los campos opcionales de facturacion.
    El listado muestra prueba gratuita, ficha incompleta o mes de habilitacion.
-2. Cuando corresponda, pulsar Facturar. Revisar receptor, CUIT, importe, moneda,
-   mes, fechas y cotizacion. Confirmar emite un comprobante de prueba.
+2. La condicion de venta habitual se guarda en la ficha de agencia y parte de
+   Transferencia bancaria. En la pestana Facturacion se puede elegir otra para
+   ese comprobante antes de pulsar Facturar; ese cambio no modifica la ficha.
+   Revisar receptor, CUIT, importe, moneda,
+   mes, fechas, condicion de venta y cotizacion. Confirmar emite un comprobante
+   de prueba. La condicion queda guardada con la factura; las siguientes ediciones
+   de la ficha no cambian un PDF anterior.
 3. Consultar el historial y descargar el PDF de las facturas autorizadas.
    Descargar o regenerar un PDF no vuelve a emitir. El envio es manual.
 4. Ante un corte de conexion, usar Consultar ARCA. Solo un resultado not_found

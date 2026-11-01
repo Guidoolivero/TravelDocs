@@ -114,6 +114,13 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] USD pagado en USD con cotizacion ARCA guardada en el snapshot.
 - [x] Vista previa, confirmacion y revalidacion transaccional antes de emitir.
 - [x] Historial y PDF autorizado con CAE/QR; descarga sin volver a emitir.
+- [x] Condicion de venta habitual por agencia, Transferencia bancaria por defecto.
+  Una opcion, editable por comprobante antes de confirmar; guardada en snapshot.
+  El cambio puntual no modifica la ficha ni los PDF anteriores.
+- [x] Servicios fijado como concepto y visible en confirmacion. USD con cotizacion
+  consultada a ARCA; no confundir la respuesta de homologacion con produccion.
+- [x] Paleta azul de TravelDocs aplicada al renderer PDF; regenerados los dos
+  comprobantes de homologacion anteriores sin nueva emision.
 - [x] Verificacion visual de PDFs ficticios ARS/USD y generacion con ARCA real test.
 - [x] Renderer como dependencia externa: verificada carga del artefacto Netlify.
 - [x] Procedimiento de correccion documentado; notas de credito probadas con SDK.
@@ -121,8 +128,8 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 434 pruebas aprobadas en Node 22.
-- [x] Emulador de facturacion: 16 pruebas aprobadas (store y servicio).
+- [x] Suite general: 435 pruebas aprobadas en Node 22.
+- [x] Emulador de facturacion: 17 pruebas aprobadas (store y servicio).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.
 - [x] Navegador facturador: ficha parcial, prueba gratuita, importe, confirmacion y PDF.

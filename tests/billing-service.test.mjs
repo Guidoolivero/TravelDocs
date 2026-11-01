@@ -172,3 +172,17 @@ test('confirmacion vieja no autoriza un intento nuevo despues de un rechazo', as
   await assert.rejects(service.issue(next.id, draft.digest), /vista previa/);
   assert.equal(sends, 1);
 });
+
+test('condicion de venta se congela por factura y override no cambia ficha de agencia', async () => {
+  const { service, ref } = await setup({ issue: async () => ({ kind: 'authorized' }) });
+  const original = await service.preview(ref.id);
+  assert.equal(original.receiver.saleCondition, 'Transferencia bancaria');
+  const changed = await service.preview(ref.id, { saleCondition: 'Cuenta corriente' });
+  assert.equal(changed.receiver.saleCondition, 'Cuenta corriente');
+  assert.equal(changed.input.concept, 'services');
+  assert.notEqual(original.digest, changed.digest);
+  await assert.rejects(service.issue(changed.id, original.digest), /vista previa/);
+  assert.equal((await service.issue(changed.id, changed.digest)).receiver.saleCondition, 'Cuenta corriente');
+  assert.equal((await db.collection('billingProfiles').doc(ref.id).get()).data().profile.saleCondition, undefined);
+  await assert.rejects(service.preview(ref.id, { saleCondition: 'Inventada' }), /venta/);
+});
