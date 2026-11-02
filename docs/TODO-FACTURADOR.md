@@ -1,18 +1,18 @@
 # TODO del facturador TravelDocs
 
 Actualizado: 2026-11-02.
-Estado: circuito manual probado en homologacion y modo produccion preparado en
-la rama. ARCA real verificada por consultas; carga, prueba conectada y publicacion
-pendientes. No se emitieron comprobantes reales.
-Rama: `codex/facturador`.
+Estado: PR #4 aprobado e integrado; produccion configurada y ARCA consultada con
+el store definitivo. Pendiente verificar el panel tras corregir el arranque PDF.
+No se emitieron comprobantes reales.
+Rama de correccion: `codex/facturador-pdf-startup`.
 Base: `05dccb1b6059ecc2a0e58b805876f0e8453cfa94`.
 Integrada en esta rama la correccion `9f9bf71` de main, sin modificar main.
 
 ## Alcance
 
-Trabajar solo en este worktree, sin subagentes. No hacer push o merge a main,
-ni deploy de produccion. Esta instruccion del usuario reemplaza la pauta general
-del repositorio de publicar cada cambio en main.
+Trabajar solo en este worktree, sin subagentes. El usuario aprobo integrar el PR #4
+y activar produccion el 2 de noviembre. Conservar el checkout original. La emision
+real requiere revision y confirmacion manual de cada factura desde el panel.
 
 Las pruebas usan datos ficticios, Firestore emulado y ARCA homologacion. Los
 certificados, claves, PDFs y datos fiscales personales quedan fuera del repo.
@@ -39,7 +39,7 @@ Una rama o un preview no aislan Firebase ni los correos por si solos.
 ## 0. Aislamiento
 
 - [x] Worktree separado y rama `codex/facturador`; checkout original preservado.
-- [x] Workflow de deploy condicionado a main; ningun push ni deploy ejecutado.
+- [x] Workflow de deploy condicionado a main; PR #4 integrado y publicado con autorizacion.
 - [x] Homologacion aislada de Firebase real. Produccion requiere proyecto, emisor,
   punto y confirmacion explicitos, sin emulador y con bundle de produccion.
 - [x] Emulador demo-billing y navegador con servicios interceptados.
@@ -188,10 +188,10 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - direct-messages.test.mjs es previo al facturador y sigue fuera de este cambio.
   La licencia original de IBM Plex conserva sus finales CRLF.
 
-## 8. Fuera de esta etapa
+## 8. Activacion de produccion y pendientes
 
 - [x] Produccion: certificado autorizado y punto 00002 creados por el usuario.
-- [ ] Configuracion y publicacion con autorizacion aparte.
+- [x] Configuracion y publicacion autorizadas despues de aprobar PR #4.
 - [x] Usuario confirma el 2 de noviembre que Valdes y Transitar siguen pendientes
   de facturar noviembre. Preparados clave local separada y CSR de produccion,
   fuera del repo.
@@ -213,10 +213,13 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] Ids y fechas contrastados en el panel autenticado, sin guardar credenciales.
   Usuario confirma los importes de noviembre. Manifiesto y emisor preparados solo
   en archivos privados temporales, con datos fiscales de los snapshots previos.
-- [ ] Validar nuevamente el manifiesto contra el backend y aplicar el corte con
-  autorizacion de activacion. No se escribieron fichas de produccion.
-- [ ] Respaldar y cargar credenciales y tickets WSAA locales al store definitivo.
-- [ ] Configurar, probar circuito conectado y publicar con autorizacion.
+- [x] Manifiesto validado contra el backend y corte inicial aplicado sin sobrescrituras.
+- [x] Respaldo privado, carga de credenciales y traspaso de un ticket WSAA a Firestore.
+- [x] Variables de Functions configuradas solo en production; ARCA consultada con ese store.
+- [x] Reproducir fallo de entrada PDF: wrapper CommonJS heredaba type=module.
+  Excluir solo package.json de raiz del artefacto NFT, sin reescribir bundle ni debug id.
+  Smoke de empaquetado agregado al workflow: carga entrada real y exige 401 sin token.
+- [ ] Verificar PDF publicado y vistas previas conectadas desde el panel autenticado.
   Guia: docs/FACTURADOR-PRODUCCION.md.
 - [ ] Definir backups, renovacion de certificados y operacion de correcciones reales.
 - [ ] Primera factura real revisada manualmente; no emitir pruebas reales.
