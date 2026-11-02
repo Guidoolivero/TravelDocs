@@ -17,3 +17,22 @@ test('PDF exige administrador y no genera documentos sin autorizacion guardada',
   g.docs.set('billingInvoices/' + id, { status: 'draft' });
   assert.equal((await g.invoke('billing-pdf', { invoiceId: id })).statusCode, 409);
 });
+
+
+test('API traduce error de autenticacion ARCA sin filtrar secretos', async () => {
+  let failure = Object.assign(new Error('TOKEN=secreto'), { code: 'ARCA_AUTHENTICATION_ERROR' });
+  const f = fixture({ env: {
+    BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing',
+    FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185',
+    ARCA_TAX_ID: '20123456786', ARCA_SALES_POINT: '1', ARCA_CERTIFICATE_PEM: 'certificado ficticio', ARCA_PRIVATE_KEY_PEM: 'clave ficticia',
+    BILLING_ISSUER_JSON: JSON.stringify({ legalName: 'Prueba', address: 'Calle 1', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' }),
+  }, modules: { facturas: { createArcaClient() { throw failure; } } } });
+  const response = await f.invoke('billing-api', { action: 'preview', agencyId: 'agency' });
+  assert.equal(response.statusCode, 503);
+  assert.match(JSON.parse(response.body).error, /certificado/);
+  assert.doesNotMatch(response.body, /TOKEN|secreto/);
+  failure = null;
+  const unknown = await f.invoke('billing-api', { action: 'preview', agencyId: 'agency' });
+  assert.equal(unknown.statusCode, 503);
+  assert.match(JSON.parse(unknown.body).error, /Consulta el estado/);
+});

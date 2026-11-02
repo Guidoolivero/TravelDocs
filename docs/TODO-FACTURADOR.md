@@ -103,6 +103,9 @@ Una rama o un preview no aislan Firebase ni los correos por si solos.
 - [x] Corte despues del CAE o fallo de persistencia recuperan sin segunda emision.
 - [x] Consultar un borrador nunca lo emite; confirmacion vieja no autoriza otro intento.
 - [x] Historial conservado al eliminar agencia; snapshots para reproducir PDF.
+- [x] Mensajes amigables para conexion, timeout, acceso, configuracion, validacion,
+  rechazo y resultado incierto. Aviso visible en el panel y error seguro persistido
+  en el intento. Recuperar limpia el aviso sin volver a emitir. Detalle ARCA plegado.
 
 Limites: un intento incierto de otro dia o con datos cambiados requiere revision
 manual. Tambien requiere revision un corte antes de que el SDK guarde la reserva,
@@ -134,8 +137,8 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 436 pruebas aprobadas en Node 22.
-- [x] Emulador de facturacion: 17 pruebas aprobadas (store y servicio).
+- [x] Suite general: 440 pruebas aprobadas en Node 22.
+- [x] Emulador de facturacion: 18 pruebas aprobadas (store y servicio).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.
 - [x] Navegador facturador: ficha parcial, prueba gratuita, importe, confirmacion y PDF.
@@ -158,6 +161,12 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 ## 8. Fuera de esta etapa
 
 - [ ] Produccion: certificado, punto de venta y configuracion con autorizacion aparte.
+- [x] Usuario confirma el 2 de noviembre que Valdes y Transitar siguen pendientes
+  de facturar noviembre. Preparados clave local separada y CSR de produccion,
+  fuera del repo. El usuario debe obtener el certificado en ARCA.
+- [ ] Asociar certificado a wsfe, confirmar punto de venta y completar habilitacion
+  tecnica y publicacion. La rama sigue bloqueando produccion; no cambiar solo
+  una variable para intentar emitir. Guia: docs/FACTURADOR-PRODUCCION.md.
 - [ ] Definir corte inicial y meses ya facturados a mano para evitar duplicarlos.
 - [ ] Definir backups, renovacion de certificados y operacion de correcciones reales.
 - [ ] Primera factura real revisada manualmente; no emitir pruebas reales.

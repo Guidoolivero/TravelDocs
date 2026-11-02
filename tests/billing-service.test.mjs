@@ -186,3 +186,20 @@ test('condicion de venta se congela por factura y override no cambia ficha de ag
   assert.equal((await db.collection('billingProfiles').doc(ref.id).get()).data().profile.saleCondition, undefined);
   await assert.rejects(service.preview(ref.id, { saleCondition: 'Inventada' }), /venta/);
 });
+
+test('error de ARCA deja aviso persistido sin secretos y recuperar lo limpia sin reemitir', async () => {
+  let sends = 0;
+  const { service, draft } = await setup({
+    issue: async () => { sends++; throw Object.assign(new Error('TOKEN=privado'), { code: 'ARCA_TRANSPORT_ERROR' }); },
+    recover: async () => ({ kind: 'authorized', voucher: { cae: 'RECUPERADO' } }),
+  });
+  await assert.rejects(service.issue(draft.id, draft.digest));
+  const saved = await service.get(draft.id);
+  assert.equal(saved.status, 'issuing');
+  assert.match(saved.lastError, /Consultar ARCA/);
+  assert.doesNotMatch(saved.lastError, /privado|TOKEN/);
+  const recovered = await service.issue(draft.id, draft.digest, { recoverOnly: true });
+  assert.equal(recovered.status, 'authorized');
+  assert.equal(recovered.lastError, null);
+  assert.equal(sends, 1);
+});

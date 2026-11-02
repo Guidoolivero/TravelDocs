@@ -42,6 +42,12 @@ ni se modificaron las agencias reales.
 5. Ante rechazo confirmado, corregir la ficha y volver a revisar. Se conserva
    el intento rechazado y se asigna una clave nueva al intento corregido.
 
+Los errores se muestran en un aviso visible del panel, con el siguiente paso.
+Si falla una emision o consulta, el intento conserva un mensaje seguro para
+volver a verlo en el historial. La informacion tecnica de rechazos se despliega
+con Ver detalle de ARCA. Ante una respuesta incierta nunca se afirma que no
+se emitio: primero se consulta ARCA.
+
 No borrar registros ni reservas para desbloquear una emision. Un conflicto,
 una consulta fallida, un comprobante reemplazado o una secuencia bloqueada
 requieren revision; no habilitan reenvio. Si un intento incierto pasa de dia o

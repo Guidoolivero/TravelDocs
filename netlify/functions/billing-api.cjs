@@ -4,6 +4,7 @@ const { assertBillingSandbox } = require('./lib/billing-config.cjs');
 const { createBillingStore } = require('./lib/billing-store.cjs');
 const { createBillingService } = require('./lib/billing-service.cjs');
 const { createArcaClient } = require('facturas');
+const { billingErrorText } = require('../../public/js/billing-feedback.mjs');
 
 const reply = (statusCode, body) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 exports.handler = async event => {
@@ -41,8 +42,8 @@ exports.handler = async event => {
       : await service.issue(body.invoiceId, body.digest, { retry: body.action === 'retry', recoverOnly: body.action === 'recover' });
     return reply(200, result);
   } catch (err) {
-    if (!err.status) console.error('billing-api', { code: err.code || 'BILLING_ERROR', name: err.name });
-    const status = [400, 404, 409, 503].includes(err.status) ? err.status : 503;
-    return reply(status, { error: err.status ? err.message : 'No se pudo completar la operacion. Consultar el estado antes de reintentar.' });
+    if (!err?.status) console.error('billing-api', { code: err?.code || 'BILLING_ERROR', name: err?.name });
+    const status = [400, 404, 409, 503].includes(err?.status) ? err.status : 503;
+    return reply(status, { error: billingErrorText(err) });
   }
 };

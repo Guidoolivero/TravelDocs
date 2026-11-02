@@ -20,7 +20,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = []; page.on('pageerror', e => errors.push(e.message));
 const agencies = Array.from({ length: 5 }, (_, i) => ({ id: 'prueba-' + i, name: 'Agencia de prueba ' + i, status: 'active', plan: 'trial', createdAt: '2026-10-21', billing: {}, billingStatus: { state: 'trial', trialEndsOn: '2026-11-20', firstPeriod: '2026-12' } }));
 const draft = { id: 'a'.repeat(64), digest: 'approved', agencyId: 'prueba-0', period: '2026-11', status: 'draft', receiver: { legalName: 'Agencia ficticia', taxId: '20123456786', address: 'Calle 1', condition: 'monotributo' }, input: { currency: 'ARS', date: '2026-11-02', items: [{ amount: 10000 }] } };
-let saved, issues = 0, previews = 0;
+let saved, issues = 0, previews = 0, failPreview = true;
 await page.route('**/*', async route => {
   const u = new URL(route.request().url()), method = route.request().method();
   const cors = { 'Access-Control-Allow-Origin': url, 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, GET, PATCH, OPTIONS' };
@@ -33,8 +33,10 @@ await page.route('**/*', async route => {
     if (u.pathname.endsWith('/billing-api')) {
       const body = route.request().postDataJSON();
       if (body.action === 'list') return json({ invoices: previews ? [draft] : [] });
+      if (body.action === 'preview' && failPreview) { failPreview = false; return route.abort('failed'); }
       if (body.action === 'preview') { previews++; draft.receiver.saleCondition = body.saleCondition; return json(draft); }
-      if (body.action === 'issue') { issues++; draft.status = 'authorized'; return json(draft); }
+      if (body.action === 'issue') { issues++; draft.status = 'issuing'; return route.fulfill({ status: 503, headers: cors, contentType: 'application/json', body: JSON.stringify({ error: 'No pudimos obtener una respuesta de ARCA. La factura podria haberse autorizado. Usa Consultar ARCA antes de reintentar.' }) }); }
+      if (body.action === 'recover') { draft.status = 'authorized'; return json(draft); }
     }
     return json({ ok: true });
   }
@@ -77,13 +79,24 @@ try {
   assert.equal(await page.locator('#admin-panel-agencies').isVisible(), false);
   await page.locator('[data-billing-condition="prueba-0"]').selectOption('Cheque');
   await page.locator('[data-billing-preview="prueba-0"]').click();
+  await page.locator('#admin-billing-feedback').waitFor({ state: 'visible' });
+  assert.match(await page.locator('#admin-billing-feedback').innerText(), /Revisa tu conexion/);
+  assert.equal(issues, 0);
+  await page.locator('[data-billing-preview="prueba-0"]').click();
   await page.locator('#modal-confirm.open').waitFor();
   assert.equal(issues, 0);
   assert.match(await page.locator('#confirm-text').innerText(), /Agencia ficticia/);
   assert.match(await page.locator('#confirm-text').innerText(), /Concepto: Servicios/);
   assert.match(await page.locator('#confirm-text').innerText(), /Condicion de venta: Cheque/);
   await page.locator('#confirm-ok-btn').click();
+  await page.locator('[data-billing-recover]').waitFor();
+  assert.match(await page.locator('#admin-billing-feedback').innerText(), /podria haberse autorizado/);
+  if (process.env.BILLING_UI_SCREENSHOT) await page.screenshot({ path: process.env.BILLING_UI_SCREENSHOT.replace(/\.png$/, '-error.png'), fullPage: true });
+  assert.match(await page.locator('#admin-billing-tbody').innerText(), /Consultar ARCA/);
+  assert.equal(issues, 1);
+  await page.locator('[data-billing-recover]').click();
   await page.locator('[data-billing-pdf]').waitFor();
+  assert.equal(await page.locator('#admin-billing-feedback').isVisible(), false);
   assert.equal(issues, 1);
   const downloading = page.waitForEvent('download');
   await page.locator('[data-billing-pdf]').click();

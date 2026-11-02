@@ -1,4 +1,5 @@
 const { createHash } = require('node:crypto');
+const { billingErrorText } = require('../../../public/js/billing-feedback.mjs');
 const { billingInvoice, billingProfileForPeriod, validateBillingProfile } = require('./billing.cjs');
 
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -10,6 +11,13 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
     const doc = await invoices.doc(id).get();
     if (!doc.exists) throw Object.assign(new Error('Factura no encontrada.'), { status: 404 });
     return { id: doc.id, ...doc.data() };
+  }
+  async function arcaOperation(id, operation) {
+    try { return await operation(); } catch (err) {
+      // El aviso es auxiliar: no debe ocultar el error ni cambiar el intento fiscal.
+      await invoices.doc(id).update({ lastError: billingErrorText(err) }).catch(() => {});
+      throw err;
+    }
   }
   async function prepare(agencyId, saleCondition) {
     const agencySnap = await db.collection('agencies').doc(agencyId).get();
@@ -49,8 +57,8 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
         if (invoice.issuer.taxId !== issuer.taxId || invoice.input.salesPoint !== salesPoint) throw Object.assign(new Error('Cambio el emisor o punto de venta; revisar configuracion.'), { status: 409 });
         if (['authorized', 'rejected', 'conflict'].includes(invoice.status)) return invoice;
         if (invoice.status !== 'draft') {
-          const outcome = await client.recover(invoice.idempotencyKey, { abortSignal });
-          await invoices.doc(id).update(clean({ status: outcome.kind, outcome }));
+          const outcome = await arcaOperation(id, () => client.recover(invoice.idempotencyKey, { abortSignal }));
+          await invoices.doc(id).update(clean({ status: outcome.kind, outcome, lastError: null }));
           if (!retry || outcome.kind !== 'indeterminate' || outcome.lookup.kind !== 'not_found') return get(id);
         }
         // shortcut: un intento incierto de otro dia requiere revision manual, no se cambia su solicitud fiscal.
@@ -64,8 +72,8 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
           if (JSON.stringify([version(agency), version(fiscal)]) !== JSON.stringify(fresh.sourceVersions)) throw Object.assign(new Error('Los datos cambiaron; revisar la vista previa.'), { status: 409 });
           tx.update(invoices.doc(id), { status: 'issuing' });
         });
-        const outcome = await client.issue(invoice.input, { idempotencyKey: invoice.idempotencyKey, abortSignal });
-        await invoices.doc(id).update(clean({ status: outcome.kind, outcome }));
+        const outcome = await arcaOperation(id, () => client.issue(invoice.input, { idempotencyKey: invoice.idempotencyKey, abortSignal }));
+        await invoices.doc(id).update(clean({ status: outcome.kind, outcome, lastError: null }));
         return get(id);
       });
     },

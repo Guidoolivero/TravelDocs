@@ -742,3 +742,9 @@ textarea { resize: vertical; min-height: 72px; }
 
 .billing-sale-condition { max-width: 220px; padding: 7px 10px; border: 1px solid var(--text2); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; }
 .billing-sale-condition:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.billing-feedback { margin-bottom: 20px; padding: 16px; border-left: 3px solid var(--red); border-radius: 8px; background: var(--red-bg); color: var(--red); line-height: 1.5; }
+.billing-feedback:focus-visible,
+.billing-technical summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.billing-status-message, .billing-technical p { max-width: 36ch; white-space: normal; margin: 6px 0 0; color: var(--text2); font-size: 12px; line-height: 1.5; }
+.billing-technical summary { margin-top: 8px; cursor: pointer; color: var(--text2); font-size: 12px; }

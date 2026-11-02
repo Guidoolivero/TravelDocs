@@ -1,3 +1,4 @@
+import { billingErrorText, billingOutcomeText } from './billing-feedback.mjs';
 import { parsePrice, SALE_CONDITIONS } from './billing-form.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
 import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers.mjs';
@@ -4606,6 +4607,13 @@ async function loadAgencies() {
 
 let _billingInvoices = [];
 const billingRequest = (body, endpoint = 'billing-api') => adminFetch('', { method: 'POST', body: JSON.stringify(body) }, endpoint);
+function showBillingError(error) {
+  const feedback = document.getElementById('admin-billing-feedback');
+  feedback.textContent = billingErrorText(error);
+  feedback.hidden = false;
+  feedback.focus();
+}
+function clearBillingError() { document.getElementById('admin-billing-feedback').hidden = true; }
 const billingMoney = invoice => new Intl.NumberFormat('es-AR', { style: 'currency', currency: invoice.input.currency }).format(invoice.input.items[0].amount / 100);
 
 async function loadBillingInvoices() {
@@ -4617,22 +4625,23 @@ async function loadBillingInvoices() {
     const labels = { draft: 'Borrador', issuing: 'Consultar resultado', authorized: 'Autorizada', rejected: 'Rechazada', indeterminate: 'Requiere consulta', conflict: 'Conflicto: requiere revision' };
     document.getElementById('admin-billing-tbody').innerHTML = _billingInvoices.map(invoice => `<tr>
       <td>${esc(invoice.receiver.legalName)}</td><td>${esc(invoice.period)}</td><td>${esc(billingMoney(invoice))}</td>
-      <td>${esc(labels[invoice.status] || invoice.status)}${invoice.outcome?.issues?.length ? `<br><small>${esc(invoice.outcome.issues.map(issue => issue.message || issue.code).join('; '))}</small>` : ''}</td>
+      <td>${esc(labels[invoice.status] || invoice.status)}${invoice.lastError || billingOutcomeText(invoice) ? `<p class="billing-status-message">${esc(invoice.lastError || billingOutcomeText(invoice))}</p>` : ''}${invoice.outcome?.issues?.length ? `<details class="billing-technical"><summary>Ver detalle de ARCA</summary><p>${esc(invoice.outcome.issues.map(issue => issue.message || issue.code).join('; '))}</p></details>` : ''}</td>
       <td>${invoice.status === 'authorized' ? `<button class="btn btn-ghost btn-sm" data-billing-pdf="${esc(invoice.id)}">Descargar PDF</button>` : ''}
       ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Revisar y emitir'}</button>` : ''}
       ${['issuing', 'indeterminate'].includes(invoice.status) ? `<button class="btn btn-ghost btn-sm" data-billing-recover="${esc(invoice.id)}">Consultar ARCA</button>` : ''}
       ${invoice.status === 'indeterminate' && invoice.outcome?.lookup?.kind === 'not_found' ? `<button class="btn btn-ghost btn-sm" data-billing-retry="${esc(invoice.id)}">Reintentar</button>` : ''}</td></tr>`).join('');
     message.textContent = _billingInvoices.length ? '' : 'Todavia no hay facturas de prueba.';
-  } catch (err) { message.textContent = err.error || 'No se pudieron cargar las facturas.'; }
+  } catch (err) { message.textContent = 'No se pudo actualizar el historial.'; showBillingError(err); }
 }
 
 async function previewBilling(agencyId) {
+  clearBillingError();
   try {
     const saleCondition = document.querySelector(`[data-billing-condition="${CSS.escape(agencyId)}"]`)?.value;
     const invoice = await billingRequest({ action: 'preview', agencyId, saleCondition });
     if (invoice.status !== 'draft') { await loadBillingInvoices(); return; }
     confirmBilling(invoice, 'issue');
-  } catch (err) { showToast(err.error || 'No se pudo preparar la factura.', true); }
+  } catch (err) { showBillingError(err); }
 }
 
 function confirmBilling(invoice, action) {
@@ -4646,20 +4655,24 @@ function confirmBilling(invoice, action) {
 }
 
 async function runBilling(action, invoice) {
+  clearBillingError();
   try {
-    await billingRequest({ action, invoiceId: invoice.id, digest: invoice.digest });
-  } catch (err) { showToast(err.error || 'Consultar el estado antes de reintentar.', true); }
+    const result = await billingRequest({ action, invoiceId: invoice.id, digest: invoice.digest });
+    const message = billingOutcomeText(result);
+    if (message) showBillingError({ error: message });
+  } catch (err) { showBillingError(err); }
   await loadBillingInvoices();
 }
 
 async function downloadBillingPdf(id) {
+  clearBillingError();
   try {
     const result = await billingRequest({ invoiceId: id }, 'billing-pdf');
     const blob = new Blob([Uint8Array.from(atob(result.pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob), link = document.createElement('a');
     link.href = url; link.download = result.filename; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-  } catch (err) { showToast(err.error || 'No se pudo descargar el PDF.', true); }
+  } catch (err) { showBillingError({ ...err, error: err.error || 'No pudimos descargar el PDF. La factura guardada se conserva; no vuelvas a emitirla.' }); }
 }
 
 function billingStatusLabel(status) {
