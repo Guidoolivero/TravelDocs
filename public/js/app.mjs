@@ -1,3 +1,5 @@
+import { billingErrorText, billingOutcomeText } from './billing-feedback.mjs';
+import { parsePrice, SALE_CONDITIONS } from './billing-form.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from './pending-passengers.mjs';
 import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers.mjs';
 import { csvField, excelRowToPassenger } from './csv-import.mjs';
@@ -4525,6 +4527,9 @@ window.resetImport = function() {
 
 let _adminTab = 'agencies';
 let _adminAgencies = [];
+let _adminBillingEnabled = false;
+let _adminBillingEnvironment = 'test';
+document.getElementById('admin-bill-saleCondition').innerHTML = SALE_CONDITIONS.map(value => `<option>${esc(value)}</option>`).join('');
 let _adminMembers = [];
 let _adminUsersFilter = '';
 
@@ -4535,11 +4540,11 @@ function adminBaseUrl() {
 }
 
 // Fetch autenticado contra admin-api. Lanza {status, error} si no es ok.
-async function adminFetch(path, options = {}) {
+async function adminFetch(path, options = {}, endpoint = 'admin-api') {
   const currentUser = auth.currentUser;
   if (!currentUser) throw { status: 401, error: 'Sesión expirada. Volvé a ingresar.' };
   const idToken = await currentUser.getIdToken();
-  const res = await fetch(adminBaseUrl() + path, {
+  const res = await fetch(adminBaseUrl().replace(/admin-api$/, endpoint) + path, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4564,7 +4569,8 @@ function setAdminTab(tab) {
   document.getElementById('admin-panel-agencies').style.display = tab === 'agencies' ? '' : 'none';
   document.getElementById('admin-panel-users').style.display = tab === 'users' ? '' : 'none';
   document.getElementById('admin-panel-usage').style.display = tab === 'usage' ? '' : 'none';
-  if (tab === 'agencies') loadAgencies();
+  document.getElementById('admin-panel-billing').style.display = tab === 'billing' ? '' : 'none';
+  if (tab === 'agencies' || tab === 'billing') loadAgencies();
   else if (tab === 'users') loadUsersPanel();
   else if (tab === 'usage') initUsagePanel();
 }
@@ -4575,14 +4581,117 @@ async function loadAgencies() {
   const tbody = document.getElementById('admin-agencies-tbody');
   if (!tbody) return;
   tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--text3);">Cargando...</td></tr>`;
+  const billingBody = document.getElementById('admin-billing-agencies-tbody');
+  billingBody.innerHTML = '<tr><td colspan="4">Cargando agencias...</td></tr>';
   try {
     const json = await adminFetch('/agencies');
     _adminAgencies = json.agencies || [];
+    _adminBillingEnabled = json.billingEnabled === true;
+    _adminBillingEnvironment = json.billingEnvironment === 'production' ? 'production' : 'test';
+    document.getElementById('admin-billing-title').textContent = _adminBillingEnvironment === 'production' ? 'Facturas reales' : 'Facturas de homologacion';
+    document.getElementById('admin-billing-environment').textContent = _adminBillingEnvironment === 'production' ? 'Produccion: los comprobantes emitidos tienen validez fiscal.' : 'Comprobantes de prueba, sin valor fiscal.';
+    document.getElementById('admin-billing-fields').hidden = !_adminBillingEnabled;
+    document.querySelector('[data-admin-tab="billing"]').hidden = !_adminBillingEnabled;
+    document.getElementById('admin-billing-history').hidden = !_adminBillingEnabled;
+    if (_adminBillingEnabled) {
+      document.getElementById('admin-billing-agencies-tbody').innerHTML = _adminAgencies.map(a => `<tr>
+        <td>${esc(a.name || a.id)}</td><td>${esc(billingStatusLabel(a.billingStatus))}</td>
+        <td><select class="billing-sale-condition" aria-label="Condicion de venta de ${esc(a.name || a.id)}" data-billing-condition="${esc(a.id)}">${SALE_CONDITIONS.map(value => `<option${value === (a.billing.saleCondition || SALE_CONDITIONS[0]) ? ' selected' : ''}>${esc(value)}</option>`).join('')}</select></td>
+        <td>${a.billingStatus.state === 'ready' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(a.id)}">Facturar</button>` : ''}</td>
+      </tr>`).join('') || '<tr><td colspan="4">Sin agencias.</td></tr>';
+      if (_adminTab === 'billing') loadBillingInvoices();
+    }
     renderAgenciesTable();
     populateAgencySelects();
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;color:var(--red);">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
+    billingBody.innerHTML = `<tr><td colspan="4">${esc(err.error || 'Error al cargar agencias.')}</td></tr>`;
   }
+}
+
+let _billingInvoices = [];
+const billingRequest = (body, endpoint = 'billing-api') => adminFetch('', { method: 'POST', body: JSON.stringify(body) }, endpoint);
+function showBillingError(error) {
+  const feedback = document.getElementById('admin-billing-feedback');
+  feedback.textContent = billingErrorText(error);
+  feedback.hidden = false;
+  feedback.focus();
+}
+function clearBillingError() { document.getElementById('admin-billing-feedback').hidden = true; }
+const billingMoney = invoice => new Intl.NumberFormat('es-AR', { style: 'currency', currency: invoice.input.currency }).format(invoice.input.items[0].amount / 100);
+
+async function loadBillingInvoices() {
+  const message = document.getElementById('admin-billing-message');
+  message.textContent = 'Cargando facturas...';
+  try {
+    const result = await billingRequest({ action: 'list' });
+    _billingInvoices = result.invoices;
+    const labels = { draft: 'Borrador', issuing: 'Consultar resultado', authorized: 'Autorizada', rejected: 'Rechazada', indeterminate: 'Requiere consulta', conflict: 'Conflicto: requiere revision' };
+    document.getElementById('admin-billing-tbody').innerHTML = _billingInvoices.map(invoice => `<tr>
+      <td>${esc(invoice.receiver.legalName)}</td><td>${esc(invoice.period)}</td><td>${esc(billingMoney(invoice))}</td>
+      <td>${esc(labels[invoice.status] || invoice.status)}${invoice.lastError || billingOutcomeText(invoice) ? `<p class="billing-status-message">${esc(invoice.lastError || billingOutcomeText(invoice))}</p>` : ''}${invoice.outcome?.issues?.length ? `<details class="billing-technical"><summary>Ver detalle de ARCA</summary><p>${esc(invoice.outcome.issues.map(issue => issue.message || issue.code).join('; '))}</p></details>` : ''}</td>
+      <td>${invoice.status === 'authorized' ? `<button class="btn btn-ghost btn-sm" data-billing-pdf="${esc(invoice.id)}">Descargar PDF</button>` : ''}
+      ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Revisar y emitir'}</button>` : ''}
+      ${['issuing', 'indeterminate'].includes(invoice.status) ? `<button class="btn btn-ghost btn-sm" data-billing-recover="${esc(invoice.id)}">Consultar ARCA</button>` : ''}
+      ${invoice.status === 'indeterminate' && invoice.outcome?.lookup?.kind === 'not_found' ? `<button class="btn btn-ghost btn-sm" data-billing-retry="${esc(invoice.id)}">Reintentar</button>` : ''}</td></tr>`).join('');
+    message.textContent = _billingInvoices.length ? '' : 'Todavia no hay facturas en este entorno.';
+  } catch (err) { message.textContent = 'No se pudo actualizar el historial.'; showBillingError(err); }
+}
+
+async function previewBilling(agencyId) {
+  clearBillingError();
+  try {
+    const saleCondition = document.querySelector(`[data-billing-condition="${CSS.escape(agencyId)}"]`)?.value;
+    const invoice = await billingRequest({ action: 'preview', agencyId, saleCondition });
+    if (invoice.status !== 'draft') {
+      if (invoice.status === 'authorized') showToast(`La factura de ${invoice.period} ya esta autorizada. Descargala desde el historial.`);
+      else showBillingError({ error: billingOutcomeText(invoice) || 'Ya existe un intento para este mes. Revisa su estado en el historial.' });
+      await loadBillingInvoices();
+      return;
+    }
+    confirmBilling(invoice, 'issue');
+  } catch (err) { showBillingError(err); }
+}
+
+function confirmBilling(invoice, action) {
+  const real = invoice.environment === 'production';
+  showConfirmDialog({
+    title: real ? 'Confirmar factura C real' : 'Confirmar factura C de prueba',
+    message: `${invoice.receiver.legalName}, CUIT ${invoice.receiver.taxId}. ${invoice.receiver.address}. Condicion: ${invoice.receiver.condition}. Concepto: Servicios. Condicion de venta: ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
+    subtext: `Punto de venta: ${invoice.input.salesPoint || ''}. Desde, hasta y vencimiento: ${fmtDate(invoice.input.date)}. ${invoice.quotation ? `Cotizacion ARCA: ${invoice.quotation.rate}, fecha ${invoice.quotation.date}. Pago en USD.` : ''} ${real ? 'Se solicitara a ARCA una factura con validez fiscal.' : 'Sin valor fiscal.'}`,
+    confirmLabel: action === 'retry' ? 'Confirmar reintento' : real ? 'Emitir factura real' : 'Emitir prueba',
+    onConfirm: () => runBilling(action, invoice),
+  });
+}
+
+async function runBilling(action, invoice) {
+  clearBillingError();
+  try {
+    const result = await billingRequest({ action, invoiceId: invoice.id, digest: invoice.digest });
+    const message = billingOutcomeText(result);
+    if (message) showBillingError({ error: message });
+  } catch (err) { showBillingError(err); }
+  await loadBillingInvoices();
+}
+
+async function downloadBillingPdf(id) {
+  clearBillingError();
+  try {
+    const result = await billingRequest({ invoiceId: id }, 'billing-pdf');
+    const blob = new Blob([Uint8Array.from(atob(result.pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = result.filename; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) { showBillingError({ ...err, error: err.error || 'No pudimos descargar el PDF. La factura guardada se conserva; no vuelvas a emitirla.' }); }
+}
+
+function billingStatusLabel(status) {
+  if (status.state === 'trial') return `Prueba gratis hasta ${fmtDate(status.trialEndsOn)}`;
+  if (status.state === 'incomplete') return 'Ficha fiscal incompleta';
+  if (status.state === 'scheduled') return `Facturacion desde ${status.firstPeriod}`;
+  if (status.state === 'ready') return 'Habilitada para facturar';
+  if (status.state === 'suspended') return 'Facturacion suspendida';
+  return 'Revisar fecha de alta';
 }
 
 function renderAgenciesTable() {
@@ -4597,7 +4706,7 @@ function renderAgenciesTable() {
       <td style="font-weight:500;">${esc(a.name || a.id)}</td>
       <td style="font-family:var(--mono);font-size:12px;">${esc(a.slug || a.id)}</td>
       <td>${planBadge(a.plan)}</td>
-      <td>${statusBadgeAdmin(a.status)}</td>
+      <td>${statusBadgeAdmin(a.status)}${a.billingStatus ? `<br><small>${esc(billingStatusLabel(a.billingStatus))}</small>` : ''}</td>
       <td>${a.memberCount ?? 0}</td>
       <td style="font-size:12px;white-space:nowrap;">${fmtDate(a.createdAt)}</td>
       <td style="text-align:right;white-space:nowrap;">
@@ -4644,7 +4753,8 @@ function openEditAgency(agencyId) {
     plan: a.plan,
     status: a.status,
     branding: a.branding || {},
-    alerts: a.alerts || {}
+    alerts: a.alerts || {},
+    billing: a.billing || {}
   });
 }
 
@@ -4682,6 +4792,12 @@ async function handleAgencyLogoChange(e) {
 }
 
 function fillAgencyForm(a) {
+  document.getElementById('admin-billing-fields').open = false;
+  document.getElementById('admin-bill-saleCondition').value = a.billing?.saleCondition || SALE_CONDITIONS[0];
+  for (const key of ['taxId', 'legalName', 'address', 'condition', 'currency']) {
+    document.getElementById('admin-bill-' + key).value = a.billing?.[key] || '';
+  }
+  document.getElementById('admin-bill-amount').value = a.billing?.amount ? (a.billing.amount / 100).toFixed(2) : '';
   document.getElementById('admin-agency-edit-id').value = a.id || '';
   document.getElementById('admin-ag-name').value = a.name || '';
   document.getElementById('admin-ag-slug').value = a.slug || '';
@@ -4728,6 +4844,15 @@ async function submitAgencyForm() {
       emailjsTemplateId: document.getElementById('admin-ag-emailjs-tpl').value.trim()
     }
   };
+
+  if (_adminBillingEnabled) {
+    payload.billing = { saleCondition: document.getElementById('admin-bill-saleCondition').value };
+    for (const key of ['taxId', 'legalName', 'address', 'condition', 'currency']) payload.billing[key] = document.getElementById('admin-bill-' + key).value.trim();
+    try {
+      const amount = document.getElementById('admin-bill-amount').value.trim();
+      payload.billing.amount = amount ? parsePrice(amount) : null;
+    } catch (err) { return showToast(err.message, true); }
+  }
 
   if (!payload.name) return showToast('Falta el nombre comercial.', true);
   if (!editId) {
@@ -5206,8 +5331,17 @@ document.getElementById('admin-agency-delete-input')?.addEventListener('input', 
   document.getElementById('admin-agency-delete-confirm').disabled = e.target.value.trim() !== target;
 });
 
+document.getElementById('admin-billing-refresh')?.addEventListener('click', loadBillingInvoices);
 // Delegación para acciones en tablas
 document.addEventListener('click', e => {
+  const preview = e.target.closest('[data-billing-preview]');
+  if (preview) { previewBilling(preview.dataset.billingPreview); return; }
+  const pdf = e.target.closest('[data-billing-pdf]');
+  if (pdf) { downloadBillingPdf(pdf.dataset.billingPdf); return; }
+  const recover = e.target.closest('[data-billing-recover]');
+  if (recover) { const invoice = _billingInvoices.find(i => i.id === recover.dataset.billingRecover); if (invoice) runBilling('recover', invoice); return; }
+  const retry = e.target.closest('[data-billing-retry]');
+  if (retry) { const invoice = _billingInvoices.find(i => i.id === retry.dataset.billingRetry); if (invoice) confirmBilling(invoice, 'retry'); return; }
   const edit = e.target.closest('[data-agency-edit]');
   if (edit) { openEditAgency(edit.dataset.agencyEdit); return; }
   const suspend = e.target.closest('[data-agency-suspend]');

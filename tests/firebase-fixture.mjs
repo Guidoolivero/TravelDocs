@@ -11,6 +11,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
   ]);
   if (missing) docs.delete('users/user');
   const calls = [];
+  const added = [];
   const clock = { now: Date.now() };
   class TestDate extends Date { static now() { return clock.now; } }
   const tokens = new Map(['admin', 'user'].map(uid => [uid, {
@@ -68,7 +69,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       async set(value, options) { docs.set(path, mergeFields(options?.merge ? docs.get(path) : {}, value)); },
       async update(value) { docs.set(path, mergeFields(docs.get(path), value)); },
       async delete() { docs.delete(path); },
-      async add() {},
+      async add(value) { added.push([path, structuredClone(value)]); },
     };
   }
   const firestore = () => ({
@@ -104,7 +105,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
     return module.exports;
   }
   return {
-    docs, calls, sdkAuth, tokens, accounts, clock,
+    docs, calls, added, sdkAuth, tokens, accounts, clock,
     recordUsage: body => load(new URL('../netlify/functions/_usage.cjs', import.meta.url)).recordUsage(body),
     request: (path, body, method = 'GET', query = {}) => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: method, path: `/.netlify/functions/admin-api${path}`, headers: { authorization: 'Bearer admin' }, body: JSON.stringify(body), queryStringParameters: query }),
     invoke: (name, body = {}, actor = 'admin', httpMethod = 'POST') => load(new URL(`../netlify/functions/${name}.cjs`, import.meta.url)).handler({ httpMethod, path: `/.netlify/functions/${name}`, headers: { authorization: `Bearer ${actor}` }, body: JSON.stringify(body) }),

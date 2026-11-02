@@ -477,5 +477,15 @@ if (!HAS_EMULATOR) {
       const db = testEnv.unauthenticatedContext().firestore();
       await assertFails(settingsDoc(db, AGENCY_A, 'gdsCities').set({ items: [] }));
     });
+    for (const role of ['owner', 'admin', 'agent']) {
+      it(`${role} no accede a datos fiscales, tickets ni reservas del facturador`, async () => {
+        const db = authAs(ROLE_UID[role], AGENCY_A, role).firestore();
+        for (const collection of ['billingProfiles', 'billingInvoices', 'billingAttempts', 'billingStore', 'billingLocks', 'billingSecrets']) {
+          const ref = db.collection(collection).doc('prueba');
+          await assertFails(ref.get());
+          await assertFails(ref.set({ value: 'no permitido' }));
+        }
+      });
+    }
   });
 }
