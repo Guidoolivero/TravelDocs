@@ -163,7 +163,10 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [ ] Produccion: certificado, punto de venta y configuracion con autorizacion aparte.
 - [x] Usuario confirma el 2 de noviembre que Valdes y Transitar siguen pendientes
   de facturar noviembre. Preparados clave local separada y CSR de produccion,
-  fuera del repo. El usuario debe obtener el certificado en ARCA.
+  fuera del repo.
+- [x] Certificado de produccion recibido el 2 de noviembre: CUIT y clave publica
+  coinciden con la solicitud y la clave local. Vence el 1 de noviembre de 2028.
+  Copia privada guardada fuera del repo; falta autorizar wsfe y verificar acceso.
 - [ ] Asociar certificado a wsfe, confirmar punto de venta y completar habilitacion
   tecnica y publicacion. La rama sigue bloqueando produccion; no cambiar solo
   una variable para intentar emitir. Guia: docs/FACTURADOR-PRODUCCION.md.

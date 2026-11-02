@@ -2,7 +2,11 @@
 
 Estado al 2 de noviembre de 2026: habilitacion pendiente. El usuario confirmo
 que las facturas de noviembre de Valdes y Transitar siguen pendientes.
-El certificado usado hasta ahora pertenece a homologacion.
+El certificado de produccion ya fue obtenido y verificado localmente: coincide
+con el CUIT del emisor y con la clave preparada. Vence el 1 de noviembre de 2028.
+Se guardo una copia privada en ~/.traveldocs-arca-produccion/certificado.pem.
+Todavia falta asociarlo a wsfe y verificar el acceso; las emisiones realizadas
+hasta ahora pertenecen a homologacion.
 
 Esta guia prepara el acceso. No habilita por si sola la emision real: el codigo
 de la rama sigue restringido a ARCA test y Firebase aislado. La conexion,
