@@ -5,13 +5,16 @@ que las facturas de noviembre de Valdes y Transitar siguen pendientes.
 El certificado de produccion ya fue obtenido y verificado localmente: coincide
 con el CUIT del emisor y con la clave preparada. Vence el 1 de noviembre de 2028.
 Se guardo una copia privada en ~/.traveldocs-arca-produccion/certificado.pem.
-Todavia falta asociarlo a wsfe y verificar el acceso; las emisiones realizadas
-hasta ahora pertenecen a homologacion.
+El usuario ya lo asocio a wsfe. El acceso a produccion se verifico mediante
+una consulta de solo lectura: la lista de puntos de venta vino vacia. Falta
+verificar o dar de alta el punto de venta Webservices. Todas las emisiones
+realizadas hasta ahora pertenecen a homologacion.
 
 Esta guia prepara el acceso. No habilita por si sola la emision real: el codigo
 de la rama sigue restringido a ARCA test y Firebase aislado. La conexion,
 configuracion, prueba completa y publicacion deben completarse antes de emitir.
-Main y los servicios de produccion no se modificaron durante estas pruebas.
+Main, Firebase y Netlify de produccion siguen sin cambios. El usuario genero
+y autorizo el certificado en ARCA; solo se realizaron consultas de lectura.
 
 ## Certificado
 

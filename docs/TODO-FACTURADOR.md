@@ -167,8 +167,10 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] Certificado de produccion recibido el 2 de noviembre: CUIT y clave publica
   coinciden con la solicitud y la clave local. Vence el 1 de noviembre de 2028.
   Copia privada guardada fuera del repo; falta autorizar wsfe y verificar acceso.
-- [ ] Asociar certificado a wsfe, confirmar punto de venta y completar habilitacion
-  tecnica y publicacion. La rama sigue bloqueando produccion; no cambiar solo
+- [x] Usuario asocio el certificado a Facturacion Electronica. Acceso a wsfe de
+  produccion verificado con consulta de solo lectura el 2 de noviembre. La consulta
+  de puntos de venta devolvio una lista vacia; falta verificar/crear el punto.
+- [ ] Confirmar punto de venta y completar habilitacion tecnica y publicacion. La rama sigue bloqueando produccion; no cambiar solo
   una variable para intentar emitir. Guia: docs/FACTURADOR-PRODUCCION.md.
 - [ ] Definir corte inicial y meses ya facturados a mano para evitar duplicarlos.
 - [ ] Definir backups, renovacion de certificados y operacion de correcciones reales.
