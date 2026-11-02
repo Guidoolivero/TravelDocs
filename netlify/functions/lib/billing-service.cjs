@@ -5,11 +5,13 @@ const { billingInvoice, billingProfileForPeriod, validateBillingProfile } = requ
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const clean = value => JSON.parse(JSON.stringify(value));
 const version = snap => snap.updateTime ? `${snap.updateTime.seconds}:${snap.updateTime.nanoseconds}` : null;
-function createBillingService({ db, client, store, issuer, salesPoint, today, abortSignal }) {
+function createBillingService({ db, client, store, issuer, salesPoint, today, abortSignal, environment = 'test' }) {
+  if (!['test', 'production'].includes(environment)) throw Object.assign(new Error('Ambiente de facturacion invalido.'), { status: 503 });
   const invoices = db.collection('billingInvoices');
   async function get(id) {
     const doc = await invoices.doc(id).get();
     if (!doc.exists) throw Object.assign(new Error('Factura no encontrada.'), { status: 404 });
+    if ((doc.data().environment || 'test') !== environment) throw Object.assign(new Error('La factura pertenece a otro ambiente.'), { status: 409 });
     return { id: doc.id, ...doc.data() };
   }
   async function arcaOperation(id, operation) {
@@ -38,12 +40,13 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
     get,
     async preview(agencyId, { saleCondition } = {}) {
       const data = await prepare(agencyId, saleCondition);
-      const id = digest([issuer.taxId, salesPoint, agencyId, data.period]);
+      const obligation = [issuer.taxId, salesPoint, agencyId, data.period];
+      const id = digest(environment === 'test' ? obligation : [environment, ...obligation]);
       return store.withLock(`monthly:${id}`, async () => {
         const existing = (await invoices.doc(id).get()).data();
         if (existing && !['draft', 'rejected'].includes(existing.status)) return { id, ...existing };
         const attempt = (existing?.attempt || 1) + (existing?.status === 'rejected' ? 1 : 0);
-        const saved = clean({ ...data, sourceDigest: data.digest, digest: digest([data.digest, attempt]), attempt, status: 'draft', idempotencyKey: `traveldocs:test:${id}:${attempt}` });
+        const saved = clean({ ...data, environment, sourceDigest: data.digest, digest: digest([data.digest, attempt]), attempt, status: 'draft', idempotencyKey: `traveldocs:${environment}:${id}:${attempt}` });
         const batch = db.batch();
         if (existing?.status === 'rejected') batch.set(db.collection('billingAttempts').doc(`${id}-${existing.attempt}`), { ...existing, invoiceId: id });
         batch.set(invoices.doc(id), saved);

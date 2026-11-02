@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 const root = fileURLToPath(new URL('../', import.meta.url));
+const environment = process.env.BILLING_UI_ENVIRONMENT || 'test';
 const { chromium } = createRequire(import.meta.url)('playwright-core');
 const server = createServer(async (req, res) => {
   try {
@@ -19,7 +20,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = []; page.on('pageerror', e => errors.push(e.message));
 const agencies = Array.from({ length: 5 }, (_, i) => ({ id: 'prueba-' + i, name: 'Agencia de prueba ' + i, status: 'active', plan: 'trial', createdAt: '2026-10-21', billing: {}, billingStatus: { state: 'trial', trialEndsOn: '2026-11-20', firstPeriod: '2026-12' } }));
-const draft = { id: 'a'.repeat(64), digest: 'approved', agencyId: 'prueba-0', period: '2026-11', status: 'draft', receiver: { legalName: 'Agencia ficticia', taxId: '20123456786', address: 'Calle 1', condition: 'monotributo' }, input: { currency: 'ARS', date: '2026-11-02', items: [{ amount: 10000 }] } };
+const draft = { environment, id: 'a'.repeat(64), digest: 'approved', agencyId: 'prueba-0', period: '2026-11', status: 'draft', receiver: { legalName: 'Agencia ficticia', taxId: '20123456786', address: 'Calle 1', condition: 'monotributo' }, input: { currency: 'ARS', date: '2026-11-02', items: [{ amount: 10000 }] } };
 let saved, issues = 0, previews = 0, failPreview = true;
 await page.route('**/*', async route => {
   const u = new URL(route.request().url()), method = route.request().method();
@@ -27,7 +28,7 @@ await page.route('**/*', async route => {
   const json = value => route.fulfill({ headers: cors, contentType: 'application/json', body: JSON.stringify(value) });
   if (u.pathname.startsWith('/.netlify/')) {
     if (method === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (u.pathname.endsWith('/admin-api/agencies') && method === 'GET') return json({ billingEnabled: true, agencies });
+    if (u.pathname.endsWith('/admin-api/agencies') && method === 'GET') return json({ billingEnabled: true, billingEnvironment: environment, agencies });
     if (u.pathname.includes('/admin-api/agencies') && ['POST', 'PATCH'].includes(method)) { saved = route.request().postDataJSON(); return json({ ok: true }); }
     if (u.pathname.endsWith('/billing-pdf')) return json({ pdf: Buffer.from('%PDF-1.4\nfixture').toString('base64'), filename: 'prueba-factura-C-00001-00000001.pdf' });
     if (u.pathname.endsWith('/billing-api')) {
@@ -85,6 +86,9 @@ try {
   await page.locator('[data-billing-preview="prueba-0"]').click();
   await page.locator('#modal-confirm.open').waitFor();
   assert.equal(issues, 0);
+  assert.match(await page.locator('#modal-confirm').innerText(), environment === 'production' ? /Emitir factura real/ : /Emitir prueba/);
+  if (environment === 'production') assert.doesNotMatch(await page.locator('#modal-confirm').innerText(), /Sin valor fiscal/);
+  assert.match(await page.locator('#admin-billing-history').innerText(), environment === 'production' ? /Facturas reales/ : /homologacion/);
   assert.match(await page.locator('#confirm-text').innerText(), /Agencia ficticia/);
   assert.match(await page.locator('#confirm-text').innerText(), /Concepto: Servicios/);
   assert.match(await page.locator('#confirm-text').innerText(), /Condicion de venta: Cheque/);

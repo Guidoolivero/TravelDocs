@@ -4,17 +4,19 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { fixture } from './firebase-fixture.mjs';
 import { renderTravelDocsPdf } from '../netlify/functions/lib/invoice-pdf.cjs';
 const env = { BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185' };
-for (const currency of ['ARS', 'USD']) {
-  test(`PDF ${currency} se reproduce desde snapshot autorizado sin emitir`, async () => {
-    let printedIssuer, printedSaleCondition;
-    const f = fixture({ env, modules: { './lib/invoice-pdf.cjs': { renderTravelDocsPdf(doc, options) {
+for (const environment of ['test', 'production']) for (const currency of ['ARS', 'USD']) {
+  test(`PDF ${currency} ${environment} se reproduce desde snapshot autorizado sin emitir`, async () => {
+    let printedIssuer, printedSaleCondition, printedNotice;
+    const runtimeEnv = environment === 'test' ? env : { ...env, ARCA_ENVIRONMENT: 'production', CONTEXT: 'production', FIRESTORE_EMULATOR_HOST: '', BILLING_FIREBASE_PROJECT_ID: 'tradingdocs-mt', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"tradingdocs-mt"}', ARCA_TAX_ID: '20123456786', ARCA_SALES_POINT: '2', BILLING_PRODUCTION_CONFIRMATION: '20123456786:2' };
+    const f = fixture({ env: runtimeEnv, modules: { './lib/invoice-pdf.cjs': { renderTravelDocsPdf(doc, options) {
       printedIssuer = doc.issuer;
       printedSaleCondition = doc.saleConditions;
+      printedNotice = options.notice;
       return renderTravelDocsPdf(doc, options);
     } } } });
     const id = 'a'.repeat(64);
     const invoice = {
-      status: 'authorized',
+      status: 'authorized', environment,
       issuer: { legalName: 'Emisor ficticio', address: 'Calle Prueba 100', taxId: '20123456786', condition: 'monotributo', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' },
       receiver: { legalName: 'Agencia ficticia', address: 'Calle Prueba 200', ...(currency === 'USD' ? { saleCondition: 'Cuenta corriente' } : {}) },
       input: { items: [{ description: 'Servicio TravelDocs - 2026-11', quantity: 1, amount: 10000, unitPrice: '100.00' }] },
@@ -36,11 +38,14 @@ for (const currency of ['ARS', 'USD']) {
     const result = JSON.parse(response.body), pdf = Buffer.from(result.pdf, 'base64');
     assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
     assert.equal([...pdf.toString('latin1').matchAll(/\/Type\s*\/Page\b/g)].length, 1, 'Factura mensual en una hoja A4');
-    assert.match(result.filename, /^prueba-factura-C-/);
+    assert.equal(printedNotice, environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '');
+    assert.match(result.filename, environment === 'test' ? /^prueba-factura-C-/ : /^factura-C-/);
     assert.deepEqual(f.docs.get('billingInvoices/' + id), invoice);
+    f.docs.get('billingInvoices/' + id).environment = environment === 'test' ? 'production' : 'test';
+    assert.equal((await f.invoke('billing-pdf', { invoiceId: id })).statusCode, 409);
     if (process.env.BILLING_PDF_QA_DIR) {
       await mkdir(process.env.BILLING_PDF_QA_DIR, { recursive: true });
-      await writeFile(`${process.env.BILLING_PDF_QA_DIR}/${currency}.pdf`, pdf);
+      await writeFile(`${process.env.BILLING_PDF_QA_DIR}/${environment}-${currency}.pdf`, pdf);
     }
   });
 }

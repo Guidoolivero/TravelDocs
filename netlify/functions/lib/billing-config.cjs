@@ -1,15 +1,21 @@
-// Esta rama solo permite pruebas: una variable no puede habilitar ARCA produccion.
-function assertBillingSandbox(env = process.env) {
+function assertBillingEnvironment(env = process.env) {
+  // Netlify no inyecta CONTEXT en Functions: el bundle fija el contexto al compilar.
+  const context = typeof BILLING_BUILD_CONTEXT === 'string' ? BILLING_BUILD_CONTEXT : env.CONTEXT;
   let project;
   try { project = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT || '{}').project_id; } catch {}
-  if (env.BILLING_ENABLED !== 'true' || env.ARCA_ENVIRONMENT !== 'test' ||
-      !project || project === 'tradingdocs-mt' || project !== env.BILLING_FIREBASE_PROJECT_ID ||
-      (project.startsWith('demo-') && !env.FIRESTORE_EMULATOR_HOST)) {
-    throw Object.assign(new Error('Facturador deshabilitado: requiere ARCA test y Firebase de pruebas aislado.'), { status: 503 });
+  const matchingProject = project && project === env.BILLING_FIREBASE_PROJECT_ID;
+  if (env.BILLING_ENABLED === 'true' && matchingProject) {
+    if (env.ARCA_ENVIRONMENT === 'test' && project !== 'tradingdocs-mt' &&
+        (!project.startsWith('demo-') || env.FIRESTORE_EMULATOR_HOST)) return 'test';
+    const point = Number(env.ARCA_SALES_POINT);
+    if (env.ARCA_ENVIRONMENT === 'production' && project === 'tradingdocs-mt' &&
+        context === 'production' && !env.FIRESTORE_EMULATOR_HOST &&
+        /^\d{11}$/.test(env.ARCA_TAX_ID || '') && Number.isInteger(point) && point >= 1 && point <= 99998 &&
+        env.BILLING_PRODUCTION_CONFIRMATION === `${env.ARCA_TAX_ID}:${point}`) return 'production';
   }
-  return project;
+  throw Object.assign(new Error('Facturador deshabilitado: revisar el ambiente, proyecto y habilitacion de facturacion.'), { status: 503 });
 }
 function billingEnabled() {
-  try { assertBillingSandbox(); return true; } catch { return false; }
+  try { assertBillingEnvironment(); return true; } catch { return false; }
 }
-module.exports = { assertBillingSandbox, billingEnabled };
+module.exports = { assertBillingEnvironment, billingEnabled };

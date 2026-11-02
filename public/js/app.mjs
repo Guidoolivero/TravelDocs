@@ -4528,6 +4528,7 @@ window.resetImport = function() {
 let _adminTab = 'agencies';
 let _adminAgencies = [];
 let _adminBillingEnabled = false;
+let _adminBillingEnvironment = 'test';
 document.getElementById('admin-bill-saleCondition').innerHTML = SALE_CONDITIONS.map(value => `<option>${esc(value)}</option>`).join('');
 let _adminMembers = [];
 let _adminUsersFilter = '';
@@ -4586,6 +4587,9 @@ async function loadAgencies() {
     const json = await adminFetch('/agencies');
     _adminAgencies = json.agencies || [];
     _adminBillingEnabled = json.billingEnabled === true;
+    _adminBillingEnvironment = json.billingEnvironment === 'production' ? 'production' : 'test';
+    document.getElementById('admin-billing-title').textContent = _adminBillingEnvironment === 'production' ? 'Facturas reales' : 'Facturas de homologacion';
+    document.getElementById('admin-billing-environment').textContent = _adminBillingEnvironment === 'production' ? 'Produccion: los comprobantes emitidos tienen validez fiscal.' : 'Comprobantes de prueba, sin valor fiscal.';
     document.getElementById('admin-billing-fields').hidden = !_adminBillingEnabled;
     document.querySelector('[data-admin-tab="billing"]').hidden = !_adminBillingEnabled;
     document.getElementById('admin-billing-history').hidden = !_adminBillingEnabled;
@@ -4630,7 +4634,7 @@ async function loadBillingInvoices() {
       ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Revisar y emitir'}</button>` : ''}
       ${['issuing', 'indeterminate'].includes(invoice.status) ? `<button class="btn btn-ghost btn-sm" data-billing-recover="${esc(invoice.id)}">Consultar ARCA</button>` : ''}
       ${invoice.status === 'indeterminate' && invoice.outcome?.lookup?.kind === 'not_found' ? `<button class="btn btn-ghost btn-sm" data-billing-retry="${esc(invoice.id)}">Reintentar</button>` : ''}</td></tr>`).join('');
-    message.textContent = _billingInvoices.length ? '' : 'Todavia no hay facturas de prueba.';
+    message.textContent = _billingInvoices.length ? '' : 'Todavia no hay facturas en este entorno.';
   } catch (err) { message.textContent = 'No se pudo actualizar el historial.'; showBillingError(err); }
 }
 
@@ -4645,11 +4649,12 @@ async function previewBilling(agencyId) {
 }
 
 function confirmBilling(invoice, action) {
+  const real = invoice.environment === 'production';
   showConfirmDialog({
-    title: 'Confirmar factura C de prueba',
+    title: real ? 'Confirmar factura C real' : 'Confirmar factura C de prueba',
     message: `${invoice.receiver.legalName}, CUIT ${invoice.receiver.taxId}. ${invoice.receiver.address}. Condicion: ${invoice.receiver.condition}. Concepto: Servicios. Condicion de venta: ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
-    subtext: `Desde, hasta y vencimiento: ${fmtDate(invoice.input.date)}. ${invoice.quotation ? `Cotizacion ARCA: ${invoice.quotation.rate}, fecha ${invoice.quotation.date}. Pago en USD.` : ''} Sin valor fiscal.`,
-    confirmLabel: action === 'retry' ? 'Confirmar reintento' : 'Emitir prueba',
+    subtext: `Punto de venta: ${invoice.input.salesPoint || ''}. Desde, hasta y vencimiento: ${fmtDate(invoice.input.date)}. ${invoice.quotation ? `Cotizacion ARCA: ${invoice.quotation.rate}, fecha ${invoice.quotation.date}. Pago en USD.` : ''} ${real ? 'Se solicitara a ARCA una factura con validez fiscal.' : 'Sin valor fiscal.'}`,
+    confirmLabel: action === 'retry' ? 'Confirmar reintento' : real ? 'Emitir factura real' : 'Emitir prueba',
     onConfirm: () => runBilling(action, invoice),
   });
 }

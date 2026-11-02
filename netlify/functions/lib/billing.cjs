@@ -11,13 +11,13 @@ function trialDates(createdOn) {
 
 module.exports = { trialDates };
 
-function billingStatus(agency, profile = {}, today, enabledOn) {
+function billingStatus(agency, profile = {}, today, enabledOn, initialPeriod) {
   const dates = trialDates(agency?.createdOn);
   const missing = ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount'].filter(key => !profile[key]);
   if (dates && enabledOn) {
     const start = new Date(`${enabledOn}T12:00:00Z`);
     start.setUTCMonth(start.getUTCMonth() + 1, 1);
-    const firstPeriod = start.toISOString().slice(0, 7);
+    const firstPeriod = initialPeriod || start.toISOString().slice(0, 7);
     if (firstPeriod > dates.firstPeriod) dates.firstPeriod = firstPeriod;
   }
   let state;
@@ -80,9 +80,21 @@ function billingRecord(profile, previous, today) {
     const price = { period, amount: profile.amount, currency: profile.currency };
     if (index < 0) prices.push(price); else prices[index] = price;
   }
-  return { profile, prices, enabledOn: complete ? previous?.enabledOn || today : null };
+  return { profile, prices, enabledOn: complete ? previous?.enabledOn || today : null,
+    ...(complete && previous?.enabledOn && previous?.initialPeriod ? { initialPeriod: previous.initialPeriod } : {}) };
 }
 module.exports.billingRecord = billingRecord;
+
+// Solo para incorporar agencias ya facturadas fuera del sistema; no lo acepta el formulario.
+function initialBillingRecord(input, agency, period, today) {
+  if (period !== today.slice(0, 7) || !trialDates(today)) throw invalid('El corte inicial debe ser el mes actual.');
+  const profile = validateBillingProfile(input);
+  const record = { profile, enabledOn: today, initialPeriod: period,
+    prices: [{ period, amount: profile.amount ?? null, currency: profile.currency || '' }] };
+  if (billingStatus(agency, profile, today, record.enabledOn, period).state !== 'ready') throw invalid('La agencia no esta habilitada para el corte inicial.');
+  return record;
+}
+module.exports.initialBillingRecord = initialBillingRecord;
 
 function billingProfileForPeriod(record, period) {
   const price = (record.prices || []).filter(p => p.period <= period).sort((a, b) => b.period.localeCompare(a.period))[0];
@@ -94,7 +106,7 @@ function billingInvoice({ agency, record, period, today, salesPoint, quotation }
   if (period !== today.slice(0, 7)) throw invalid('Solo se puede emitir el mes actual.');
   if (!Number.isInteger(salesPoint) || salesPoint < 1 || salesPoint > 99998) throw invalid('Punto de venta invalido.');
   const profile = validateBillingProfile(billingProfileForPeriod(record, period));
-  if (!record.enabledOn || billingStatus(agency, profile, today, record.enabledOn).state !== 'ready') {
+  if (!record.enabledOn || billingStatus(agency, profile, today, record.enabledOn, record.initialPeriod).state !== 'ready') {
     throw invalid('La agencia no esta habilitada para facturar este mes.');
   }
   if (profile.currency === 'USD' && (quotation?.currencyId !== 'DOL' || !Number.isFinite(quotation.rate) || quotation.rate <= 0 || !/^\d{8}$/.test(quotation.date) || quotation.date >= today.replaceAll('-', ''))) {

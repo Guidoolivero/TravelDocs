@@ -1,8 +1,9 @@
 # TODO del facturador TravelDocs
 
 Actualizado: 2026-11-02.
-Estado: circuito manual implementado y probado en homologacion; pendiente revision
-del panel y preparacion de un entorno navegable con Firebase aislado.
+Estado: circuito manual probado en homologacion y modo produccion preparado en
+la rama. ARCA real verificada por consultas; carga, prueba conectada y publicacion
+pendientes. No se emitieron comprobantes reales.
 Rama: `codex/facturador`.
 Base: `05dccb1b6059ecc2a0e58b805876f0e8453cfa94`.
 
@@ -38,7 +39,8 @@ Una rama o un preview no aislan Firebase ni los correos por si solos.
 
 - [x] Worktree separado y rama `codex/facturador`; checkout original preservado.
 - [x] Workflow de deploy condicionado a main; ningun push ni deploy ejecutado.
-- [x] Bloqueo de facturacion salvo ARCA test y Firebase de pruebas configurado.
+- [x] Homologacion aislada de Firebase real. Produccion requiere proyecto, emisor,
+  punto y confirmacion explicitos, sin emulador y con bundle de produccion.
 - [x] Emulador demo-billing y navegador con servicios interceptados.
 - [ ] Preparar Firebase y administradores de prueba para un preview navegable.
   El frontend conserva su configuracion existente; no usarlo contra produccion.
@@ -137,15 +139,17 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 440 pruebas aprobadas en Node 22.
-- [x] Emulador de facturacion: 18 pruebas aprobadas (store y servicio).
+- [x] Suite general: 448 pruebas aprobadas en Node 22.
+- [x] Emulador de facturacion: 20 pruebas aprobadas (store, servicio e importacion inicial).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.
 - [x] Navegador facturador: ficha parcial, prueba gratuita, importe, confirmacion y PDF.
 - [x] Build de frontend, bundle Functions y carga del renderer PDF verificados.
 - [x] Revision local de seguridad y ponytail del diff.
 - [x] Hallmark aplicado al area tocada. El chequeo global sigue con fallos previos
-  de la app; no se restileo el producto para resolverlos.
+  de la app; no se restileo el producto para resolverlos. En esta vuelta el render
+  de Hallmark no encontro puppeteer-core; la interfaz se verifico con el smoke
+  de Chrome en ambos ambientes simulados y sus capturas.
 - [x] Guia de operacion y limites: `docs/FACTURADOR-HOMOLOGACION.md`.
 - [x] Guardar commit local solo en `codex/facturador`.
 - [x] Usuario aprobo los PDFs, incluida marca TravelDocs y ejemplo con sus datos fiscales.
@@ -160,19 +164,34 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 8. Fuera de esta etapa
 
-- [ ] Produccion: certificado, punto de venta y configuracion con autorizacion aparte.
+- [x] Produccion: certificado autorizado y punto 00002 creados por el usuario.
+- [ ] Configuracion y publicacion con autorizacion aparte.
 - [x] Usuario confirma el 2 de noviembre que Valdes y Transitar siguen pendientes
   de facturar noviembre. Preparados clave local separada y CSR de produccion,
   fuera del repo.
 - [x] Certificado de produccion recibido el 2 de noviembre: CUIT y clave publica
   coinciden con la solicitud y la clave local. Vence el 1 de noviembre de 2028.
-  Copia privada guardada fuera del repo; falta autorizar wsfe y verificar acceso.
+  Copia privada guardada fuera del repo; wsfe autorizado y acceso verificado.
 - [x] Usuario asocio el certificado a Facturacion Electronica. Acceso a wsfe de
   produccion verificado con consulta de solo lectura el 2 de noviembre. La consulta
-  de puntos de venta devolvio una lista vacia; falta verificar/crear el punto.
-- [ ] Confirmar punto de venta y completar habilitacion tecnica y publicacion. La rama sigue bloqueando produccion; no cambiar solo
-  una variable para intentar emitir. Guia: docs/FACTURADOR-PRODUCCION.md.
-- [ ] Definir corte inicial y meses ya facturados a mano para evitar duplicarlos.
+  inicial vino vacia. Tras el alta, devolvio el punto 2 habilitado. Proximo numero C: 1;
+  cotizacion consultada: 1534, fecha 20261030. Consultas sin reserva ni emision.
+- [x] Modo produccion implementado con guardas, SDK configurado por ambiente,
+  obligaciones y claves separadas. Snapshots viejos sin ambiente siguen siendo test.
+  Panel y confirmacion distinguen factura real; PDF real sin leyenda de homologacion.
+- [x] Credenciales reales previstas en billingSecrets/production, solo Admin SDK,
+  para evitar el limite de 4 KB de variables de Lambda. Aislamiento testeado.
+- [x] Corte inicial confirmado: Valdes y Transitar desde 2026-11, sin retroactivos.
+  Importador con simulacion por defecto y transaccion sin sobrescrituras; probado
+  solo con agencias ficticias del emulador. Mantener CUIT en Ingresos Brutos.
+- [x] Ids y fechas contrastados en el panel autenticado, sin guardar credenciales.
+  Usuario confirma los importes de noviembre. Manifiesto y emisor preparados solo
+  en archivos privados temporales, con datos fiscales de los snapshots previos.
+- [ ] Validar nuevamente el manifiesto contra el backend y aplicar el corte con
+  autorizacion de activacion. No se escribieron fichas de produccion.
+- [ ] Respaldar y cargar credenciales y tickets WSAA locales al store definitivo.
+- [ ] Configurar, probar circuito conectado y publicar con autorizacion.
+  Guia: docs/FACTURADOR-PRODUCCION.md.
 - [ ] Definir backups, renovacion de certificados y operacion de correcciones reales.
 - [ ] Primera factura real revisada manualmente; no emitir pruebas reales.
 - [ ] Cron: acordar dia habil, horario, feriados y tratamiento de pendientes.

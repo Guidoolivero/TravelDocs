@@ -37,6 +37,43 @@ async function setup(client) {
   return { service, ref, draft: await service.preview(id) };
 }
 
+test('pruebas y produccion tienen obligaciones distintas y no recuperan el otro ambiente', async () => {
+  const { service: sandbox, ref, draft: testDraft } = await setup({});
+  const keys = [];
+  const production = createBillingService({ db, environment: 'production',
+    client: { preview: input => input, issue: async (input, options) => { keys.push(options.idempotencyKey); return { kind: 'authorized' }; } },
+    store: createBillingStore(db), issuer: { taxId: '20123456786' }, salesPoint: 1, today: () => '2026-11-02' });
+  const realDraft = await production.preview(ref.id);
+  assert.notEqual(realDraft.id, testDraft.id);
+  assert.equal(realDraft.environment, 'production');
+  await assert.rejects(production.get(testDraft.id), /ambiente/);
+  await assert.rejects(production.issue(testDraft.id, testDraft.digest), /ambiente/);
+  await assert.rejects(sandbox.get(realDraft.id), /ambiente/);
+  await production.issue(realDraft.id, realDraft.digest);
+  assert.equal(keys.length, 1);
+  assert.match(keys[0], /^traveldocs:production:/);
+  assert.equal((await sandbox.get(testDraft.id)).status, 'draft');
+});
+
+test('importacion inicial es simulacion por defecto y aplica una sola vez sin emitir', async () => {
+  const { importInitialBilling } = await import('../scripts/import-initial-billing.mjs');
+  const agencyId = randomUUID();
+  await db.collection('agencies').doc(agencyId).set({ status: 'active', createdAt: new Date('2026-08-01T12:00:00Z') });
+  const manifest = { period: '2026-11', agencies: [{ agencyId, profile: { taxId: '20123456786', legalName: 'Ficticia', address: 'Calle 1', condition: 'monotributo', currency: 'ARS', amount: 6000000 } }] };
+  const options = { today: '2026-11-02' };
+  const result = await importInitialBilling(db, manifest, options);
+  assert.equal(result[0].firstPeriod, '2026-11');
+  assert.equal((await db.collection('billingProfiles').doc(agencyId).get()).exists, false);
+  await importInitialBilling(db, manifest, { ...options, apply: true });
+  const saved = (await db.collection('billingProfiles').doc(agencyId).get()).data();
+  assert.equal(saved.initialPeriod, '2026-11');
+  assert.equal(saved.enabledOn, '2026-11-02');
+  await assert.rejects(importInitialBilling(db, manifest, { ...options, apply: true }), /ficha/);
+  const invoices = await db.collection('billingInvoices').where('agencyId', '==', agencyId).get();
+  assert.equal(invoices.size, 0);
+  await assert.rejects(importInitialBilling(db, { ...manifest, agencies: [...manifest.agencies, ...manifest.agencies] }, options), /repetida/);
+});
+
 test('suspender despues de preview bloquea emision y preview cambiado exige confirmar otra vez', async () => {
   let calls = 0;
   const { service, ref, draft } = await setup({ issue: async () => { calls++; return { kind: 'authorized' }; } });

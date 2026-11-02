@@ -24,7 +24,7 @@ const { findUidByEmail, linkUserToAgency } = require('./lib/tenant-helpers.cjs')
 const { canDeleteAgency, canDeleteUser, validateUserPatch } = require('./lib/admin-validators.cjs');
 
 const { validateBillingProfile, billingStatus, billingRecord } = require('./lib/billing.cjs');
-const { assertBillingSandbox, billingEnabled } = require('./lib/billing-config.cjs');
+const { assertBillingEnvironment, billingEnabled } = require('./lib/billing-config.cjs');
 
 const SLUG_RE = /^[a-z0-9-]{3,40}$/;
 const VALID_ROLES = ['owner', 'admin', 'agent'];
@@ -154,17 +154,17 @@ async function listAgencies() {
       branding: data.branding || {},
       alerts: data.alerts || {},
       createdAt: createdAtIso(data.createdAt),
-      ...(billing ? { billing, billingStatus: billingStatus({ ...data, createdOn: createdAtIso(data.createdAt) }, billing, createdAtIso(Date.now()), record.enabledOn) } : {}),
+      ...(billing ? { billing, billingStatus: billingStatus({ ...data, createdOn: createdAtIso(data.createdAt) }, billing, createdAtIso(Date.now()), record.enabledOn, record.initialPeriod) } : {}),
     });
   }
-  return reply(200, { agencies, billingEnabled: billingEnabled() });
+  return reply(200, { agencies, billingEnabled: billingEnabled(), billingEnvironment: billingEnabled() ? assertBillingEnvironment() : null });
 }
 
 async function createAgency(event, adminAuth) {
   const b = body(event);
   if (!b) return reply(400, { error: 'Body inválido (JSON requerido).' });
 
-  if (b.billing !== undefined) assertBillingSandbox();
+  if (b.billing !== undefined) assertBillingEnvironment();
   const billing = b.billing === undefined ? undefined : validateBillingProfile(b.billing);
 
   const slug = (b.slug || '').trim().toLowerCase();
@@ -201,7 +201,7 @@ async function updateAgency(agencyId, event, adminAuth) {
   const b = body(event);
   if (!b) return reply(400, { error: 'Body inválido (JSON requerido).' });
 
-  if (b.billing !== undefined) assertBillingSandbox();
+  if (b.billing !== undefined) assertBillingEnvironment();
   const billing = b.billing === undefined ? undefined : validateBillingProfile(b.billing);
   const ref = db().collection('agencies').doc(agencyId);
   const snap = await ref.get();

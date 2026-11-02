@@ -91,3 +91,25 @@ test('condicion de venta valida una opcion y conserva transferencia por defecto'
   assert.throws(() => validateBillingProfile({ saleCondition: 'Inventada' }));
   assert.throws(() => validateBillingProfile({ saleCondition: ['Contado', 'Cheque'] }));
 });
+
+test('incorporacion inicial permite el mes confirmado sin falsear fecha de alta ni habilitacion', async () => {
+  const { initialBillingRecord, billingInvoice, billingRecord, billingProfileForPeriod } = await import('../netlify/functions/lib/billing.cjs');
+  const agency = { createdOn: '2026-08-01', status: 'active' };
+  const profile = { taxId: '20123456786', legalName: 'Ficticia', address: 'Calle 1', condition: 'responsable_inscripto', currency: 'ARS', amount: 6000000 };
+  const record = initialBillingRecord(profile, agency, '2026-11', '2026-11-02');
+  assert.equal(record.enabledOn, '2026-11-02');
+  assert.equal(record.initialPeriod, '2026-11');
+  const args = { agency, record, period: '2026-11', today: '2026-11-02', salesPoint: 2 };
+  assert.equal(billingInvoice(args).items[0].amount, 6000000);
+  assert.throws(() => billingInvoice({ ...args, period: '2026-10' }), /actual/);
+  const changed = billingRecord({ ...profile, amount: 7000000 }, record, '2026-11-15');
+  assert.equal(changed.initialPeriod, '2026-11');
+  assert.equal(billingProfileForPeriod(changed, '2026-11').amount, 6000000);
+  assert.equal(billingProfileForPeriod(changed, '2026-12').amount, 7000000);
+  for (const [data, period, receiver] of [
+    [agency, '2026-10', profile], [agency, '2026-12', profile],
+    [{ ...agency, createdOn: '2026-10-21' }, '2026-11', profile],
+    [{ ...agency, status: 'suspended' }, '2026-11', profile],
+    [{ status: 'active' }, '2026-11', profile], [agency, '2026-11', {}],
+  ]) assert.throws(() => initialBillingRecord(receiver, data, period, '2026-11-02'));
+});

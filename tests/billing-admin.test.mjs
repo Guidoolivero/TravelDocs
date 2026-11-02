@@ -66,3 +66,20 @@ test('recrear slug no hereda ficha fiscal de una agencia eliminada', async () =>
   const agency = JSON.parse((await f.request('/agencies')).body).agencies.find(a => a.id === 'nueva');
   assert.equal(agency.billing.legalName, undefined);
 });
+
+test('reactivar una agencia incorporada no reutiliza el mes inicial y cliente no puede adelantarlo', async () => {
+  const f = fixture({ env });
+  f.clock.now = Date.parse('2026-11-15T15:00:00Z');
+  f.docs.set('agencies/otra', { createdAt: '2026-08-01', status: 'active' });
+  const profile = { taxId: '20123456786', legalName: 'Ficticia', address: 'Calle 1', condition: 'monotributo', currency: 'ARS', amount: 10000 };
+  f.docs.set('billingProfiles/otra', { profile, enabledOn: '2026-11-02', initialPeriod: '2026-11', prices: [{ period: '2026-11', amount: 10000, currency: 'ARS' }] });
+  const before = JSON.parse((await f.request('/agencies')).body).agencies.find(a => a.id === 'otra');
+  assert.equal(before.billingStatus.state, 'ready');
+  assert.equal((await f.agency('otra', { billing: { ...profile, initialPeriod: '2026-11' } })).statusCode, 400);
+  await f.agency('otra', { status: 'suspended' });
+  await f.agency('otra', { status: 'active' });
+  const after = JSON.parse((await f.request('/agencies')).body).agencies.find(a => a.id === 'otra');
+  assert.equal(after.billingStatus.firstPeriod, '2026-12');
+  assert.equal(after.billingStatus.state, 'scheduled');
+  assert.equal(f.docs.get('billingProfiles/otra').initialPeriod, undefined);
+});
