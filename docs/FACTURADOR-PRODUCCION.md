@@ -53,7 +53,7 @@ se verifico contra esa solicitud. Nunca subir la clave a un repositorio ni a pub
 
 ## Configuracion tecnica
 
-La activacion necesita estas variables de Functions, solo en contexto production:
+La activacion necesita estas variables disponibles en Functions, solo en contexto production:
 
 - BILLING_ENABLED=true y ARCA_ENVIRONMENT=production.
 - BILLING_FIREBASE_PROJECT_ID=tradingdocs-mt y service account del mismo proyecto.
@@ -62,6 +62,15 @@ La activacion necesita estas variables de Functions, solo en contexto production
   numero sin guiones. No activa envios ni cron.
 - BILLING_ISSUER_JSON con legalName, address, grossIncome y activitiesStartDate
   revisados. El campo grossIncome conserva el CUIT, por indicacion del usuario.
+
+El plan actual de Netlify rechaza limitar variables al scope Functions (403).
+El usuario autorizo usar los scopes estandar para estas siete variables el
+2 de noviembre. Los valores se guardaron solo en production y se verificaron
+mediante lectura posterior de la API. CUIT, confirmacion y datos del emisor
+son legibles desde la administracion de Netlify. Certificado y clave privada
+permanecen exclusivamente en billingSecrets/production.
+Despues de cambiar variables hay que volver a desplegar; un deploy anterior
+no recibe automaticamente la nueva configuracion.
 
 El bundle fija BILLING_BUILD_CONTEXT al valor de CONTEXT durante la compilacion.
 No depende de que CONTEXT exista en Functions: Netlify no lo ofrece alli.

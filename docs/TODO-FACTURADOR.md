@@ -215,7 +215,9 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
   en archivos privados temporales, con datos fiscales de los snapshots previos.
 - [x] Manifiesto validado contra el backend y corte inicial aplicado sin sobrescrituras.
 - [x] Respaldo privado, carga de credenciales y traspaso de un ticket WSAA a Firestore.
-- [x] Variables de Functions configuradas solo en production; ARCA consultada con ese store.
+- [x] Siete variables verificadas mediante API, solo en production. El usuario
+  autorizo scopes estandar: limitar a Functions devolvia 403 en su plan.
+  Certificado y clave permanecen en Firestore privado.
 - [x] Reproducir fallo de entrada PDF: wrapper CommonJS heredaba type=module.
   Excluir solo package.json de raiz del artefacto NFT, sin reescribir bundle ni debug id.
   Smoke de empaquetado agregado al workflow: carga entrada real y exige 401 sin token.
