@@ -79,6 +79,20 @@ test('injectMatrizVisas: parada tecnica y origen no reciben tarjetas', () => {
   assert.equal(data.ruta[1].requisitos.length, 0);
 });
 
+test('injectMatrizSanidad: vuelo a EEUU muestra la declaracion de ebola, no fiebre amarilla', () => {
+  const data = { ruta: [stop('ARG', 'origen'), stop('USA')] };
+  injectMatrizSanidad(data, 'Argentina (ARG)');
+  const reqs = data.ruta[1].requisitos;
+  assert.equal(reqs.length, 1);
+  assert.equal(reqs[0].categoria, 'declaracion_salud');
+  assert.match(reqs[0].nombre, /declaraci[oó]n jurada/i);
+  assert.doesNotMatch(reqs[0].nombre, /fiebre amarilla/i);
+  assert.match(reqs[0].descripcion, /declaracion jurada|attestation/i);
+  assert.doesNotMatch(reqs[0].descripcion, /fiebre amarilla/i);
+  assert.equal(reqs[0].obligatorio, true);
+  assert.equal(reqs[0].url_oficial, 'https://www.cdc.gov/port-health/legal-authorities/attestation-order.html');
+});
+
 test('injectMatrizSanidad: argentino a Jamaica exige fiebre amarilla', () => {
   const data = { ruta: [stop('JAM')] };
   injectMatrizSanidad(data, 'Argentina (ARG)');
