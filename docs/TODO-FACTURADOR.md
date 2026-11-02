@@ -6,6 +6,7 @@ la rama. ARCA real verificada por consultas; carga, prueba conectada y publicaci
 pendientes. No se emitieron comprobantes reales.
 Rama: `codex/facturador`.
 Base: `05dccb1b6059ecc2a0e58b805876f0e8453cfa94`.
+Integrada en esta rama la correccion `9f9bf71` de main, sin modificar main.
 
 ## Alcance
 
@@ -139,7 +140,7 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 448 pruebas aprobadas en Node 22.
+- [x] Suite general: 449 pruebas aprobadas en Node 22, incluida la correccion de main.
 - [x] Emulador de facturacion: 20 pruebas aprobadas (store, servicio e importacion inicial).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.
