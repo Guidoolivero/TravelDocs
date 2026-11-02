@@ -141,7 +141,12 @@ para verificar el contenido fiscal y se genera el QR desde el comprobante
 autorizado, sin usar el PNG de demostracion de la maqueta.
 
 El renderer se empaqueta como dependencia externa y las fuentes se incluyen
-explicitamente en la Function. Se probo la generacion desde el artefacto Netlify
+explicitamente en la Function. En produccion, NFT traza las dependencias sin
+reescribir el bundle ya instrumentado por Sentry. El paquete incluye tambien los
+archivos de fuentes dinamicas de pdfkit y las dependencias de inyeccion de Sentry;
+su ausencia se detecto y corrigio en una prueba del artefacto con Netlify CLI 27.12.1.
+Se comprobo que el archivo compilado conserva exactamente sus bytes y debug id.
+No se enviaron eventos a Sentry real durante esa prueba. Se probo la generacion desde el artefacto Netlify
 con Node 22, incluidos fuentes y QR. La factura mensual ARS y USD ocupa una
 hoja A4; el contenido fiscal se conserva y la fecha de vencimiento del CAE
 se imprime en 12 puntos. Esta plantilla esta limitada a facturas C del abono.

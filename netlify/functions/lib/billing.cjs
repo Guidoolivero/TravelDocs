@@ -72,13 +72,16 @@ module.exports.invalid = invalid;
 function billingRecord(profile, previous, today) {
   const complete = ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount'].every(key => profile[key]);
   const prices = [...(previous?.prices || [])];
-  if (complete && (profile.amount !== previous?.profile?.amount || profile.currency !== previous?.profile?.currency)) {
+  if (complete) {
     const start = new Date(`${today}T12:00:00Z`);
     start.setUTCMonth(start.getUTCMonth() + 1, 1);
     const period = start.toISOString().slice(0, 7);
-    const index = prices.findIndex(price => price.period === period);
-    const price = { period, amount: profile.amount, currency: profile.currency };
-    if (index < 0) prices.push(price); else prices[index] = price;
+    const scheduled = billingProfileForPeriod(previous || {}, period);
+    if (profile.amount !== scheduled.amount || profile.currency !== scheduled.currency) {
+      const index = prices.findIndex(price => price.period === period);
+      const price = { period, amount: profile.amount, currency: profile.currency };
+      if (index < 0) prices.push(price); else prices[index] = price;
+    }
   }
   return { profile, prices, enabledOn: complete ? previous?.enabledOn || today : null,
     ...(complete && previous?.enabledOn && previous?.initialPeriod ? { initialPeriod: previous.initialPeriod } : {}) };

@@ -5,6 +5,7 @@ const { createBillingStore } = require('./lib/billing-store.cjs');
 const { createBillingService } = require('./lib/billing-service.cjs');
 const { createArcaClient } = require('facturas');
 const { billingErrorText } = require('../../public/js/billing-feedback.mjs');
+const { auditBilling } = require('./lib/billing-audit.cjs');
 
 const reply = (statusCode, body) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 exports.handler = async event => {
@@ -44,9 +45,12 @@ exports.handler = async event => {
     const client = createArcaClient({ taxId: issuer.taxId, certificatePem: credentials.certificatePem, privateKeyPem: credentials.privateKeyPem, environment, store, timeout: 15000, retries: 0, logger: { disabled: true } });
     const service = createBillingService({ db, client, store, issuer, salesPoint, abortSignal, environment,
       today: () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date()) });
+    const fiscalAction = ['issue', 'recover', 'retry'].includes(body.action);
+    if (fiscalAction) await auditBilling(db, auth, `billing-${body.action}`, await service.get(body.invoiceId), 'requested');
     const result = body.action === 'preview' ? await service.preview(body.agencyId, { saleCondition: body.saleCondition })
       : body.action === 'get' ? await service.get(body.invoiceId)
       : await service.issue(body.invoiceId, body.digest, { retry: body.action === 'retry', recoverOnly: body.action === 'recover' });
+    if (fiscalAction) await auditBilling(db, auth, `billing-${body.action}`, result);
     return reply(200, result);
   } catch (err) {
     if (!err?.status) console.error('billing-api', { code: err?.code || 'BILLING_ERROR', name: err?.name });
@@ -54,3 +58,4 @@ exports.handler = async event => {
     return reply(status, { error: billingErrorText(err) });
   }
 };
+exports.handler = require('./_sentry.cjs').wrapHandler(exports.handler);

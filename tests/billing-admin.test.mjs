@@ -83,3 +83,26 @@ test('reactivar una agencia incorporada no reutiliza el mes inicial y cliente no
   assert.equal(after.billingStatus.state, 'scheduled');
   assert.equal(f.docs.get('billingProfiles/otra').initialPeriod, undefined);
 });
+
+test('panel no habilita el mes si falta tarifa vigente o enabledOn aunque la ficha este completa', async () => {
+  const f = fixture({ env });
+  f.clock.now = Date.parse('2026-11-02T15:00:00Z');
+  f.docs.set('agencies/otra', { createdAt: '2026-01-01', status: 'active' });
+  const profile = { taxId: '20123456786', legalName: 'Prueba', address: 'Calle 1', condition: 'monotributo', currency: 'ARS', amount: 6000000 };
+  for (const record of [
+    { profile, enabledOn: '2026-10-20', prices: [] },
+    { profile, enabledOn: null, prices: [{ period: '2026-11', amount: 6000000, currency: 'ARS' }] },
+  ]) {
+    f.docs.set('billingProfiles/otra', record);
+    const agency = JSON.parse((await f.request('/agencies')).body).agencies.find(a => a.id === 'otra');
+    assert.equal(agency.billingStatus.state, 'incomplete');
+  }
+});
+
+test('auditoria identifica cambio fiscal sin copiar los datos de la ficha', async () => {
+  const f = fixture({ env });
+  await f.agency('agency', { billing: { legalName: 'Razon social privada' } });
+  const entry = f.added.find(([collection, data]) => collection === 'auditLogs' && data.action === 'update-agency')[1];
+  assert.ok(entry.details.changes.includes('billing'));
+  assert.doesNotMatch(JSON.stringify(entry), /Razon social privada/);
+});

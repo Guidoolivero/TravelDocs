@@ -106,6 +106,10 @@ try {
   await page.locator('[data-billing-pdf]').click();
   assert.equal((await downloading).suggestedFilename(), 'prueba-factura-C-00001-00000001.pdf');
   assert.equal(issues, 1, 'Descargar no vuelve a emitir');
+  await page.locator('[data-billing-preview="prueba-0"]').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('ya esta autorizada'));
+  assert.equal(await page.locator('#modal-confirm.open').count(), 0);
+  assert.equal(issues, 1, 'Consultar factura emitida no vuelve a confirmar ni emitir');
   if (process.env.BILLING_UI_SCREENSHOT) await page.screenshot({ path: process.env.BILLING_UI_SCREENSHOT, fullPage: true });
   assert.deepEqual(errors, []);
   console.log('Billing UI: ficha parcial, centavos, cinco pruebas gratis y confirmacion de emision OK');

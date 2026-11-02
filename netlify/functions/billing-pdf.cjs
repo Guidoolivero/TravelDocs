@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const { requirePlatformAdmin, initAdmin } = require('./_platform-admin.cjs');
 const { assertBillingEnvironment } = require('./lib/billing-config.cjs');
 const { buildVoucherDocument } = require('facturas');
+const { auditBilling } = require('./lib/billing-audit.cjs');
 const reply = (statusCode, body) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 exports.handler = async event => {
   const auth = await requirePlatformAdmin(event);
@@ -23,8 +24,10 @@ exports.handler = async event => {
       observations: invoice.outcome.authorization?.observations || [], saleConditions: invoice.receiver.saleCondition || 'Transferencia bancaria' });
     const { renderTravelDocsPdf } = require('./lib/invoice-pdf.cjs');
     const pdf = await renderTravelDocsPdf(doc, { period: invoice.period, notice: environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '' });
+    await auditBilling(admin.firestore(), auth, 'billing-pdf', { ...invoice, id: snap.id });
     return reply(200, { pdf: Buffer.from(pdf).toString('base64'), filename: `${environment === 'test' ? 'prueba-' : ''}factura-C-${doc.number}.pdf` });
   } catch (err) {
     return reply(err.status === 503 ? 503 : 500, { error: err.status === 503 ? err.message : 'No se pudo generar el PDF. La factura guardada se conserva; no volver a emitir.' });
   }
 };
+exports.handler = require('./_sentry.cjs').wrapHandler(exports.handler);

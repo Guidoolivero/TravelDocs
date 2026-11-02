@@ -23,7 +23,7 @@ const { requirePlatformAdmin, initAdmin } = require('./_platform-admin.cjs');
 const { findUidByEmail, linkUserToAgency } = require('./lib/tenant-helpers.cjs');
 const { canDeleteAgency, canDeleteUser, validateUserPatch } = require('./lib/admin-validators.cjs');
 
-const { validateBillingProfile, billingStatus, billingRecord } = require('./lib/billing.cjs');
+const { validateBillingProfile, billingStatus, billingRecord, billingProfileForPeriod } = require('./lib/billing.cjs');
 const { assertBillingEnvironment, billingEnabled } = require('./lib/billing-config.cjs');
 
 const SLUG_RE = /^[a-z0-9-]{3,40}$/;
@@ -139,11 +139,15 @@ function serializeMember(doc, agencyId, agencyName) {
 async function listAgencies() {
   const snap = await db().collection('agencies').get();
   const agencies = [];
+  const today = createdAtIso(Date.now());
   for (const doc of snap.docs) {
     const data = doc.data() || {};
     const membersSnap = await db().collection('agencies').doc(doc.id).collection('members').get();
     const record = billingEnabled() ? (await db().collection('billingProfiles').doc(doc.id).get()).data() || {} : undefined;
     const billing = record ? record.profile || {} : undefined;
+    const agency = { ...data, createdOn: createdAtIso(data.createdAt) };
+    let status = billing && billingStatus(agency, record.enabledOn ? billing : {}, today, record.enabledOn, record.initialPeriod);
+    if (status?.state === 'ready') status = billingStatus(agency, billingProfileForPeriod(record, today.slice(0, 7)), today, record.enabledOn, record.initialPeriod);
     agencies.push({
       id: doc.id,
       name: data.name || '',
@@ -154,7 +158,7 @@ async function listAgencies() {
       branding: data.branding || {},
       alerts: data.alerts || {},
       createdAt: createdAtIso(data.createdAt),
-      ...(billing ? { billing, billingStatus: billingStatus({ ...data, createdOn: createdAtIso(data.createdAt) }, billing, createdAtIso(Date.now()), record.enabledOn, record.initialPeriod) } : {}),
+      ...(billing ? { billing, billingStatus: status } : {}),
     });
   }
   return reply(200, { agencies, billingEnabled: billingEnabled(), billingEnvironment: billingEnabled() ? assertBillingEnvironment() : null });
@@ -234,7 +238,7 @@ async function updateAgency(agencyId, event, adminAuth) {
       tx.set(billingRef, billingRecord(billing ?? previous?.profile ?? {}, reactivated ? { ...previous, enabledOn: null } : previous, createdAtIso(Date.now())));
     }
   });
-  await audit(adminAuth, 'update-agency', { agencyId, changes: Object.keys(patch) });
+  await audit(adminAuth, 'update-agency', { agencyId, changes: [...Object.keys(patch), ...(billing !== undefined ? ['billing'] : [])] });
   return reply(200, { ok: true });
 }
 

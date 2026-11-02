@@ -21,12 +21,12 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
       throw err;
     }
   }
-  async function prepare(agencyId, saleCondition) {
+  async function prepare(agencyId, saleCondition, date = today()) {
     const agencySnap = await db.collection('agencies').doc(agencyId).get();
     const recordSnap = await db.collection('billingProfiles').doc(agencyId).get();
     const agency = agencySnap.data();
     const record = recordSnap.data() || {};
-    const date = today(), period = date.slice(0, 7);
+    const period = date.slice(0, 7);
     const createdAt = agency?.createdAt?.toDate?.() ?? agency?.createdAt;
     const createdOn = createdAt ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date(createdAt)) : '';
     const receiver = billingProfileForPeriod(record, period);
@@ -39,12 +39,14 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
   return {
     get,
     async preview(agencyId, { saleCondition } = {}) {
-      const data = await prepare(agencyId, saleCondition);
-      const obligation = [issuer.taxId, salesPoint, agencyId, data.period];
+      if (saleCondition !== undefined) validateBillingProfile({ saleCondition });
+      const date = today();
+      const obligation = [issuer.taxId, salesPoint, agencyId, date.slice(0, 7)];
       const id = digest(environment === 'test' ? obligation : [environment, ...obligation]);
       return store.withLock(`monthly:${id}`, async () => {
         const existing = (await invoices.doc(id).get()).data();
         if (existing && !['draft', 'rejected'].includes(existing.status)) return { id, ...existing };
+        const data = await prepare(agencyId, saleCondition, date);
         const attempt = (existing?.attempt || 1) + (existing?.status === 'rejected' ? 1 : 0);
         const saved = clean({ ...data, environment, sourceDigest: data.digest, digest: digest([data.digest, attempt]), attempt, status: 'draft', idempotencyKey: `traveldocs:${environment}:${id}:${attempt}` });
         const batch = db.batch();

@@ -41,6 +41,10 @@ for (const environment of ['test', 'production']) for (const currency of ['ARS',
     assert.equal(printedNotice, environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '');
     assert.match(result.filename, environment === 'test' ? /^prueba-factura-C-/ : /^factura-C-/);
     assert.deepEqual(f.docs.get('billingInvoices/' + id), invoice);
+    const audit = f.added.find(([collection, data]) => collection === 'auditLogs' && data.action === 'billing-pdf')[1];
+    assert.equal(audit.details.invoiceId, id);
+    assert.equal(audit.details.environment, environment);
+    assert.doesNotMatch(JSON.stringify(audit), /Emisor ficticio|Agencia ficticia|Calle Prueba/);
     f.docs.get('billingInvoices/' + id).environment = environment === 'test' ? 'production' : 'test';
     assert.equal((await f.invoke('billing-pdf', { invoiceId: id })).statusCode, 409);
     if (process.env.BILLING_PDF_QA_DIR) {

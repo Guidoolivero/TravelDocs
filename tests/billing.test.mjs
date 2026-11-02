@@ -57,6 +57,29 @@ test('precio nuevo rige al mes siguiente sin cambiar el pendiente actual', async
   assert.equal(billingProfileForPeriod(again, '2026-12').amount, 15000);
 });
 
+test('completar ficha parcial conserva el precio cargado y permite emitir el mes siguiente', async () => {
+  const { billingRecord, billingInvoice } = await import('../netlify/functions/lib/billing.cjs');
+  const partial = { taxId: '20123456786', legalName: 'Prueba', condition: 'monotributo', currency: 'ARS', amount: 6000000 };
+  const before = billingRecord(partial, null, '2026-10-15');
+  const record = billingRecord({ ...partial, address: 'Calle 1' }, before, '2026-10-20');
+  const invoice = billingInvoice({ agency: { status: 'active', createdOn: '2026-01-01' }, record, period: '2026-11', today: '2026-11-02', salesPoint: 1 });
+  assert.equal(record.enabledOn, '2026-10-20');
+  assert.equal(invoice.items[0].amount, 6000000);
+  assert.equal(invoice.currency, 'ARS');
+});
+
+test('recompletar ficha corrige precio futuro sin modificar el precio del mes actual', async () => {
+  const { billingRecord, billingProfileForPeriod } = await import('../netlify/functions/lib/billing.cjs');
+  const profile = { taxId: '20123456786', legalName: 'Prueba', address: 'Calle 1', condition: 'monotributo', currency: 'ARS', amount: 6000000 };
+  const original = billingRecord(profile, null, '2026-09-20');
+  const increased = billingRecord({ ...profile, amount: 8000000 }, original, '2026-11-05');
+  const partial = billingRecord({ ...profile, address: '' }, increased, '2026-11-06');
+  const restored = billingRecord(profile, partial, '2026-11-07');
+  assert.equal(billingProfileForPeriod(restored, '2026-11').amount, 6000000);
+  assert.equal(billingProfileForPeriod(restored, '2026-12').amount, 6000000);
+  assert.equal(restored.enabledOn, '2026-11-07');
+});
+
 test('solicitud C usa precio del mes, servicio de un dia y bloquea retroactivos', async () => {
   const { billingRecord, billingInvoice } = await import('../netlify/functions/lib/billing.cjs');
   const profile = { taxId: '20123456786', legalName: 'Prueba', address: 'Calle 1', condition: 'responsable_inscripto', currency: 'ARS', amount: 6000000 };

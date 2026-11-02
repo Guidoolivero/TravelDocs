@@ -7,4 +7,3 @@ export function parsePrice(value) {
   if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('El importe debe ser mayor a cero.');
   return amount;
 }
-

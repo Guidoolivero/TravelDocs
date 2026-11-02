@@ -240,3 +240,29 @@ test('error de ARCA deja aviso persistido sin secretos y recuperar lo limpia sin
   assert.equal(recovered.lastError, null);
   assert.equal(sends, 1);
 });
+
+test('preview de factura ya enviada devuelve su estado sin volver a pedir cotizacion', async () => {
+  let quotes = 0, unavailable = false;
+  const { service, ref } = await setup({
+    wsfe: { getQuotation: async () => {
+      quotes++;
+      if (unavailable) throw new Error('ARCA sin conexion');
+      return { currencyId: 'DOL', rate: 1500, date: '20261030' };
+    } },
+    issue: async () => ({ kind: 'authorized' }),
+  });
+  const fiscal = db.collection('billingProfiles').doc(ref.id);
+  const record = (await fiscal.get()).data();
+  await fiscal.set(billingRecord({ ...record.profile, currency: 'USD' }, null, '2026-09-20'));
+  const draft = await service.preview(ref.id);
+  await service.issue(draft.id, draft.digest);
+  const before = quotes;
+  unavailable = true;
+  for (const state of ['authorized', 'issuing', 'indeterminate', 'conflict']) {
+    await db.collection('billingInvoices').doc(draft.id).update({ status: state });
+    const existing = await service.preview(ref.id);
+    assert.equal(existing.id, draft.id);
+    assert.equal(existing.status, state);
+  }
+  assert.equal(quotes, before);
+});

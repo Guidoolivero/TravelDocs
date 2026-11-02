@@ -4643,7 +4643,12 @@ async function previewBilling(agencyId) {
   try {
     const saleCondition = document.querySelector(`[data-billing-condition="${CSS.escape(agencyId)}"]`)?.value;
     const invoice = await billingRequest({ action: 'preview', agencyId, saleCondition });
-    if (invoice.status !== 'draft') { await loadBillingInvoices(); return; }
+    if (invoice.status !== 'draft') {
+      if (invoice.status === 'authorized') showToast(`La factura de ${invoice.period} ya esta autorizada. Descargala desde el historial.`);
+      else showBillingError({ error: billingOutcomeText(invoice) || 'Ya existe un intento para este mes. Revisa su estado en el historial.' });
+      await loadBillingInvoices();
+      return;
+    }
     confirmBilling(invoice, 'issue');
   } catch (err) { showBillingError(err); }
 }

@@ -40,6 +40,11 @@
   included_files = ["netlify/functions/lib/invoice-fonts/**", "netlify/functions/lib/invoice-assets/**"]
 
 [context.production.functions."billing-pdf"]
-  node_bundler = "esbuild"
-  external_node_modules = ["@react-pdf/renderer"]
-  included_files = ["netlify/functions/lib/invoice-fonts/**", "netlify/functions/lib/invoice-assets/**"]
+  # Traza dependencias sin reescribir el bundle ni su debug id de Sentry.
+  node_bundler = "nft"
+  included_files = [
+    "netlify/functions/lib/invoice-fonts/**", "netlify/functions/lib/invoice-assets/**",
+    "node_modules/pdfkit/js/standard-fonts/**",
+    "node_modules/@sentry/server-runtime-injection/**", "node_modules/@sentry/server-utils/**",
+    "node_modules/@sentry/core/**", "node_modules/@sentry/conventions/**", "node_modules/@opentelemetry/api/**"
+  ]

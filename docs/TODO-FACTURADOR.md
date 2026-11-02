@@ -140,8 +140,8 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 449 pruebas aprobadas en Node 22, incluida la correccion de main.
-- [x] Emulador de facturacion: 20 pruebas aprobadas (store, servicio e importacion inicial).
+- [x] Suite general: 454 pruebas aprobadas en Node 22, incluidas las regresiones del PR.
+- [x] Emulador de facturacion: 21 pruebas aprobadas (store, servicio e importacion inicial).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.
 - [x] Navegador facturador: ficha parcial, prueba gratuita, importe, confirmacion y PDF.
@@ -162,6 +162,31 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
   Prueba de teclado, guardado parcial, confirmacion y descarga aprobadas.
 - [ ] Revision del panel actualizado por el usuario en esa demo. No sustituye una prueba completa
   con Firebase aislado y ARCA homologacion desde el navegador antes de publicar.
+
+## Revision del PR #4
+
+- [x] Reproducir y corregir completar ficha parcial sin cambiar el precio: se
+  compara la tarifa programada del siguiente mes, no solo el ultimo formulario.
+- [x] Corregir tarifa futura desactualizada al recompletar una ficha; conservar
+  el precio pendiente del mes actual.
+- [x] El panel exige habilitacion y tarifa vigente para mostrar listo para emitir.
+- [x] Preview revisa el intento mensual dentro del lock antes de pedir cotizacion.
+  Autorizadas o en consulta devuelven su snapshot sin nueva llamada a ARCA.
+- [x] Aviso al consultar una factura ya autorizada; los intentos pendientes muestran
+  su estado. No se abre otra confirmacion ni se emite de nuevo.
+- [x] Auditoria de cambio fiscal y de emision, consulta, reintento y descarga: actor,
+  id y estado, sin datos fiscales, claves ni digest. Fallo auxiliar no interrumpe
+  la operacion fiscal. Ambas Functions usan el wrapper existente de Sentry.
+- [x] PDF productivo empaquetado con NFT para conservar el bundle y debug id de
+  Sentry. Assets dinamicos de pdfkit y dependencias de inyeccion de Sentry incluidos.
+  Paquete probado con Netlify CLI 27.12.1, renderer y PDF A4; bundle byte por byte
+  identico al generado antes de empaquetar. Sin envio de eventos a Sentry real.
+- [x] Quitar linea vacia sobrante en billing-form.mjs.
+- Se conserva billingProfiles al eliminar una agencia: las comprobaciones de
+  existencia bloquean nuevas emisiones y recrear el slug reinicia la ficha.
+  No se altero esa politica de retencion durante la correccion.
+- direct-messages.test.mjs es previo al facturador y sigue fuera de este cambio.
+  La licencia original de IBM Plex conserva sus finales CRLF.
 
 ## 8. Fuera de esta etapa
 
