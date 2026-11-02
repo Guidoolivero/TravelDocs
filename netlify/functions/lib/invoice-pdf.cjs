@@ -1,7 +1,8 @@
 const { createElement: h } = require('react');
-const { Document, Page, View: V, Text: T, Image, Svg, Path, Polygon, Font, StyleSheet, renderToBuffer } = require('@react-pdf/renderer');
+const { Document, Page, View: V, Text: T, Image, Svg, Path, Polygon, Defs, LinearGradient, Stop, Font, StyleSheet, renderToBuffer } = require('@react-pdf/renderer');
 const QRCode = require('qrcode');
 const path = require('node:path');
+const logo = path.join(process.cwd(), 'netlify/functions/lib/invoice-assets/traveldocs-editorial.png');
 
 // Fuentes locales: el PDF no depende de Google Fonts ni de imagenes remotas.
 for (const [family, file, weight] of [
@@ -9,15 +10,12 @@ for (const [family, file, weight] of [
   ['Plex Condensed', 'IBMPlexSansCondensed-Bold.ttf', 700],
 ]) Font.register({ family, src: path.join(process.cwd(), 'netlify/functions/lib/invoice-fonts', file), fontWeight: weight });
 Font.registerHyphenationCallback(word => [word]);
-const c = { ink: '#102b4e', soft: '#30465f', navy: '#092a50', blue: '#124b86', teal: '#0c8f91', coral: '#ff6846', yellow: '#ffb14a', white: '#ffffff', line: '#dbe4ea', wash: '#f2f6f8', sky: '#d9f1f1', header: '#174b73', outline: '#7990a8', footer: '#fbfcfc', recipient: '#f7fcfc', operation: '#fffaf8' };
+const c = { ink: '#102b4e', soft: '#30465f', navy: '#092a50', blue: '#124b86', teal: '#0c8f91', coral: '#ff6846', yellow: '#ffb14a', white: '#ffffff', line: '#dbe4ea', wash: '#f2f6f8', sky: '#d9f1f1', headerLight: '#eaf5f5', headerShade: '#bddade', outline: '#7990a8', footer: '#fbfcfc', recipient: '#f7fcfc', operation: '#fffaf8' };
 const s = StyleSheet.create({
   page: { fontFamily: 'Plex', fontSize: 9, color: c.ink, paddingBottom: 126 },
   row: { flexDirection: 'row', alignItems: 'center' },
   ribbon: { height: 6, flexDirection: 'row' },
   header: { height: 104, backgroundColor: c.navy, paddingHorizontal: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  mark: { width: 34, height: 34, borderRadius: 10, backgroundColor: c.coral, alignItems: 'center', justifyContent: 'center' },
-  wordmark: { fontFamily: 'Plex Condensed', fontWeight: 700, fontSize: 21, color: c.white },
   title: { fontFamily: 'Plex Condensed', fontWeight: 700, fontSize: 23, color: c.white },
   letter: { width: 38, height: 43, border: `0.7 solid ${c.outline}`, borderRadius: 8, textAlign: 'center', paddingTop: 5, fontFamily: 'Plex Condensed', fontWeight: 700, fontSize: 25, color: c.white },
   kicker: { color: c.teal, fontSize: 6.8, fontWeight: 600, letterSpacing: 1.2, marginBottom: 5 },
@@ -80,8 +78,10 @@ async function renderTravelDocsPdf(doc, { period, notice = 'HOMOLOGACION - SIN V
     h(Page, { size: 'A4', style: s.page },
       h(V, { style: s.ribbon }, ...[[c.coral, '25%'], [c.yellow, '17%'], [c.teal, '30%'], [c.blue, '28%']].map(([backgroundColor, width]) => h(V, { key: backgroundColor, style: { backgroundColor, width } }))),
       h(V, { style: s.header },
-        h(Svg, { width: 230, height: 104, viewBox: '0 0 230 104', style: { position: 'absolute', left: 0, top: 0 } }, h(Polygon, { points: '0,0 230,0 155,104 0,104', fill: c.header })),
-        h(V, { style: s.brand }, h(V, { style: s.mark }, icon()), h(T, { style: s.wordmark }, 'Travel', h(T, { style: { color: c.coral } }, 'Docs'))),
+        h(Svg, { width: 270, height: 104, viewBox: '0 0 270 104', style: { position: 'absolute', left: 0, top: 0 } },
+          h(Defs, null, h(LinearGradient, { id: 'brandwash', x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, h(Stop, { offset: '0%', stopColor: c.headerLight }), h(Stop, { offset: '100%', stopColor: c.headerShade }))),
+          h(Polygon, { points: '0,0 270,0 190,104 0,104', fill: 'url(#brandwash)' })),
+        h(Image, { src: logo, style: { width: 180, height: 44 } }),
         h(V, { style: [s.row, { gap: 12 }] }, h(V, null, h(T, { style: s.letter }, doc.voucherClass), h(T, { style: { fontSize: 6.5, color: c.sky, marginTop: 4 } }, 'Codigo ' + doc.code)), h(V, null, h(T, { style: [s.kicker, { color: c.sky }] }, 'COMPROBANTE'), h(T, { style: s.title }, 'Factura'), h(T, { style: { color: c.sky, fontSize: 8, marginTop: 3, fontWeight: 600 } }, 'Nº ' + doc.number)))),
       h(V, { style: s.issuer }, h(V, { style: s.issuerMain }, h(T, { style: s.kicker }, 'EMISOR'), h(T, { style: [s.heading, { fontSize: 11, marginBottom: 4 }] }, doc.issuer.legalName), h(T, null, doc.issuer.address)),
         h(V, { style: s.issuerDetails }, detail('CUIT', taxId(doc.issuer.taxId)), detail('Ingresos Brutos', doc.issuer.grossIncome), detail('Inicio de actividades', date(doc.issuer.activitiesStartDate)), detail('Condicion fiscal', doc.issuer.conditionLegend))),
@@ -96,7 +96,7 @@ async function renderTravelDocsPdf(doc, { period, notice = 'HOMOLOGACION - SIN V
       h(V, { style: s.summary, wrap: false }, h(V, { style: s.payment }, h(T, { style: s.kicker }, 'FORMA DE PAGO'), h(T, { style: [s.heading, { fontSize: 11, marginBottom: 5 }] }, doc.saleConditions), h(T, { style: { fontSize: 8, color: c.soft } }, currency === 'USD' ? 'Comprobante emitido en dolares estadounidenses.' : 'Comprobante emitido en pesos argentinos.')),
         h(V, { style: s.totals }, row('Subtotal', doc.totals.subtotal), ...doc.totals.otherTaxes.map(tax => row(tax.description, tax.amount)), doc.totals.adjustment ? row('Ajuste', doc.totals.adjustment) : null, h(V, { style: [s.totalRow, s.grand] }, h(T, { style: s.bold }, 'Importe total'), h(T, { style: { fontFamily: 'Plex Condensed', fontWeight: 700, fontSize: 18, color: c.coral } }, h(T, { style: { fontSize: 8 } }, currency + ' '), formatInvoiceAmount(doc.totals.total))))),
       ...doc.legends.map((legend, index) => h(T, { key: index, style: { marginHorizontal: 36, marginTop: 8, fontSize: 8 } }, legend.text)),
-      h(V, { style: s.footer, fixed: true }, h(V, { style: s.brand }, h(V, { style: [s.mark, { width: 23, height: 23, borderRadius: 7 }] }, icon(c.white, 16)), h(V, null, h(T, { style: { fontFamily: 'Plex Condensed', fontWeight: 700, fontSize: 9 } }, 'TravelDocs'), h(T, { style: { color: c.teal, fontSize: 7, marginTop: 4 } }, 'traveldocs.com.ar'))),
+      h(V, { style: s.footer, fixed: true }, h(V, null, h(Image, { src: logo, style: { width: 110, height: 26.9 } }), h(T, { style: { color: c.teal, fontSize: 7, marginTop: 3, marginLeft: 2.5 } }, 'traveldocs.com.ar')),
         h(V, { style: s.footerFiscal }, h(Image, { src: qr, style: { width: 76, height: 76 } }), h(V, null, h(T, { style: [s.kicker, { fontSize: 6 }] }, 'COMPROBANTE AUTORIZADO'), h(T, { style: { fontSize: 9, fontWeight: 600 } }, 'C.A.E. Nº ' + doc.authorization.code), h(T, { style: s.footerDate }, 'Fecha Vto.: ' + date(doc.authorization.dueDate)))))));
   return renderToBuffer(tree);
 }

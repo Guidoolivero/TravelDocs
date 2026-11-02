@@ -1,6 +1,6 @@
 # TODO del facturador TravelDocs
 
-Actualizado: 2026-11-01.
+Actualizado: 2026-11-02.
 Estado: circuito manual implementado y probado en homologacion; pendiente revision
 del panel y preparacion de un entorno navegable con Firebase aislado.
 Rama: `codex/facturador`.
@@ -124,6 +124,9 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
   Fuentes IBM Plex locales con licencia; QR generado desde cada autorizacion.
   Valdes y Transitar regeneradas en una hoja A4 sin nueva emision.
   Campos fiscales verificados y renderer/fuentes probados en el paquete Netlify.
+- [x] Logo editorial provisto el 2 de noviembre: SVG original conservado y PNG
+  transparente de alta resolucion incluido en cabecera y pie. Fondo claro en
+  la cabecera, segun la captura; datos y autorizaciones fiscales sin cambios.
 - [x] Verificacion visual de PDFs ficticios ARS/USD y generacion con ARCA real test.
 - [x] Renderer como dependencia externa: verificada carga del artefacto Netlify.
 - [x] Procedimiento de correccion documentado; notas de credito probadas con SDK.

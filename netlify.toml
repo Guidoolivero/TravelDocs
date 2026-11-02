@@ -37,9 +37,9 @@
 [functions."billing-pdf"]
   node_bundler = "esbuild"
   external_node_modules = ["@react-pdf/renderer", "@sentry/node"]
-  included_files = ["netlify/functions/lib/invoice-fonts/**"]
+  included_files = ["netlify/functions/lib/invoice-fonts/**", "netlify/functions/lib/invoice-assets/**"]
 
 [context.production.functions."billing-pdf"]
   node_bundler = "esbuild"
   external_node_modules = ["@react-pdf/renderer"]
-  included_files = ["netlify/functions/lib/invoice-fonts/**"]
+  included_files = ["netlify/functions/lib/invoice-fonts/**", "netlify/functions/lib/invoice-assets/**"]

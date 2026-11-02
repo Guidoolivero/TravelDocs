@@ -128,6 +128,8 @@ npm run build:frontend
 La plantilla PDF reproduce el diseño aportado por el usuario en los archivos
 TravelDocsInvoice.tsx y la carpeta implementacion-html. Usa React PDF 4.9.0,
 con fuentes IBM Plex locales y su licencia en netlify/functions/lib/invoice-fonts.
+El logo editorial entregado por el usuario se conserva como SVG y PNG en
+netlify/functions/lib/invoice-assets, incluido en el paquete de la Function.
 No carga Google Fonts ni imagenes remotas. Se conserva buildVoucherDocument
 para verificar el contenido fiscal y se genera el QR desde el comprobante
 autorizado, sin usar el PNG de demostracion de la maqueta.
