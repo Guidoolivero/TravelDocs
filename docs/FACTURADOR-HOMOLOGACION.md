@@ -125,6 +125,15 @@ npm run test:billing:ui
 npm run build:frontend
 ```
 
-El renderer PDF se mantiene como dependencia externa al empaquetar su Function:
-inlinearlo rompe la carga de los assets de PDFKit. Se verifico la configuracion
-resuelta de Netlify y la carga del artefacto con Node 22.
+La plantilla PDF reproduce el diseño aportado por el usuario en los archivos
+TravelDocsInvoice.tsx y la carpeta implementacion-html. Usa React PDF 4.9.0,
+con fuentes IBM Plex locales y su licencia en netlify/functions/lib/invoice-fonts.
+No carga Google Fonts ni imagenes remotas. Se conserva buildVoucherDocument
+para verificar el contenido fiscal y se genera el QR desde el comprobante
+autorizado, sin usar el PNG de demostracion de la maqueta.
+
+El renderer se empaqueta como dependencia externa y las fuentes se incluyen
+explicitamente en la Function. Se probo la generacion desde el artefacto Netlify
+con Node 22, incluidos fuentes y QR. La factura mensual ARS y USD ocupa una
+hoja A4; el contenido fiscal se conserva y la fecha de vencimiento del CAE
+se imprime en 12 puntos. Esta plantilla esta limitada a facturas C del abono.

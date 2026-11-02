@@ -2,15 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fixture } from './firebase-fixture.mjs';
-import { renderVoucherPdf } from '@facturas/pdf';
+import { renderTravelDocsPdf } from '../netlify/functions/lib/invoice-pdf.cjs';
 const env = { BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185' };
 for (const currency of ['ARS', 'USD']) {
   test(`PDF ${currency} se reproduce desde snapshot autorizado sin emitir`, async () => {
     let printedIssuer, printedSaleCondition;
-    const f = fixture({ env, modules: { '@facturas/pdf': { renderVoucherPdf(doc, options) {
+    const f = fixture({ env, modules: { './lib/invoice-pdf.cjs': { renderTravelDocsPdf(doc, options) {
       printedIssuer = doc.issuer;
       printedSaleCondition = doc.saleConditions;
-      return renderVoucherPdf(doc, options);
+      return renderTravelDocsPdf(doc, options);
     } } } });
     const id = 'a'.repeat(64);
     const invoice = {
@@ -35,6 +35,7 @@ for (const currency of ['ARS', 'USD']) {
     assert.equal(printedIssuer.taxId, invoice.issuer.taxId);
     const result = JSON.parse(response.body), pdf = Buffer.from(result.pdf, 'base64');
     assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
+    assert.equal([...pdf.toString('latin1').matchAll(/\/Type\s*\/Page\b/g)].length, 1, 'Factura mensual en una hoja A4');
     assert.match(result.filename, /^prueba-factura-C-/);
     assert.deepEqual(f.docs.get('billingInvoices/' + id), invoice);
     if (process.env.BILLING_PDF_QA_DIR) {
@@ -43,3 +44,10 @@ for (const currency of ['ARS', 'USD']) {
     }
   });
 }
+
+test('importes del PDF conservan centavos sin redondeos intermedios', async () => {
+  const { formatInvoiceAmount } = await import('../netlify/functions/lib/invoice-pdf.cjs');
+  for (const [input, expected] of [[0, '0,00'], [1, '0,01'], [10000, '100,00'], [6000000, '60.000,00'], [-123456, '-1.234,56'], [999999999999, '9.999.999.999,99']]) {
+    assert.equal(formatInvoiceAmount(input), expected);
+  }
+});

@@ -55,7 +55,7 @@ Una rama o un preview no aislan Firebase ni los correos por si solos.
 
 ## 2. SDK y homologacion
 
-- [x] Fijar `facturas` y `@facturas/pdf` en 0.25.2; Node 22.
+- [x] Fijar `facturas` en 0.25.2; Node 22. Renderer propio con React PDF 4.9.0.
 - [x] Certificado, clave y autorizacion wsfe de homologacion verificados fuera del repo.
 - [x] Consultar tipos, numeracion y cotizacion; punto 1 verificado por emision.
   El listado de puntos devuelve vacio en homologacion; no se creo punto real.
@@ -119,8 +119,11 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
   El cambio puntual no modifica la ficha ni los PDF anteriores.
 - [x] Servicios fijado como concepto y visible en confirmacion. USD con cotizacion
   consultada a ARCA; no confundir la respuesta de homologacion con produccion.
-- [x] Paleta azul de TravelDocs aplicada al renderer PDF; regenerados los dos
-  comprobantes de homologacion anteriores sin nueva emision.
+- [x] Plantilla PDF adaptada al diseño aportado por el usuario (React y HTML):
+  franja de colores, marca con avion, cabecera azul, emisor, tarjetas, tabla y total.
+  Fuentes IBM Plex locales con licencia; QR generado desde cada autorizacion.
+  Valdes y Transitar regeneradas en una hoja A4 sin nueva emision.
+  Campos fiscales verificados y renderer/fuentes probados en el paquete Netlify.
 - [x] Verificacion visual de PDFs ficticios ARS/USD y generacion con ARCA real test.
 - [x] Renderer como dependencia externa: verificada carga del artefacto Netlify.
 - [x] Procedimiento de correccion documentado; notas de credito probadas con SDK.
@@ -128,7 +131,7 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 435 pruebas aprobadas en Node 22.
+- [x] Suite general: 436 pruebas aprobadas en Node 22.
 - [x] Emulador de facturacion: 17 pruebas aprobadas (store y servicio).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.

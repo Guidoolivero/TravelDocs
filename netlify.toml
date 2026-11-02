@@ -36,8 +36,10 @@
 # El renderer PDF conserva sus assets y modulos ESM originales.
 [functions."billing-pdf"]
   node_bundler = "esbuild"
-  external_node_modules = ["@facturas/pdf", "@sentry/node"]
+  external_node_modules = ["@react-pdf/renderer", "@sentry/node"]
+  included_files = ["netlify/functions/lib/invoice-fonts/**"]
 
 [context.production.functions."billing-pdf"]
   node_bundler = "esbuild"
-  external_node_modules = ["@facturas/pdf"]
+  external_node_modules = ["@react-pdf/renderer"]
+  included_files = ["netlify/functions/lib/invoice-fonts/**"]

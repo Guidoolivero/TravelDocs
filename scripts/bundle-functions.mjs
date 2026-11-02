@@ -32,7 +32,7 @@ await build({
   absWorkingDir: root,
   entryPoints: handlers.map((name) => path.join(srcDir, name)),
   bundle: true,
-  external: ["@facturas/pdf"],
+  external: ["@react-pdf/renderer"],
   platform: "node",
   format: "cjs",
   target: "node22",
