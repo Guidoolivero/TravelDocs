@@ -43,6 +43,8 @@
   # Traza dependencias sin reescribir el bundle ni su debug id de Sentry.
   node_bundler = "nft"
   included_files = [
+    # El wrapper billing-pdf.js usa CommonJS; no debe heredar type=module del repo.
+    "!package.json",
     "netlify/functions/lib/invoice-fonts/**", "netlify/functions/lib/invoice-assets/**",
     "node_modules/pdfkit/js/standard-fonts/**",
     "node_modules/@sentry/server-runtime-injection/**", "node_modules/@sentry/server-utils/**",
