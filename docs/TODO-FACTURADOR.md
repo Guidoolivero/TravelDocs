@@ -4,8 +4,8 @@ Actualizado: 2026-11-03.
 Estado: PR #4, #5 y #6 integrados; produccion configurada y ARCA consultada con
 el store definitivo. Vista previa PDF verificada con servicios simulados.
 No se emitieron comprobantes reales.
-Rama de correccion: `codex/facturador-pdf-preview`.
-Base: `6734fe288bebf46d2f0759cec5972a59edfbdb9b`.
+Rama de correccion: `codex/facturador-pdf-runtime`.
+Base: `c54cabbc2f44d24d30717933f30e368642de6452`.
 
 ## Alcance
 
@@ -147,12 +147,15 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
   la cabecera, segun la captura; datos y autorizaciones fiscales sin cambios.
 - [x] Verificacion visual de PDFs ficticios ARS/USD y generacion con ARCA real test.
 - [x] Renderer como dependencia externa: verificada carga del artefacto Netlify.
+- [x] Reproducir ERR_REQUIRE_ESM al generar el PDF con require de ESM deshabilitado,
+  como en Lambda Node 22. Cargar React PDF mediante import() y registrar fuentes
+  una vez. Regresion del renderer y arranque del paquete con esa restriccion.
 - [x] Procedimiento de correccion documentado; notas de credito probadas con SDK.
   No se agrego interfaz de notas de credito en esta etapa.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 459 pruebas aprobadas en Node 22, incluidas las regresiones del PDF.
+- [x] Suite general: 460 pruebas aprobadas en Node 22, incluidas las regresiones del PDF.
 - [x] Emulador de facturacion: 21 pruebas aprobadas (store, servicio e importacion inicial).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.

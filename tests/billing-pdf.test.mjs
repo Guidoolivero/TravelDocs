@@ -1,9 +1,26 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { fixture } from './firebase-fixture.mjs';
 import { renderTravelDocsPdf } from '../netlify/functions/lib/invoice-pdf.cjs';
 const env = { BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185' };
+test('renderer genera PDF con require de ESM deshabilitado como en Lambda', () => {
+  const source = `
+    import assert from 'node:assert/strict';
+    import { buildDraftDocument, renderTravelDocsPdf } from ${JSON.stringify(new URL('../netlify/functions/lib/invoice-pdf.cjs', import.meta.url).href)};
+    const invoice = {
+      issuer: { legalName: 'Emisor ficticio', taxId: '20123456786', address: 'Calle 100', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' },
+      receiver: { legalName: 'Agencia ficticia', taxId: '20123456786', address: 'Calle 200', condition: 'monotributo' },
+      input: { salesPoint: 2, date: '2026-11-03', currency: 'ARS', service: { from: '2026-11-03', to: '2026-11-03', dueDate: '2026-11-03' },
+        items: [{ description: 'Servicio TravelDocs', quantity: 1, amount: 10000, unitPrice: '100.00' }] },
+    };
+    const pdf = await renderTravelDocsPdf(buildDraftDocument(invoice), { period: '2026-11', draft: true });
+    assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
+  `;
+  const result = spawnSync(process.execPath, ['--no-experimental-require-module', '--input-type=module', '-e', source], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.error?.message || result.stderr);
+});
 for (const environment of ['test', 'production']) for (const currency of ['ARS', 'USD']) {
   test(`PDF ${currency} ${environment} se reproduce desde snapshot autorizado sin emitir`, async () => {
     let printedIssuer, printedSaleCondition, printedNotice;

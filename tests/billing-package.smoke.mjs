@@ -34,7 +34,7 @@ try {
       if (response.statusCode !== 401 || response.headers['Cache-Control'] !== 'no-store') throw new Error('Se esperaba 401 sin credenciales');
     } catch (error) { console.error(error.name + ': ' + error.message.split('\\n')[0]); process.exitCode = 1; }
   `;
-  const result = spawnSync(process.execPath, ['--input-type=module', '-e', probe], {
+  const result = spawnSync(process.execPath, ['--no-experimental-require-module', '--input-type=module', '-e', probe], {
     cwd: artifact.path, timeout: 30000,
     env: { ...process.env, SENTRY_DSN: 'https://disabled.invalid/0',
       FIREBASE_SERVICE_ACCOUNT: JSON.stringify({ project_id: 'demo-billing', client_email: 'qa@demo-billing.iam.gserviceaccount.com',
