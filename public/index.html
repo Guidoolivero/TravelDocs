@@ -1181,6 +1181,24 @@
   </div>
 </div>
 
+<dialog class="billing-preview-dialog" id="billing-preview-dialog" aria-labelledby="billing-preview-title" aria-describedby="billing-preview-summary">
+  <div class="modal-header">
+    <h2 class="modal-title" id="billing-preview-title">Vista previa de la factura</h2>
+    <form method="dialog"><button class="close-btn" aria-label="Cerrar vista previa">&times;</button></form>
+  </div>
+  <div class="billing-preview-body">
+    <p id="billing-preview-summary"></p>
+    <p id="billing-preview-status" role="status"></p>
+    <div id="billing-preview-canvas"></div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn btn-ghost" id="billing-preview-open" target="_blank" rel="noopener" hidden>Abrir PDF</a>
+    <a class="btn btn-ghost" id="billing-preview-download" hidden>Descargar borrador</a>
+    <form method="dialog"><button class="btn btn-ghost">Cancelar</button></form>
+    <button class="btn btn-danger" id="billing-preview-issue" disabled>Emitir factura real</button>
+  </div>
+</dialog>
+
 <!-- MODAL: CONFIRM DELETE -->
 <div class="modal-overlay" id="modal-confirm">
   <div class="modal" style="max-width:440px;">

@@ -1,12 +1,11 @@
 # TODO del facturador TravelDocs
 
-Actualizado: 2026-11-02.
-Estado: PR #4 aprobado e integrado; produccion configurada y ARCA consultada con
-el store definitivo. Pendiente verificar el panel tras corregir el arranque PDF.
+Actualizado: 2026-11-03.
+Estado: PR #4, #5 y #6 integrados; produccion configurada y ARCA consultada con
+el store definitivo. Vista previa PDF verificada con servicios simulados.
 No se emitieron comprobantes reales.
-Rama de correccion: `codex/facturador-pdf-startup`.
-Base: `05dccb1b6059ecc2a0e58b805876f0e8453cfa94`.
-Integrada en esta rama la correccion `9f9bf71` de main, sin modificar main.
+Rama de correccion: `codex/facturador-pdf-preview`.
+Base: `6734fe288bebf46d2f0759cec5972a59edfbdb9b`.
 
 ## Alcance
 
@@ -126,6 +125,12 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] Boton y dialogo identificados como Vista previa; emitir requiere confirmacion.
   Borradores reales ARS/USD probados con ARCA el 2 de noviembre, sin emitir.
 - [x] Vista previa, confirmacion y revalidacion transaccional antes de emitir.
+- [x] Vista previa del PDF con el diseño aprobado dentro del panel, usando PDF.js
+  existente. Abrir PDF y Descargar borrador disponibles sin emitir. Borrador
+  rotulado sin valor fiscal, sin numero definitivo, CAE ni QR. El servidor exige
+  estado draft, digest vigente y administrador con MFA. Confirmacion separada.
+  Canvas y descarga probados en Chrome y WebKit con dispositivo iPad simulado,
+  bajo la CSP publicada. No sustituye probar el iPad fisico del usuario.
 - [x] Historial y PDF autorizado con CAE/QR; descarga sin volver a emitir.
 - [x] Condicion de venta habitual por agencia, Transferencia bancaria por defecto.
   Una opcion, editable por comprobante antes de confirmar; guardada en snapshot.
@@ -147,7 +152,7 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 ## 7. Verificacion y entrega
 
-- [x] Suite general: 454 pruebas aprobadas en Node 22, incluidas las regresiones del PR.
+- [x] Suite general: 459 pruebas aprobadas en Node 22, incluidas las regresiones del PDF.
 - [x] Emulador de facturacion: 21 pruebas aprobadas (store, servicio e importacion inicial).
 - [x] Reglas Firestore: 45 pruebas aprobadas; no se modificaron las reglas.
 - [x] Navegador: regresiones del panel y MFA aprobadas con servicios simulados.

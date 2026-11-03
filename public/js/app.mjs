@@ -4649,11 +4649,12 @@ async function previewBilling(agencyId) {
       await loadBillingInvoices();
       return;
     }
-    confirmBilling(invoice, 'issue');
+    await confirmBilling(invoice, 'issue');
   } catch (err) { showBillingError(err); }
 }
 
 function confirmBilling(invoice, action) {
+  if (action === 'issue') return showBillingPdfPreview(invoice);
   const real = invoice.environment === 'production';
   showConfirmDialog({
     title: real ? 'Vista previa - Factura C real' : 'Vista previa - Factura C de prueba',
@@ -4662,6 +4663,72 @@ function confirmBilling(invoice, action) {
     confirmLabel: action === 'retry' ? 'Confirmar reintento' : real ? 'Emitir factura real' : 'Emitir prueba',
     onConfirm: () => runBilling(action, invoice),
   });
+}
+
+let _billingPreviewVersion = 0;
+let _billingPreviewUrl = null;
+const billingPreviewDialog = document.getElementById('billing-preview-dialog');
+billingPreviewDialog.addEventListener('close', () => {
+  _billingPreviewVersion++;
+  if (_billingPreviewUrl) {
+    const url = _billingPreviewUrl;
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    _billingPreviewUrl = null;
+  }
+  document.getElementById('billing-preview-canvas').replaceChildren();
+  document.getElementById('billing-preview-issue').onclick = null;
+  for (const id of ['billing-preview-open', 'billing-preview-download']) {
+    const link = document.getElementById(id);
+    link.hidden = true;
+    link.removeAttribute('href');
+  }
+  if (!document.querySelector('.modal-overlay.open')) document.body.style.overflow = '';
+});
+
+async function showBillingPdfPreview(invoice) {
+  if (billingPreviewDialog.open) return;
+  const version = ++_billingPreviewVersion;
+  const status = document.getElementById('billing-preview-status');
+  const issue = document.getElementById('billing-preview-issue');
+  document.getElementById('billing-preview-summary').textContent = `${invoice.receiver.legalName}. ${billingMoney(invoice)} (${invoice.input.currency}). Mes ${invoice.period}. ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}.`;
+  status.textContent = 'Preparando PDF del borrador. Todavia no se emitio ninguna factura.';
+  issue.textContent = invoice.environment === 'production' ? 'Emitir factura real' : 'Emitir prueba';
+  issue.disabled = true;
+  issue.onclick = () => { billingPreviewDialog.close(); runBilling('issue', invoice); };
+  billingPreviewDialog.showModal();
+  document.body.style.overflow = 'hidden';
+  try {
+    const result = await billingRequest({ invoiceId: invoice.id, preview: true, digest: invoice.digest }, 'billing-pdf');
+    if (version !== _billingPreviewVersion) return;
+    const bytes = Uint8Array.from(atob(result.pdf), c => c.charCodeAt(0));
+    _billingPreviewUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    for (const id of ['billing-preview-open', 'billing-preview-download']) {
+      const link = document.getElementById(id);
+      link.href = _billingPreviewUrl;
+      link.hidden = false;
+    }
+    document.getElementById('billing-preview-download').download = result.filename;
+    const pdfjs = await cargarPdfjs();
+    if (version !== _billingPreviewVersion) return;
+    const pdf = await pdfjs.getDocument({ data: bytes }).promise;
+    try {
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', 'Borrador de factura. Los datos figuran tambien en el PDF descargable.');
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      if (version !== _billingPreviewVersion) return;
+      document.getElementById('billing-preview-canvas').replaceChildren(canvas);
+      status.textContent = 'Borrador sin valor fiscal. El numero, CAE y QR se agregan al emitir.';
+      issue.disabled = false;
+    } finally { await pdf.destroy(); }
+  } catch (err) {
+    if (version !== _billingPreviewVersion) return;
+    status.textContent = _billingPreviewUrl ? 'No pudimos mostrar el visor. Usa Abrir PDF o Descargar borrador para revisar la factura.' : billingErrorText(err);
+    issue.disabled = !_billingPreviewUrl;
+  }
 }
 
 async function runBilling(action, invoice) {
@@ -4680,8 +4747,8 @@ async function downloadBillingPdf(id) {
     const result = await billingRequest({ invoiceId: id }, 'billing-pdf');
     const blob = new Blob([Uint8Array.from(atob(result.pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob), link = document.createElement('a');
-    link.href = url; link.download = result.filename; link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    link.href = url; link.download = result.filename; document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (err) { showBillingError({ ...err, error: err.error || 'No pudimos descargar el PDF. La factura guardada se conserva; no vuelvas a emitirla.' }); }
 }
 

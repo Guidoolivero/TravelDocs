@@ -54,6 +54,51 @@ for (const environment of ['test', 'production']) for (const currency of ['ARS',
   });
 }
 
+for (const environment of ['test', 'production']) for (const currency of ['ARS', 'USD']) {
+  test(`vista previa PDF ${currency} ${environment} no inventa numeracion, CAE ni QR`, async () => {
+    let printedDoc, printedOptions;
+    const { buildDraftDocument } = await import('../netlify/functions/lib/invoice-pdf.cjs');
+    const runtimeEnv = environment === 'test' ? env : { ...env, ARCA_ENVIRONMENT: 'production', CONTEXT: 'production', FIRESTORE_EMULATOR_HOST: '', BILLING_FIREBASE_PROJECT_ID: 'tradingdocs-mt', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"tradingdocs-mt"}', ARCA_TAX_ID: '20123456786', ARCA_SALES_POINT: '2', BILLING_PRODUCTION_CONFIRMATION: '20123456786:2' };
+    const f = fixture({ env: runtimeEnv, modules: { './lib/invoice-pdf.cjs': { buildDraftDocument,
+      renderTravelDocsPdf(doc, options) { printedDoc = doc; printedOptions = options; return renderTravelDocsPdf(doc, options); },
+    } } });
+    const id = 'c'.repeat(64), digest = 'd'.repeat(64);
+    const invoice = { status: 'draft', environment, digest, period: '2026-11',
+      issuer: { legalName: 'Emisor ficticio', address: 'Calle Prueba 100', taxId: '20123456786', condition: 'monotributo', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' },
+      receiver: { legalName: 'Agencia ficticia', taxId: '20123456786', address: 'Calle Prueba 200', condition: 'responsable_inscripto', saleCondition: 'Transferencia bancaria' },
+      input: { date: '2026-11-03', currency, salesPoint: 2, ...(currency === 'USD' ? { exchangeRate: '1545.5' } : {}), service: { from: '2026-11-03', to: '2026-11-03', dueDate: '2026-11-03' },
+        items: [{ description: 'Servicio TravelDocs - 2026-11', quantity: 1, amount: 10000, unitPrice: '100.00' }] },
+    };
+    f.docs.set('billingInvoices/' + id, invoice);
+    assert.equal((await f.invoke('billing-pdf', { invoiceId: id })).statusCode, 409);
+    const response = await f.invoke('billing-pdf', { invoiceId: id, preview: true, digest });
+    assert.equal(response.statusCode, 200, response.body);
+    assert.equal(printedOptions.draft, true);
+    assert.match(printedOptions.notice, /BORRADOR.*SIN VALOR FISCAL/);
+    assert.equal(printedDoc.authorization, undefined);
+    assert.equal(printedDoc.qr, undefined);
+    assert.equal(printedDoc.number, 'Sin emitir');
+    assert.equal(printedDoc.totals.total, 10000);
+    assert.equal(printedDoc.receiver.name, invoice.receiver.legalName);
+    const result = JSON.parse(response.body), pdf = Buffer.from(result.pdf, 'base64');
+    assert.equal(result.preview, true);
+    assert.match(result.filename, /^borrador-/);
+    assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
+    assert.equal([...pdf.toString('latin1').matchAll(/\/Type\s*\/Page\b/g)].length, 1);
+    assert.deepEqual(f.docs.get('billingInvoices/' + id), invoice);
+    assert.equal((await f.invoke('billing-pdf', { invoiceId: id, preview: true, digest: 'e'.repeat(64) })).statusCode, 409);
+    assert.equal((await f.invoke('billing-pdf', { invoiceId: id, preview: true, digest }, 'user')).statusCode, 403);
+    for (const status of ['issuing', 'indeterminate', 'conflict', 'rejected', 'authorized']) {
+      f.docs.get('billingInvoices/' + id).status = status;
+      assert.equal((await f.invoke('billing-pdf', { invoiceId: id, preview: true, digest })).statusCode, 409);
+    }
+    if (process.env.BILLING_PDF_QA_DIR) {
+      await mkdir(process.env.BILLING_PDF_QA_DIR, { recursive: true });
+      await writeFile(`${process.env.BILLING_PDF_QA_DIR}/draft-${environment}-${currency}.pdf`, pdf);
+    }
+  });
+}
+
 test('importes del PDF conservan centavos sin redondeos intermedios', async () => {
   const { formatInvoiceAmount } = await import('../netlify/functions/lib/invoice-pdf.cjs');
   for (const [input, expected] of [[0, '0,00'], [1, '0,01'], [10000, '100,00'], [6000000, '60.000,00'], [-123456, '-1.234,56'], [999999999999, '9.999.999.999,99']]) {
