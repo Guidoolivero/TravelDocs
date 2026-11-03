@@ -544,6 +544,39 @@ describe('injectKnownForms', () => {
     assert.ok(evisa, 'la e-Visa del modelo sobrevive (no se inyecta la canonica argentine-specific)');
     assert.equal(reqs.filter(r => /fiebre amarilla/i.test(r.nombre)).length, 0, 'no se inyecta la fiebre amarilla canonica (la decide Gemini por itinerario)');
   });
+
+  it('Lima escala comercial: inyecta TUUA de transferencia; destino LIM no', () => {
+    const escala = {
+      ruta: [{
+        pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'escala_comercial',
+        requisitos: []
+      }]
+    };
+    const destino = {
+      ruta: [{
+        pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino',
+        requisitos: []
+      }]
+    };
+    const cuz = {
+      ruta: [{
+        pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'CUZ', tipo: 'escala_comercial',
+        requisitos: []
+      }]
+    };
+    injectKnownForms(escala, 'Brasil (BRA)');
+    injectKnownForms(destino);
+    injectKnownForms(cuz);
+    const tuua = escala.ruta[0].requisitos.find(r => /TUUA/i.test(r.nombre));
+    assert.ok(tuua, 'en escala LIM se inyecta la TUUA');
+    assert.equal(tuua.obligatorio, true);
+    assert.equal(tuua.url_oficial, 'https://pagotuua.lima-airport.com');
+    assert.match(tuua.costo_aproximado, /11\.86/);
+    assert.equal(destino.ruta[0].requisitos.some(r => /TUUA/i.test(r.nombre)), false,
+      'si Lima es destino la TUUA de transferencia no aplica (va en el boleto)');
+    assert.equal(cuz.ruta[0].requisitos.some(r => /TUUA/i.test(r.nombre)), false,
+      'solo Jorge Chavez (LIM), no Cusco');
+  });
 });
 
 // Mismo orden que la pantalla: el servidor inyecta conocidos y despues la matriz,

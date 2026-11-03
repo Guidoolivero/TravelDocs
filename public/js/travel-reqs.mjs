@@ -170,6 +170,11 @@ export function injectKnownForms(data, nacionalidad = 'ARG') {
       if (!matchPaisStop(stop, p)) continue;
       for (const req of p.reqs) {
         if (!isArg && req.solo_arg !== false) continue;
+        if (req.solo_escala && stop.tipo !== 'escala_comercial') continue;
+        if (Array.isArray(req.iatas) && req.iatas.length) {
+          const iata = String(stop.aeropuerto_iata || '').toUpperCase();
+          if (!iata || !req.iatas.map(x => String(x).toUpperCase()).includes(iata)) continue;
+        }
         if (esCorrectorFiebre(req) && tieneSanidadMatriz(stop)) continue;
         stop.requisitos = stop.requisitos.filter(r => !sameAsReq(req, r));
         stop.requisitos.push({

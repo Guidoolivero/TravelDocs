@@ -521,6 +521,11 @@ function injectKnownForms(resultData, nacionalidad = 'ARG') {
       if (!matchPaisStop(stop, p)) continue;
       for (const req of p.reqs) {
         if (!isArg && req.solo_arg !== false) continue;
+        if (req.solo_escala && stop.tipo !== 'escala_comercial') continue;
+        if (Array.isArray(req.iatas) && req.iatas.length) {
+          const iata = String(stop.aeropuerto_iata || '').toUpperCase();
+          if (!iata || !req.iatas.map(x => String(x).toUpperCase()).includes(iata)) continue;
+        }
         stop.requisitos = stop.requisitos.filter(r => !sameAsReq(req, r));
         stop.requisitos.push({ ...req, verificado_web: true, nota_fuentes: req.nota_fuentes || 'Formulario oficial conocido (unificado).' });
         agregados++;

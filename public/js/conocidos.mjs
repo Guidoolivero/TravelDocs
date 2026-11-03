@@ -1240,6 +1240,22 @@ export const PAISES_CONOCIDOS = [
     ],
     "reqs": [
       {
+        "categoria": "PLF",
+        "nombre": "TUUA de transferencia (Lima / Jorge Chávez)",
+        "solo_arg": false,
+        "solo_escala": true,
+        "iatas": [
+          "LIM"
+        ],
+        "obligatorio": true,
+        "descripcion": "Desde el 7/12/2025, todo pasajero en conexión internacional-internacional por el Aeropuerto Jorge Chávez (LIM) debe pagar la Tarifa Unificada de Uso de Aeropuerto (TUUA) de transferencia. No aplica si Lima es origen o destino final (esa tarifa ya va en el boleto) ni en conexiones nacionales. Se paga online o en el aeropuerto (efectivo o tarjeta). Una escala ida y otra vuelta = dos pagos.",
+        "costo_aproximado": "USD 11.86 (incluye IGV)",
+        "anticipacion_recomendada": "antes de la escala (recomendado) o en el aeropuerto",
+        "url_oficial": "https://pagotuua.lima-airport.com",
+        "sameAs": new RegExp("TUUA|pagotuua|tasa de (conexi[oó]n|transferencia).*lima|lima.?airport", "i"),
+        "nota_fuentes": "Fuente oficial LAP (lima-airport.com, tarifa aeroportuaria). Vigente desde 07/12/2025. Monto sujeto a revisión del MTC."
+      },
+      {
         "categoria": "vacuna",
         "nombre": "Certificado internacional de fiebre amarilla",
         "obligatorio": false,

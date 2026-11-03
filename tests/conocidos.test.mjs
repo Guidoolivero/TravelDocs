@@ -46,6 +46,18 @@ test('conocidos: alertas con dedup RegExp', () => {
   }
 });
 
+test('conocidos: Peru tiene TUUA de transferencia solo en escala LIM', () => {
+  const peru = PAISES_CONOCIDOS.find(p => p.iso3.includes('PER'));
+  assert.ok(peru, 'falta la entrada de Peru');
+  const tuua = peru.reqs.find(r => /TUUA/i.test(r.nombre));
+  assert.ok(tuua, 'falta la TUUA de transferencia');
+  assert.equal(tuua.solo_escala, true);
+  assert.equal(tuua.solo_arg, false);
+  assert.deepEqual(tuua.iatas, ['LIM']);
+  assert.equal(tuua.url_oficial, 'https://pagotuua.lima-airport.com');
+  assert.match(tuua.costo_aproximado, /11\.86/);
+});
+
 test('conocidos: Cuba usa la e-Visa electronica (desde 01/07/2025)', () => {
   const cuba = PAISES_CONOCIDOS.find(p => p.iso3.includes('CUB'));
   assert.ok(cuba, 'falta la entrada de Cuba');
