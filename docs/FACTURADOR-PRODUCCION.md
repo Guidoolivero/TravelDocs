@@ -35,7 +35,13 @@ Vista previa abre el PDF del borrador dentro del panel. Se puede abrir aparte o
 descargar con Descargar borrador. Conserva los datos y el diseño de la factura,
 con la leyenda BORRADOR - SIN VALOR FISCAL y sin numero definitivo, CAE ni QR.
 Emitir factura real es una accion separada. Cuando ARCA autoriza el comprobante,
-el historial ofrece Descargar PDF con su numero, CAE y QR. Descargar no emite.
+el historial ofrece Vista previa y Descargar PDF con su numero, CAE y QR.
+Vista previa de una autorizada abre el mismo visor sin accion de emision. El
+boton de la agencia tambien abre la factura ya emitida del mes. Descargar no emite.
+
+El 3 de noviembre el usuario emitio ambas facturas y aporto sus PDF. Se revisaron
+la presentacion en una hoja, los importes confirmados, fechas, numeracion, CAE y
+QR presentes. No se realizo otra consulta de validacion contra ARCA.
 
 React PDF se carga mediante import() desde CommonJS. Lambda deshabilita require
 de ESM en Node 22; probar solo con el valor predeterminado de Node local no cubre

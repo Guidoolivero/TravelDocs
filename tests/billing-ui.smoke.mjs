@@ -34,6 +34,7 @@ const draft = { environment, id: 'a'.repeat(64), digest: 'b'.repeat(64), agencyI
   receiver: { legalName: 'Agencia ficticia', taxId: '20123456786', address: 'Calle 1', condition: 'monotributo' },
   input: { currency: 'ARS', date: '2026-11-02', salesPoint: 2, service: { from: '2026-11-02', to: '2026-11-02', dueDate: '2026-11-02' }, items: [{ description: 'Servicio TravelDocs', quantity: 1, unitPrice: '100.00', amount: 10000 }] } };
 let saved, issues = 0, previews = 0, failPreview = true;
+const pdfRequests = [];
 await page.route('**/*', async route => {
   const u = new URL(route.request().url()), method = route.request().method();
   const cors = { 'Access-Control-Allow-Origin': url, 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, GET, PATCH, OPTIONS' };
@@ -44,15 +45,19 @@ await page.route('**/*', async route => {
     if (u.pathname.endsWith('/admin-api/agencies') && method === 'GET') return json({ billingEnabled: true, billingEnvironment: environment, agencies });
     if (u.pathname.includes('/admin-api/agencies') && ['POST', 'PATCH'].includes(method)) { saved = route.request().postDataJSON(); return json({ ok: true }); }
     if (u.pathname.endsWith('/billing-pdf')) {
-      const preview = route.request().postDataJSON().preview === true;
-      const pdf = await renderTravelDocsPdf(buildDraftDocument(draft), { draft: true, period: draft.period, notice: 'BORRADOR - SIN VALOR FISCAL' });
+      const body = route.request().postDataJSON();
+      pdfRequests.push(body);
+      const preview = body.preview === true;
+      const doc = buildDraftDocument(draft);
+      if (!preview) Object.assign(doc, { number: '00002-00000001', authorization: { code: '12345678901234', dueDate: '2026-11-12' }, qr: 'https://www.arca.gob.ar/fe/qr/?p=PRUEBA' });
+      const pdf = await renderTravelDocsPdf(doc, { draft: preview, period: draft.period, notice: preview ? 'BORRADOR - SIN VALOR FISCAL' : environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '' });
       return json({ pdf: pdf.toString('base64'), preview, filename: preview ? 'borrador-factura-C-2026-11.pdf' : 'prueba-factura-C-00001-00000001.pdf' });
     }
     if (u.pathname.endsWith('/billing-api')) {
       const body = route.request().postDataJSON();
       if (body.action === 'list') return json({ invoices: previews ? [draft] : [] });
       if (body.action === 'preview' && failPreview) { failPreview = false; return route.abort('failed'); }
-      if (body.action === 'preview') { previews++; draft.receiver.saleCondition = body.saleCondition; return json(draft); }
+      if (body.action === 'preview') { previews++; if (draft.status !== 'authorized') draft.receiver.saleCondition = body.saleCondition; return json(draft); }
       if (body.action === 'issue') { issues++; draft.status = 'issuing'; return route.fulfill({ status: 503, headers: cors, contentType: 'application/json', body: JSON.stringify({ error: 'No pudimos obtener una respuesta de ARCA. La factura podria haberse autorizado. Usa Consultar ARCA antes de reintentar.' }) }); }
       if (body.action === 'recover') { draft.status = 'authorized'; return json(draft); }
     }
@@ -138,10 +143,27 @@ try {
   await page.locator('[data-billing-pdf]').click();
   assert.equal((await downloading).suggestedFilename(), 'prueba-factura-C-00001-00000001.pdf');
   assert.equal(issues, 1, 'Descargar no vuelve a emitir');
+  const beforeView = previews;
+  assert.equal(await page.locator('[data-billing-view]').count(), 1, 'El historial permite ver el PDF autorizado');
+  await page.locator('[data-billing-view]').click();
+  await page.locator('#billing-preview-canvas canvas').waitFor();
+  assert.equal(await page.locator('#billing-preview-issue').isVisible(), false);
+  assert.equal(await page.locator('#billing-preview-issue').isDisabled(), true);
+  assert.match(await page.locator('#billing-preview-title').innerText(), /autorizada/);
+  assert.equal(await page.locator('#billing-preview-download').innerText(), 'Descargar PDF');
+  assert.deepEqual(pdfRequests.at(-1), { invoiceId: draft.id });
+  assert.equal(previews, beforeView, 'Ver desde historial no prepara otro comprobante');
+  assert.equal(issues, 1, 'Ver desde historial no vuelve a emitir');
+  await page.keyboard.press('Escape');
+  await page.locator('[data-billing-condition="prueba-0"]').selectOption('Otra');
   await page.locator('[data-billing-preview="prueba-0"]').click();
-  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('ya esta autorizada'));
+  await page.locator('#billing-preview-canvas canvas').waitFor();
+  assert.match(await page.locator('#billing-preview-title').innerText(), /autorizada/);
+  assert.match(await page.locator('#billing-preview-summary').innerText(), /Cheque/);
+  assert.equal(await page.locator('#billing-preview-issue').isVisible(), false);
+  assert.deepEqual(pdfRequests.at(-1), { invoiceId: draft.id });
   assert.equal(await page.locator('#modal-confirm.open').count(), 0);
-  assert.equal(issues, 1, 'Consultar factura emitida no vuelve a confirmar ni emitir');
+  assert.equal(issues, 1, 'Consultar factura emitida desde la agencia no vuelve a emitir');
   if (process.env.BILLING_UI_SCREENSHOT) await page.screenshot({ path: process.env.BILLING_UI_SCREENSHOT, fullPage: true });
   assert.deepEqual(errors, []);
   console.log('Billing UI: ficha parcial, centavos, cinco pruebas gratis y confirmacion de emision OK');

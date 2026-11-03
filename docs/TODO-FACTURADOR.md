@@ -1,11 +1,11 @@
 # TODO del facturador TravelDocs
 
 Actualizado: 2026-11-03.
-Estado: PR #4, #5 y #6 integrados; produccion configurada y ARCA consultada con
-el store definitivo. Vista previa PDF verificada con servicios simulados.
-No se emitieron comprobantes reales.
-Rama de correccion: `codex/facturador-pdf-runtime`.
-Base: `c54cabbc2f44d24d30717933f30e368642de6452`.
+Estado: PR #4 a #8 integrados; produccion configurada. El usuario emitio las
+facturas de noviembre de Valdes y Transitar y aporto los PDF para revision.
+El agente no emitio comprobantes reales.
+Rama de correccion: `codex/facturador-ver-autorizadas`.
+Base: `57e69a718a1202fcc8744c31d4ab9cae966aab1c`.
 
 ## Alcance
 
@@ -132,6 +132,9 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
   Canvas y descarga probados en Chrome y WebKit con dispositivo iPad simulado,
   bajo la CSP publicada. No sustituye probar el iPad fisico del usuario.
 - [x] Historial y PDF autorizado con CAE/QR; descarga sin volver a emitir.
+- [x] Vista previa de autorizadas desde historial y boton de agencia: usa el snapshot
+  guardado, conserva condicion de venta y no muestra accion de emision. Descarga
+  disponible dentro del visor. Abrir desde historial no prepara otra factura.
 - [x] Condicion de venta habitual por agencia, Transferencia bancaria por defecto.
   Una opcion, editable por comprobante antes de confirmar; guardada en snapshot.
   El cambio puntual no modifica la ficha ni los PDF anteriores.
@@ -187,8 +190,8 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] El panel exige habilitacion y tarifa vigente para mostrar listo para emitir.
 - [x] Preview revisa el intento mensual dentro del lock antes de pedir cotizacion.
   Autorizadas o en consulta devuelven su snapshot sin nueva llamada a ARCA.
-- [x] Aviso al consultar una factura ya autorizada; los intentos pendientes muestran
-  su estado. No se abre otra confirmacion ni se emite de nuevo.
+- [x] Consultar una factura ya autorizada abre su PDF; los intentos pendientes
+  muestran su estado. No se abre otra confirmacion ni se emite de nuevo.
 - [x] Auditoria de cambio fiscal y de emision, consulta, reintento y descarga: actor,
   id y estado, sin datos fiscales, claves ni digest. Fallo auxiliar no interrumpe
   la operacion fiscal. Ambas Functions usan el wrapper existente de Sentry.
@@ -236,10 +239,12 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 - [x] Reproducir fallo de entrada PDF: wrapper CommonJS heredaba type=module.
   Excluir solo package.json de raiz del artefacto NFT, sin reescribir bundle ni debug id.
   Smoke de empaquetado agregado al workflow: carga entrada real y exige 401 sin token.
-- [ ] Verificar PDF publicado y vistas previas conectadas desde el panel autenticado.
-  Guia: docs/FACTURADOR-PRODUCCION.md.
+- [x] Verificar borradores publicados y descargas de Valdes y Transitar desde
+  Safari autenticado el 3 de noviembre. Guia: docs/FACTURADOR-PRODUCCION.md.
 - [ ] Definir backups, renovacion de certificados y operacion de correcciones reales.
-- [ ] Primera factura real revisada manualmente; no emitir pruebas reales.
+- [x] Primeras facturas reales emitidas por el usuario el 3 de noviembre: Valdes
+  ARS 60.000 y Transitar USD 100. PDF revisados: una hoja, numeracion, CAE, QR,
+  fechas y condicion de venta presentes. Sin consulta adicional de validacion ARCA.
 - [ ] Cron: acordar dia habil, horario, feriados y tratamiento de pendientes.
 - [ ] Automatizar emision luego de validar el circuito manual; envio por email despues.
 
