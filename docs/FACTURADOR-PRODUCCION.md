@@ -37,6 +37,11 @@ con la leyenda BORRADOR - SIN VALOR FISCAL y sin numero definitivo, CAE ni QR.
 Emitir factura real es una accion separada. Cuando ARCA autoriza el comprobante,
 el historial ofrece Descargar PDF con su numero, CAE y QR. Descargar no emite.
 
+React PDF se carga mediante import() desde CommonJS. Lambda deshabilita require
+de ESM en Node 22; probar solo con el valor predeterminado de Node local no cubre
+esa restriccion. La regresion genera un PDF con --no-experimental-require-module;
+el smoke del paquete usa la misma opcion. Referencia: [runtime de AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html).
+
 ## Certificado
 
 1. Ingresar a ARCA con clave fiscal y verificar el contribuyente representado.
