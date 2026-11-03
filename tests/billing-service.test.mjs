@@ -141,6 +141,36 @@ test('no emite un snapshot con otro emisor o punto de venta configurado', async 
   assert.equal(calls, 0);
 });
 
+test('vista previa USD consulta hasta el dia anterior aunque ARCA ya publique la cotizacion de hoy', async () => {
+  let sends = 0, failure, requestedDates = [];
+  const { ref } = await setup({});
+  const fiscal = db.collection('billingProfiles').doc(ref.id);
+  const record = (await fiscal.get()).data();
+  await fiscal.set(billingRecord({ ...record.profile, currency: 'USD' }, null, '2026-09-20'));
+  const client = { preview: input => input, issue: async () => { sends++; },
+    wsfe: { getQuotation: async ({ date }) => {
+      requestedDates.push(date);
+      if (failure === 'connection') throw Object.assign(new Error('Sin conexion'), { code: 'ARCA_TRANSPORT_ERROR' });
+      if (failure === 'missing' || ['2026-11-01', '2026-10-31'].includes(date)) throw Object.assign(new Error('Sin resultados'), { issues: [{ code: '602' }] });
+      return date === '2026-10-30' ? { currencyId: 'DOL', rate: 1534, date: '20261030' }
+        : { currencyId: 'DOL', rate: 1545.5, date: '20261102' };
+    } },
+  };
+  const service = createBillingService({ db, client, store: createBillingStore(db), issuer: { taxId: '20123456786' }, salesPoint: 2, today: () => '2026-11-02' });
+  const draft = await service.preview(ref.id);
+  assert.deepEqual(requestedDates, ['2026-11-01', '2026-10-31', '2026-10-30']);
+  assert.equal(draft.input.exchangeRate, '1534');
+  assert.equal(draft.status, 'draft');
+  assert.equal(sends, 0);
+  failure = 'connection'; requestedDates = [];
+  await assert.rejects(service.preview(ref.id), /Sin conexion/);
+  assert.equal(requestedDates.length, 1);
+  failure = 'missing'; requestedDates = [];
+  await assert.rejects(service.preview(ref.id), /ARCA no informo una cotizacion/);
+  assert.equal(requestedDates.length, 10);
+  assert.equal(sends, 0);
+});
+
 test('suspension durante consulta de cotizacion impide enviar una vista previa ya leida', async () => {
   const { ref } = await setup({});
   const fiscalRef = db.collection('billingProfiles').doc(ref.id);

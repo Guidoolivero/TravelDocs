@@ -21,6 +21,20 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
       throw err;
     }
   }
+  async function quotationBefore(date) {
+    const day = new Date(`${date}T00:00:00Z`);
+    // ARCA indica dias sin cotizacion con 602; el limite evita consultas indefinidas.
+    for (let count = 0; count < 10; count++) {
+      abortSignal?.throwIfAborted();
+      day.setUTCDate(day.getUTCDate() - 1);
+      try {
+        return await client.wsfe.getQuotation({ currencyId: 'DOL', date: day.toISOString().slice(0, 10) });
+      } catch (err) {
+        if (!err.issues?.length || !err.issues.every(issue => String(issue.code) === '602')) throw err;
+      }
+    }
+    throw Object.assign(new Error('ARCA no informo una cotizacion de USD para los dias previos. No se emitio la factura; volve a intentar mas tarde.'), { status: 503 });
+  }
   async function prepare(agencyId, saleCondition, date = today()) {
     const agencySnap = await db.collection('agencies').doc(agencyId).get();
     const recordSnap = await db.collection('billingProfiles').doc(agencyId).get();
@@ -31,7 +45,7 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
     const createdOn = createdAt ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date(createdAt)) : '';
     const receiver = billingProfileForPeriod(record, period);
     if (saleCondition !== undefined) receiver.saleCondition = validateBillingProfile({ saleCondition }).saleCondition;
-    const quotation = receiver.currency === 'USD' ? await client.wsfe.getQuotation({ currencyId: 'DOL' }) : null;
+    const quotation = receiver.currency === 'USD' ? await quotationBefore(date) : null;
     const input = billingInvoice({ agency: agency ? { ...agency, createdOn } : null, record, period, today: date, salesPoint, quotation });
     const snapshot = { agencyId, period, input, issuer, receiver, quotation, sourceVersions: [version(agencySnap), version(recordSnap)] };
     return { ...snapshot, digest: digest(snapshot), preview: client.preview(input) };

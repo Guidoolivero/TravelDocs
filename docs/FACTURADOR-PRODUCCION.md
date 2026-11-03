@@ -20,6 +20,17 @@ El modo produccion esta publicado con habilitacion explicita y separacion de
 comprobantes, claves de idempotencia y etiquetas. Se cargaron las credenciales
 privadas y las fichas iniciales en Firebase real. La emision sigue siendo manual.
 
+La consulta de USD usa una fecha anterior a la emision. ARCA devuelve 602 en
+dias sin cotizacion; se retrocede hasta diez dias y se interrumpe ante cualquier
+otro error. El SDK 0.25.2 omite FchCotiz en su API publica: postinstall aplica una
+adaptacion acotada y comprobada antes del build. Una nueva version exige revisar
+esa adaptacion. No se acepta la cotizacion del mismo dia para evitar el rechazo
+10038 en pagos en la misma moneda extranjera.
+
+El 2 de noviembre se prepararon borradores reales de Valdes ARS 60.000 y
+Transitar USD 100 con el servicio corregido, sin solicitar CAE. ARCA devolvio
+1534, fecha 20261030, para Transitar. Falta confirmar manualmente para emitir.
+
 ## Certificado
 
 1. Ingresar a ARCA con clave fiscal y verificar el contribuyente representado.
