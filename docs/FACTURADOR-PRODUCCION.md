@@ -31,6 +31,12 @@ El 2 de noviembre se prepararon borradores reales de Valdes ARS 60.000 y
 Transitar USD 100 con el servicio corregido, sin solicitar CAE. ARCA devolvio
 1534, fecha 20261030, para Transitar. Falta confirmar manualmente para emitir.
 
+Vista previa abre el PDF del borrador dentro del panel. Se puede abrir aparte o
+descargar con Descargar borrador. Conserva los datos y el diseño de la factura,
+con la leyenda BORRADOR - SIN VALOR FISCAL y sin numero definitivo, CAE ni QR.
+Emitir factura real es una accion separada. Cuando ARCA autoriza el comprobante,
+el historial ofrece Descargar PDF con su numero, CAE y QR. Descargar no emite.
+
 ## Certificado
 
 1. Ingresar a ARCA con clave fiscal y verificar el contribuyente representado.

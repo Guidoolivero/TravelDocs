@@ -18,14 +18,17 @@ exports.handler = async event => {
     if (!snap.exists) return reply(404, { error: 'Factura no encontrada.' });
     const invoice = snap.data();
     if ((invoice.environment || 'test') !== environment) return reply(409, { error: 'La factura pertenece a otro ambiente.' });
-    if (invoice.status !== 'authorized') return reply(409, { error: 'La factura todavia no esta autorizada.' });
-    const doc = buildVoucherDocument({ voucher: invoice.outcome.voucher, items: invoice.input.items,
+    const preview = input.preview === true;
+    if (preview ? invoice.status !== 'draft' || !/^[a-f0-9]{64}$/.test(input.digest || '') || input.digest !== invoice.digest : invoice.status !== 'authorized') {
+      return reply(409, { error: preview ? 'La vista previa cambio. Volve a abrirla antes de emitir.' : 'La factura todavia no esta autorizada.' });
+    }
+    const { renderTravelDocsPdf, buildDraftDocument } = require('./lib/invoice-pdf.cjs');
+    const doc = preview ? buildDraftDocument(invoice) : buildVoucherDocument({ voucher: invoice.outcome.voucher, items: invoice.input.items,
       issuer: { ...invoice.issuer, tradeName: 'TravelDocs' }, receiver: { name: invoice.receiver.legalName, address: invoice.receiver.address },
       observations: invoice.outcome.authorization?.observations || [], saleConditions: invoice.receiver.saleCondition || 'Transferencia bancaria' });
-    const { renderTravelDocsPdf } = require('./lib/invoice-pdf.cjs');
-    const pdf = await renderTravelDocsPdf(doc, { period: invoice.period, notice: environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '' });
+    const pdf = await renderTravelDocsPdf(doc, { period: invoice.period, draft: preview, notice: preview ? 'BORRADOR - SIN VALOR FISCAL' : environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '' });
     await auditBilling(admin.firestore(), auth, 'billing-pdf', { ...invoice, id: snap.id });
-    return reply(200, { pdf: Buffer.from(pdf).toString('base64'), filename: `${environment === 'test' ? 'prueba-' : ''}factura-C-${doc.number}.pdf` });
+    return reply(200, { pdf: Buffer.from(pdf).toString('base64'), preview, filename: preview ? `borrador-factura-C-${invoice.period}.pdf` : `${environment === 'test' ? 'prueba-' : ''}factura-C-${doc.number}.pdf` });
   } catch (err) {
     return reply(err.status === 503 ? 503 : 500, { error: err.status === 503 ? err.message : 'No se pudo generar el PDF. La factura guardada se conserva; no volver a emitir.' });
   }

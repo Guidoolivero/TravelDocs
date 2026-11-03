@@ -748,3 +748,14 @@ textarea { resize: vertical; min-height: 72px; }
 .billing-technical summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .billing-status-message, .billing-technical p { max-width: 36ch; white-space: normal; margin: 6px 0 0; color: var(--text2); font-size: 12px; line-height: 1.5; }
 .billing-technical summary { margin-top: 8px; cursor: pointer; color: var(--text2); font-size: 12px; }
+
+.billing-preview-dialog { width: min(980px, calc(100% - 24px)); max-height: 94dvh; margin: auto; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.billing-preview-dialog[open] { display: flex; flex-direction: column; }
+.billing-preview-dialog::backdrop { background: var(--text); opacity: .45; }
+.billing-preview-dialog .modal-header, .billing-preview-dialog .modal-footer { flex-shrink: 0; }
+.billing-preview-dialog .modal-footer { flex-wrap: wrap; }
+.billing-preview-dialog form { margin: 0; }
+.billing-preview-dialog a[hidden] { display: none; }
+.billing-preview-body { min-height: 0; overflow: auto; padding: 16px; background: var(--surface2); }
+#billing-preview-summary, #billing-preview-status { margin: 0 0 12px; color: var(--text2); font-size: 13px; line-height: 1.5; }
+#billing-preview-canvas canvas { display: block; width: 100%; height: auto; }

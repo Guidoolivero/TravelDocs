@@ -35,7 +35,9 @@ ni se modificaron las agencias reales.
    mes, fechas, condicion de venta y cotizacion. Confirmar emite un comprobante
    de prueba. La condicion queda guardada con la factura; las siguientes ediciones
    de la ficha no cambian un PDF anterior.
-   Vista previa guarda un borrador y muestra los datos; no solicita CAE ni emite.
+   Vista previa guarda un borrador y muestra su PDF con el diseño de la factura.
+   Permite abrirlo o descargarlo como borrador sin numero definitivo, CAE ni QR;
+   no solicita CAE ni emite. La emision requiere pulsar el boton de confirmacion.
 3. Consultar el historial y descargar el PDF de las facturas autorizadas.
    Descargar o regenerar un PDF no vuelve a emitir. El envio es manual.
 4. Ante un corte de conexion, usar Consultar ARCA. Solo un resultado not_found
