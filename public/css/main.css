@@ -755,7 +755,7 @@ textarea { resize: vertical; min-height: 72px; }
 .billing-preview-dialog .modal-header, .billing-preview-dialog .modal-footer { flex-shrink: 0; }
 .billing-preview-dialog .modal-footer { flex-wrap: wrap; }
 .billing-preview-dialog form { margin: 0; }
-.billing-preview-dialog a[hidden] { display: none; }
+.billing-preview-dialog [hidden] { display: none; }
 .billing-preview-body { min-height: 0; overflow: auto; padding: 16px; background: var(--surface2); }
 #billing-preview-summary, #billing-preview-status { margin: 0 0 12px; color: var(--text2); font-size: 13px; line-height: 1.5; }
 #billing-preview-canvas canvas { display: block; width: 100%; height: auto; }

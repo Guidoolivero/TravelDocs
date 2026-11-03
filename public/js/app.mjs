@@ -4630,7 +4630,7 @@ async function loadBillingInvoices() {
     document.getElementById('admin-billing-tbody').innerHTML = _billingInvoices.map(invoice => `<tr>
       <td>${esc(invoice.receiver.legalName)}</td><td>${esc(invoice.period)}</td><td>${esc(billingMoney(invoice))}</td>
       <td>${esc(labels[invoice.status] || invoice.status)}${invoice.lastError || billingOutcomeText(invoice) ? `<p class="billing-status-message">${esc(invoice.lastError || billingOutcomeText(invoice))}</p>` : ''}${invoice.outcome?.issues?.length ? `<details class="billing-technical"><summary>Ver detalle de ARCA</summary><p>${esc(invoice.outcome.issues.map(issue => issue.message || issue.code).join('; '))}</p></details>` : ''}</td>
-      <td>${invoice.status === 'authorized' ? `<button class="btn btn-ghost btn-sm" data-billing-pdf="${esc(invoice.id)}">Descargar PDF</button>` : ''}
+      <td>${invoice.status === 'authorized' ? `<button class="btn btn-ghost btn-sm" data-billing-view="${esc(invoice.id)}">Vista previa</button><button class="btn btn-ghost btn-sm" data-billing-pdf="${esc(invoice.id)}">Descargar PDF</button>` : ''}
       ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Vista previa'}</button>` : ''}
       ${['issuing', 'indeterminate'].includes(invoice.status) ? `<button class="btn btn-ghost btn-sm" data-billing-recover="${esc(invoice.id)}">Consultar ARCA</button>` : ''}
       ${invoice.status === 'indeterminate' && invoice.outcome?.lookup?.kind === 'not_found' ? `<button class="btn btn-ghost btn-sm" data-billing-retry="${esc(invoice.id)}">Reintentar</button>` : ''}</td></tr>`).join('');
@@ -4644,7 +4644,7 @@ async function previewBilling(agencyId) {
     const saleCondition = document.querySelector(`[data-billing-condition="${CSS.escape(agencyId)}"]`)?.value;
     const invoice = await billingRequest({ action: 'preview', agencyId, saleCondition });
     if (invoice.status !== 'draft') {
-      if (invoice.status === 'authorized') showToast(`La factura de ${invoice.period} ya esta autorizada. Descargala desde el historial.`);
+      if (invoice.status === 'authorized') await showBillingPdfPreview(invoice);
       else showBillingError({ error: billingOutcomeText(invoice) || 'Ya existe un intento para este mes. Revisa su estado en el historial.' });
       await loadBillingInvoices();
       return;
@@ -4686,19 +4686,23 @@ billingPreviewDialog.addEventListener('close', () => {
 });
 
 async function showBillingPdfPreview(invoice) {
-  if (billingPreviewDialog.open) return;
+  if (billingPreviewDialog.open || !['draft', 'authorized'].includes(invoice.status)) return;
+  const authorized = invoice.status === 'authorized';
   const version = ++_billingPreviewVersion;
   const status = document.getElementById('billing-preview-status');
   const issue = document.getElementById('billing-preview-issue');
+  document.getElementById('billing-preview-title').textContent = authorized ? 'Factura C autorizada' : 'Vista previa de la factura';
   document.getElementById('billing-preview-summary').textContent = `${invoice.receiver.legalName}. ${billingMoney(invoice)} (${invoice.input.currency}). Mes ${invoice.period}. ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}.`;
-  status.textContent = 'Preparando PDF del borrador. Todavia no se emitio ninguna factura.';
+  status.textContent = authorized ? 'Cargando PDF de la factura autorizada...' : 'Preparando PDF del borrador. Todavia no se emitio ninguna factura.';
+  document.getElementById('billing-preview-download').textContent = authorized ? 'Descargar PDF' : 'Descargar borrador';
   issue.textContent = invoice.environment === 'production' ? 'Emitir factura real' : 'Emitir prueba';
+  issue.hidden = authorized;
   issue.disabled = true;
-  issue.onclick = () => { billingPreviewDialog.close(); runBilling('issue', invoice); };
+  issue.onclick = authorized ? null : () => { billingPreviewDialog.close(); runBilling('issue', invoice); };
   billingPreviewDialog.showModal();
   document.body.style.overflow = 'hidden';
   try {
-    const result = await billingRequest({ invoiceId: invoice.id, preview: true, digest: invoice.digest }, 'billing-pdf');
+    const result = await billingRequest(authorized ? { invoiceId: invoice.id } : { invoiceId: invoice.id, preview: true, digest: invoice.digest }, 'billing-pdf');
     if (version !== _billingPreviewVersion) return;
     const bytes = Uint8Array.from(atob(result.pdf), c => c.charCodeAt(0));
     _billingPreviewUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
@@ -4717,17 +4721,17 @@ async function showBillingPdfPreview(invoice) {
       const canvas = document.createElement('canvas');
       canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
       canvas.setAttribute('role', 'img');
-      canvas.setAttribute('aria-label', 'Borrador de factura. Los datos figuran tambien en el PDF descargable.');
+      canvas.setAttribute('aria-label', `${authorized ? 'Factura autorizada' : 'Borrador de factura'}. Los datos figuran tambien en el PDF descargable.`);
       await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
       if (version !== _billingPreviewVersion) return;
       document.getElementById('billing-preview-canvas').replaceChildren(canvas);
-      status.textContent = 'Borrador sin valor fiscal. El numero, CAE y QR se agregan al emitir.';
-      issue.disabled = false;
+      status.textContent = authorized ? (invoice.environment === 'production' ? 'Factura autorizada. CAE y QR incluidos en el PDF.' : 'Factura de prueba autorizada, sin valor fiscal.') : 'Borrador sin valor fiscal. El numero, CAE y QR se agregan al emitir.';
+      issue.disabled = authorized;
     } finally { await pdf.destroy(); }
   } catch (err) {
     if (version !== _billingPreviewVersion) return;
-    status.textContent = _billingPreviewUrl ? 'No pudimos mostrar el visor. Usa Abrir PDF o Descargar borrador para revisar la factura.' : billingErrorText(err);
-    issue.disabled = !_billingPreviewUrl;
+    status.textContent = _billingPreviewUrl ? 'No pudimos mostrar el visor. Usa Abrir PDF o el enlace de descarga para revisar la factura.' : billingErrorText(err);
+    issue.disabled = authorized || !_billingPreviewUrl;
   }
 }
 
@@ -5403,6 +5407,8 @@ document.getElementById('admin-billing-refresh')?.addEventListener('click', load
 document.addEventListener('click', e => {
   const preview = e.target.closest('[data-billing-preview]');
   if (preview) { previewBilling(preview.dataset.billingPreview); return; }
+  const view = e.target.closest('[data-billing-view]');
+  if (view) { const invoice = _billingInvoices.find(i => i.id === view.dataset.billingView); clearBillingError(); if (invoice) showBillingPdfPreview(invoice).catch(showBillingError); return; }
   const pdf = e.target.closest('[data-billing-pdf]');
   if (pdf) { downloadBillingPdf(pdf.dataset.billingPdf); return; }
   const recover = e.target.closest('[data-billing-recover]');

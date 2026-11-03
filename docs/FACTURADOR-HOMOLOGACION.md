@@ -38,7 +38,8 @@ ni se modificaron las agencias reales.
    Vista previa guarda un borrador y muestra su PDF con el diseño de la factura.
    Permite abrirlo o descargarlo como borrador sin numero definitivo, CAE ni QR;
    no solicita CAE ni emite. La emision requiere pulsar el boton de confirmacion.
-3. Consultar el historial y descargar el PDF de las facturas autorizadas.
+3. Consultar el historial y abrir Vista previa o descargar el PDF de las facturas
+   autorizadas. El visor de una autorizada no muestra el boton de emision.
    Descargar o regenerar un PDF no vuelve a emitir. El envio es manual.
 4. Ante un corte de conexion, usar Consultar ARCA. Solo un resultado not_found
    permite un reintento explicito con la misma clave y contenido.
