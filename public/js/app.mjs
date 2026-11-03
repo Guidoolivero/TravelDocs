@@ -4597,7 +4597,7 @@ async function loadAgencies() {
       document.getElementById('admin-billing-agencies-tbody').innerHTML = _adminAgencies.map(a => `<tr>
         <td>${esc(a.name || a.id)}</td><td>${esc(billingStatusLabel(a.billingStatus))}</td>
         <td><select class="billing-sale-condition" aria-label="Condicion de venta de ${esc(a.name || a.id)}" data-billing-condition="${esc(a.id)}">${SALE_CONDITIONS.map(value => `<option${value === (a.billing.saleCondition || SALE_CONDITIONS[0]) ? ' selected' : ''}>${esc(value)}</option>`).join('')}</select></td>
-        <td>${a.billingStatus.state === 'ready' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(a.id)}">Facturar</button>` : ''}</td>
+        <td>${a.billingStatus.state === 'ready' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(a.id)}">Vista previa</button>` : ''}</td>
       </tr>`).join('') || '<tr><td colspan="4">Sin agencias.</td></tr>';
       if (_adminTab === 'billing') loadBillingInvoices();
     }
@@ -4631,7 +4631,7 @@ async function loadBillingInvoices() {
       <td>${esc(invoice.receiver.legalName)}</td><td>${esc(invoice.period)}</td><td>${esc(billingMoney(invoice))}</td>
       <td>${esc(labels[invoice.status] || invoice.status)}${invoice.lastError || billingOutcomeText(invoice) ? `<p class="billing-status-message">${esc(invoice.lastError || billingOutcomeText(invoice))}</p>` : ''}${invoice.outcome?.issues?.length ? `<details class="billing-technical"><summary>Ver detalle de ARCA</summary><p>${esc(invoice.outcome.issues.map(issue => issue.message || issue.code).join('; '))}</p></details>` : ''}</td>
       <td>${invoice.status === 'authorized' ? `<button class="btn btn-ghost btn-sm" data-billing-pdf="${esc(invoice.id)}">Descargar PDF</button>` : ''}
-      ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Revisar y emitir'}</button>` : ''}
+      ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Vista previa'}</button>` : ''}
       ${['issuing', 'indeterminate'].includes(invoice.status) ? `<button class="btn btn-ghost btn-sm" data-billing-recover="${esc(invoice.id)}">Consultar ARCA</button>` : ''}
       ${invoice.status === 'indeterminate' && invoice.outcome?.lookup?.kind === 'not_found' ? `<button class="btn btn-ghost btn-sm" data-billing-retry="${esc(invoice.id)}">Reintentar</button>` : ''}</td></tr>`).join('');
     message.textContent = _billingInvoices.length ? '' : 'Todavia no hay facturas en este entorno.';
@@ -4656,7 +4656,7 @@ async function previewBilling(agencyId) {
 function confirmBilling(invoice, action) {
   const real = invoice.environment === 'production';
   showConfirmDialog({
-    title: real ? 'Confirmar factura C real' : 'Confirmar factura C de prueba',
+    title: real ? 'Vista previa - Factura C real' : 'Vista previa - Factura C de prueba',
     message: `${invoice.receiver.legalName}, CUIT ${invoice.receiver.taxId}. ${invoice.receiver.address}. Condicion: ${invoice.receiver.condition}. Concepto: Servicios. Condicion de venta: ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
     subtext: `Punto de venta: ${invoice.input.salesPoint || ''}. Desde, hasta y vencimiento: ${fmtDate(invoice.input.date)}. ${invoice.quotation ? `Cotizacion ARCA: ${invoice.quotation.rate}, fecha ${invoice.quotation.date}. Pago en USD.` : ''} ${real ? 'Se solicitara a ARCA una factura con validez fiscal.' : 'Sin valor fiscal.'}`,
     confirmLabel: action === 'retry' ? 'Confirmar reintento' : real ? 'Emitir factura real' : 'Emitir prueba',

@@ -79,12 +79,14 @@ try {
   await page.locator('#admin-panel-billing').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#admin-panel-agencies').isVisible(), false);
   await page.locator('[data-billing-condition="prueba-0"]').selectOption('Cheque');
+  assert.equal(await page.locator('[data-billing-preview="prueba-0"]').innerText(), 'Vista previa');
   await page.locator('[data-billing-preview="prueba-0"]').click();
   await page.locator('#admin-billing-feedback').waitFor({ state: 'visible' });
   assert.match(await page.locator('#admin-billing-feedback').innerText(), /Revisa tu conexion/);
   assert.equal(issues, 0);
   await page.locator('[data-billing-preview="prueba-0"]').click();
   await page.locator('#modal-confirm.open').waitFor();
+  assert.match(await page.locator('#modal-confirm').innerText(), /Vista previa/);
   assert.equal(issues, 0);
   assert.match(await page.locator('#modal-confirm').innerText(), environment === 'production' ? /Emitir factura real/ : /Emitir prueba/);
   if (environment === 'production') assert.doesNotMatch(await page.locator('#modal-confirm').innerText(), /Sin valor fiscal/);

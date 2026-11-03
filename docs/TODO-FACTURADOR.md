@@ -118,6 +118,13 @@ si su recuperacion informa que no existe. No borrar reservas para desbloquear.
 
 - [x] Factura C de servicios, importe exacto, fechas de un dia y mes actual.
 - [x] USD pagado en USD con cotizacion ARCA guardada en el snapshot.
+- [x] Consultar cotizacion por fecha anterior a la emision: retroceder solo ante
+  602 sin resultados, hasta diez dias, sin calcular feriados locales. Errores de
+  conexion y autorizacion interrumpen la consulta. Validacion fiscal conservada.
+  SDK 0.25.2 adaptado en postinstall para aceptar FchCotiz; version y texto
+  comprobados para fallar si una actualizacion exige revisar la adaptacion.
+- [x] Boton y dialogo identificados como Vista previa; emitir requiere confirmacion.
+  Borradores reales ARS/USD probados con ARCA el 2 de noviembre, sin emitir.
 - [x] Vista previa, confirmacion y revalidacion transaccional antes de emitir.
 - [x] Historial y PDF autorizado con CAE/QR; descarga sin volver a emitir.
 - [x] Condicion de venta habitual por agencia, Transferencia bancaria por defecto.

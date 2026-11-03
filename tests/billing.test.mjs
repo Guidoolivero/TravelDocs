@@ -95,6 +95,25 @@ test('solicitud C usa precio del mes, servicio de un dia y bloquea retroactivos'
   assert.throws(() => billingInvoice({ agency: { ...agency, status: 'suspended' }, record, period: '2026-11', today: '2026-11-02', salesPoint: 1 }));
 });
 
+test('SDK consulta la cotizacion a la fecha solicitada sin emitir', async () => {
+  const { createWsfeService } = await import('facturas/wsfe');
+  let request;
+  const wsfe = createWsfeService({ config: { taxId: '20123456786' },
+    auth: { login: async () => ({ token: 'ficticio', sign: 'ficticio' }) },
+    soap: { execute: async value => {
+      request = value;
+      return { result: { FEParamGetCotizacionResult: { ResultGet: { MonId: 'DOL', MonCotiz: 1534, FchCotiz: '20261030' } } } };
+    } },
+  });
+  const quotation = await wsfe.getQuotation({ currencyId: 'DOL', date: '2026-11-01' });
+  assert.equal(request.operation, 'FEParamGetCotizacion');
+  assert.equal(request.body.FchCotiz, '20261101');
+  assert.deepEqual(quotation, { currencyId: 'DOL', rate: 1534, date: '20261030' });
+  await assert.rejects(wsfe.getQuotation({ currencyId: 'DOL', date: '2026-02-30' }), /non-existent calendar date/);
+  await wsfe.getQuotation({ currencyId: 'DOL' });
+  assert.equal(Object.hasOwn(request.body, 'FchCotiz'), false);
+});
+
 test('USD exige cotizacion ARCA y cancelacion en la misma moneda', async () => {
   const { billingRecord, billingInvoice } = await import('../netlify/functions/lib/billing.cjs');
   const profile = { taxId: '20123456786', legalName: 'Prueba', address: 'Calle 1', condition: 'monotributo', currency: 'USD', amount: 10000 };

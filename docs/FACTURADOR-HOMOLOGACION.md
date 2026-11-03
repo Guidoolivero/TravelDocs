@@ -30,11 +30,12 @@ ni se modificaron las agencias reales.
    El listado muestra prueba gratuita, ficha incompleta o mes de habilitacion.
 2. La condicion de venta habitual se guarda en la ficha de agencia y parte de
    Transferencia bancaria. En la pestana Facturacion se puede elegir otra para
-   ese comprobante antes de pulsar Facturar; ese cambio no modifica la ficha.
+   ese comprobante antes de pulsar Vista previa; ese cambio no modifica la ficha.
    Revisar receptor, CUIT, importe, moneda,
    mes, fechas, condicion de venta y cotizacion. Confirmar emite un comprobante
    de prueba. La condicion queda guardada con la factura; las siguientes ediciones
    de la ficha no cambian un PDF anterior.
+   Vista previa guarda un borrador y muestra los datos; no solicita CAE ni emite.
 3. Consultar el historial y descargar el PDF de las facturas autorizadas.
    Descargar o regenerar un PDF no vuelve a emitir. El envio es manual.
 4. Ante un corte de conexion, usar Consultar ARCA. Solo un resultado not_found
