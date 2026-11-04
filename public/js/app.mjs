@@ -515,6 +515,26 @@ document.getElementById('res-pdf-input')?.addEventListener('change', e => {
   e.target.value = '';   // permite re-elegir los mismos archivos
   window.interpretarPDFs(files);
 });
+document.getElementById('res-pdf-dropzone')?.addEventListener('dragover', e => {
+  if (!Array.from(e.dataTransfer?.types || []).includes('Files')) return;
+  e.preventDefault();
+  if (document.getElementById('btn-attach-pdf').disabled) {
+    e.dataTransfer.dropEffect = 'none';
+    return;
+  }
+  e.dataTransfer.dropEffect = 'copy';
+  e.currentTarget.classList.add('drag-over');
+});
+document.getElementById('res-pdf-dropzone')?.addEventListener('dragleave', e => {
+  if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget)) return;
+  e.currentTarget.classList.remove('drag-over');
+});
+document.getElementById('res-pdf-dropzone')?.addEventListener('drop', e => {
+  if (!Array.from(e.dataTransfer?.types || []).includes('Files')) return;
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!document.getElementById('btn-attach-pdf').disabled) window.interpretarPDFs(e.dataTransfer.files);
+});
 document.getElementById('res-compania')?.addEventListener('input', e => {
   window.onCompaniaInput(e.target);
   _propagateTopToDraft();

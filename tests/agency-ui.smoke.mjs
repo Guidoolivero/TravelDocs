@@ -42,6 +42,10 @@ await page.route('**/*',async route=>{
  if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
  if(u.pathname.endsWith('/mfa-admin')) {await page.evaluate(body=>{window.fixture.mfaReset=body},route.request().postDataJSON());return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});}
  if(u.pathname.endsWith('/gemini-scan')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({text:JSON.stringify({documentos:await page.evaluate(()=>window.fixture.scanDocuments)})})});
+ if(u.pathname.endsWith('/pnr-checkin')) {
+  await page.evaluate(body=>{window.fixture.pdfRequest=body;},route.request().postDataJSON());
+  return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({data:{pnrAmadeus:'TEST01',pasajeros:[],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR'}]}})});
+ }
  if(u.pathname.startsWith('/.netlify/')) return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});
  return route.continue();
 });
@@ -93,6 +97,41 @@ try{
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
+ await page.evaluate(()=>window.openNewReservation());
+ const pdfZone=page.locator('#res-pnr-raw').locator('..').locator('..');
+ const pdfHint=page.getByText('Solta el PDF aca',{exact:true});
+ const pdfDrag=await page.evaluateHandle(()=>{
+  const data=new DataTransfer();
+  data.items.add(new File(['%PDF-1.4\nuno'],'uno.pdf',{type:'application/pdf'}));
+  data.items.add(new File(['%PDF-1.4\ndos'],'dos.pdf',{type:'application/pdf'}));
+  return data;
+ });
+ await page.locator('#res-pnr-raw').fill('PNR de prueba');
+ await page.locator('#res-pnr-raw').dispatchEvent('dragover',{dataTransfer:pdfDrag});
+ assert.equal(await pdfHint.isVisible(),true,'Muestra donde soltar el PDF sobre el campo PNR');
+ await pdfZone.dispatchEvent('dragleave',{dataTransfer:pdfDrag,relatedTarget:await page.locator('#btn-attach-pdf').elementHandle()});
+ assert.equal(await pdfHint.isVisible(),true,'El recuadro permanece al pasar entre sus controles');
+ await pdfZone.dispatchEvent('dragleave',{dataTransfer:pdfDrag});
+ assert.equal(await pdfHint.isVisible(),false,'Oculta el recuadro al salir de la zona');
+ const textDrag=await page.evaluateHandle(()=>{const data=new DataTransfer();data.setData('text/plain','PNR');return data;});
+ await pdfZone.dispatchEvent('dragover',{dataTransfer:textDrag});
+ assert.equal(await pdfHint.isVisible(),false,'Arrastrar texto no activa la carga de archivos');
+ await page.evaluate(()=>{document.getElementById('btn-attach-pdf').disabled=true;});
+ await pdfZone.dispatchEvent('dragover',{dataTransfer:pdfDrag});
+ assert.equal(await pdfHint.isVisible(),false,'No ofrece cargar archivos mientras el boton esta deshabilitado');
+ await pdfZone.dispatchEvent('drop',{dataTransfer:pdfDrag});
+ assert.equal(await page.evaluate(()=>window.fixture.pdfRequest),undefined,'El arrastre respeta el bloqueo de la carga');
+ await page.evaluate(()=>{document.getElementById('btn-attach-pdf').disabled=false;});
+ await pdfZone.dispatchEvent('dragover',{dataTransfer:pdfDrag});
+ const pdfResponse=page.waitForResponse(r=>r.url().endsWith('/pnr-checkin')&&r.request().method()==='POST');
+ await page.locator('#res-pnr-raw').dispatchEvent('drop',{dataTransfer:pdfDrag});
+ await pdfResponse;
+ await page.waitForFunction(()=>document.getElementById('res-pnr-status').textContent.includes('2 e-tickets interpretados'));
+ assert.equal(await pdfHint.isVisible(),false,'Oculta el recuadro despues de soltar');
+ assert.deepEqual(await page.evaluate(()=>window.fixture.pdfRequest.pdfs),[Buffer.from('%PDF-1.4\nuno').toString('base64'),Buffer.from('%PDF-1.4\ndos').toString('base64')]);
+ assert.equal(await page.locator('#res-pnr').inputValue(),'TEST01','La carga por arrastre completa la reserva');
+ assert.equal(await page.locator('#res-pnr-raw').inputValue(),'PNR de prueba','Soltar un archivo no reemplaza el PNR pegado');
+ await page.evaluate(()=>window.closeModal('modal-reservation'));
  await page.evaluate(()=>{
   window.showView('import');
   window.fixture.scanDocuments=[{tipo:'VISA',apellido:'PRUEBA',nombre:'VISA',numero:'V123',pais_destino_visa:'USA',fecha_vencimiento:'2030-12-20'}];
@@ -142,5 +181,5 @@ try{
  await page.waitForFunction(()=>window.fixture.mfaReset?.targetUid==='other-user');
  assert.deepEqual(await page.evaluate(()=>window.fixture.mfaReset),{action:'force-reset',targetUid:'other-user'});
  assert.deepEqual(errors,[]);
- console.log('PASS browser: search, optional emergency roundtrip, pending linkage, real CSV parser to save, platform MFA reset across agencies; no external services');
+ console.log('PASS browser: search, optional emergency roundtrip, pending linkage, PDF drop feedback and multi-file upload, real CSV parser to save, platform MFA reset across agencies; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}

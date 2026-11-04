@@ -759,3 +759,9 @@ textarea { resize: vertical; min-height: 72px; }
 .billing-preview-body { min-height: 0; overflow: auto; padding: 16px; background: var(--surface2); }
 #billing-preview-summary, #billing-preview-status { margin: 0 0 12px; color: var(--text2); font-size: 13px; line-height: 1.5; }
 #billing-preview-canvas canvas { display: block; width: 100%; height: auto; }
+
+.res-pdf-dropzone { position: relative; }
+.res-pdf-drop-hint { display: none; position: absolute; inset: 0; z-index: 1; pointer-events: none; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 20px; border: 2px dashed var(--accent); border-radius: var(--radius); background: var(--accent-light); color: var(--accent); text-align: center; }
+.res-pdf-drop-hint strong { font-size: 18px; font-weight: 600; }
+.res-pdf-drop-hint span { font-size: 13px; }
+.res-pdf-dropzone.drag-over .res-pdf-drop-hint { display: flex; }
