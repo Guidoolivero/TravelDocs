@@ -106,6 +106,16 @@ describe('CTCE — codificacion IATA de email (@ → //, _ → .., - → ./)', (
   });
 });
 
+describe('CTCM - celular Amadeus', () => {
+  it('quita separadores del numero y conserva el prefijo y el pasajero', () => {
+    for (const whatsapp of ['549383455-0959', '549383455\u20110959', '549383455\u20130959', '+54 (9) 383.455-0959', '5493834550959']) {
+      const item = buildSSRStrings({ whatsapp }, '2', '1', null, { gds: 'amadeus' })
+        .find(s => s.label.includes('Celular'));
+      assert.equal(item.value, 'SRCTCMYYHK1-5493834550959/P2', whatsapp);
+    }
+  });
+});
+
 describe('nombres compatibles con GDS', () => {
   it('reemplaza apostrofes y guiones por espacio, y quita acentos y enie, en NM y DOCS de todos los GDS', () => {
     const p = { ...P_DNI_ARG, lastname: "D’ÁÑGÉLO", firstname: "José-María" };

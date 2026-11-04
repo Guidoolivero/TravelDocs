@@ -181,7 +181,7 @@ export function generateSRCTCE(p) {
 }
 
 // ── SRCTCM / CTCM (celular) ─────────────────────────────────
-//  Amadeus: SRCTCMYYHK1-{num}/P{n}    (limpio: sin espacios/guiones/+/())
+//  Amadeus: SRCTCMYYHK1-{num}/P{n}    (numero: solo digitos)
 //  Sabre:   3CTCM/{num}-{pax}         (sin guiones ni +; espacios permitidos)
 //  Galileo: omitido
 export function generateCTCM(p) {
@@ -193,7 +193,7 @@ export function generateCTCM(p) {
     if (!clean) return '';
     return `3CTCM/${clean}${paxSuffix()}`;
   }
-  const clean = p.whatsapp.replace(/[\s\-\(\)\+]/g, '');
+  const clean = p.whatsapp.replace(/\D/g, '');
   if (!clean) return '';
   return `SRCTCMYYHK1-${clean}${paxSuffix()}`;
 }
