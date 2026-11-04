@@ -208,6 +208,41 @@
         </div>
         <div class="card-body" id="dash-checkins" style="padding:14px 16px;"></div>
       </div>
+      <section class="platform-updates" aria-labelledby="platform-updates-title">
+        <header class="platform-updates-header">
+          <h2 id="platform-updates-title">Novedades de TradingDocs</h2>
+          <p>Las ultimas mejoras y como usarlas.</p>
+        </header>
+        <!-- Agregar cada cambio importante al inicio, con fecha, resumen y detalles de uso. -->
+        <div class="platform-updates-grid">
+          <article class="platform-update">
+            <div class="platform-update-meta">
+              <time datetime="2026-11-04">4 de noviembre de 2026</time>
+              <span class="platform-update-tag">Nuevo</span>
+            </div>
+            <h3>Arrastra tus PDFs al check-in</h3>
+            <p>Solta uno o varios e-tickets en la zona del PNR. Se completan los datos del viaje para que los revises antes de guardar.</p>
+            <details>
+              <summary>Como usarlo</summary>
+              <p>Abri un check-in y arrastra los PDFs desde una carpeta de tu computadora. Cuando aparezca el recuadro "Solta el PDF aca", soltalos.</p>
+              <p>Si el adjunto viene de Outlook, descargalo primero y arrastralo desde Finder o el explorador de archivos.</p>
+            </details>
+          </article>
+          <article class="platform-update">
+            <div class="platform-update-meta">
+              <time datetime="2026-11-04">4 de noviembre de 2026</time>
+              <span class="platform-update-tag platform-update-tag-fix">Mejora</span>
+            </div>
+            <h3>Celulares listos para Amadeus</h3>
+            <p>El string CTCM usa solo los digitos del celular, aunque lo hayas cargado con espacios, guiones o parentesis.</p>
+            <details>
+              <summary>Que cambia</summary>
+              <p>Los separadores dentro del numero se eliminan al generar el string. Se conservan el guion del comando y la asociacion al pasajero.</p>
+              <p>Revisa que el celular incluya el codigo de pais antes de copiarlo al GDS.</p>
+            </details>
+          </article>
+        </div>
+      </section>
     </div>
 
     <!-- PASSENGERS -->
