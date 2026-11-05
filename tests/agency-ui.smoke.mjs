@@ -94,6 +94,25 @@ try{
  await page.waitForFunction(()=>!document.getElementById('platform-updates-next').disabled);
  assert.equal(await page.locator('#platform-updates-previous').isDisabled(),true);
  assert.equal(await page.locator('#platform-updates-next').isDisabled(),false);
+ for (const width of [1280,390]) {
+  await page.setViewportSize({width,height:844});
+  await page.emulateMedia({reducedMotion:width===1280?'no-preference':'reduce'});
+  for (let index=0;index<initialNewsCount;index++) {
+   const expanded=page.locator('.platform-update').nth(index).locator('details');
+   await expanded.locator('summary').click();
+   await page.waitForFunction(index=>{
+    const details=document.querySelectorAll('.platform-update details')[index];
+    const last=details.lastElementChild.getBoundingClientRect();
+    return last.bottom<=innerHeight-8&&details.querySelector('summary').getBoundingClientRect().top>=document.querySelector('.topbar').getBoundingClientRect().bottom+4;
+   },index,{timeout:1500});
+   assert.equal(await page.locator('.platform-update details[open]').count(),1,'Abrir una tarjeta no abre las otras');
+   await expanded.locator('summary').click();
+  }
+ }
+ await page.setViewportSize({width:1280,height:720});
+ await page.locator('#platform-updates > summary').click();
+ await page.locator('#platform-updates > summary').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled&&!document.getElementById('platform-updates-next').disabled);
  await page.locator('#platform-updates-next').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-next').disabled);
  const oldestId=await page.locator('.platform-update').last().getAttribute('data-update-id');

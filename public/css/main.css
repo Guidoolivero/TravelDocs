@@ -773,7 +773,8 @@ textarea { resize: vertical; min-height: 72px; }
 .platform-updates-title { display: block; font-size: 18px; font-weight: 600; color: var(--text); }
 .platform-updates-description { display: block; margin-top: 3px; color: var(--text2); font-size: 13px; }
 .platform-updates-carousel { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 8px; align-items: center; }
-.platform-updates-grid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; align-items: start; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+.platform-updates-grid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; align-items: start; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+.platform-updates-grid::-webkit-scrollbar { display: none; }
 .platform-updates-grid > .platform-update { scroll-snap-align: start; }
 .platform-updates-step { min-width: 44px; min-height: 44px; padding: 0; }
 .platform-updates-step:focus-visible, .platform-updates-grid:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -785,7 +786,7 @@ textarea { resize: vertical; min-height: 72px; }
 .platform-update h3 { min-width: 0; overflow-wrap: break-word; margin-bottom: 10px; font-size: 17px; font-weight: 600; line-height: 1.4; color: var(--text); }
 .platform-update p { color: var(--text2); font-size: 13px; line-height: 1.65; }
 .platform-update > p { flex: 1; }
-.platform-update details { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+.platform-update details { scroll-margin-top: 80px; scroll-margin-bottom: 16px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
 .platform-update summary { width: fit-content; padding: 4px 0; color: var(--accent); font-size: 13px; font-weight: 500; cursor: pointer; }
 .platform-update summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
 .platform-update details p { margin-top: 10px; }

@@ -287,6 +287,11 @@ async function initPlatformUpdates(uid) {
   previous.onclick = () => track.scrollBy({ left: -step() });
   next.onclick = () => track.scrollBy({ left: step() });
   track.addEventListener('scroll', updateArrows);
+  track.querySelectorAll('.platform-update details').forEach(details => {
+    details.addEventListener('toggle', () => {
+      if (details.open) details.scrollIntoView({ block: 'start', inline: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  });
   new ResizeObserver(updateArrows).observe(track);
   section.addEventListener('toggle', () => {
     if (section.open) {
