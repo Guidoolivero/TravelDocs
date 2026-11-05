@@ -12,6 +12,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TravelDocs — Gestión de Documentos</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/traveldocs-icon-32.png">
+<link rel="icon" type="image/svg+xml" href="/assets/traveldocs-icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -167,6 +169,7 @@
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
     <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <a id="platform-updates-link" class="platform-updates-link" href="#platform-updates" hidden>ULTIMAS NOVEDADES</a>
     <div class="topbar-actions">
       <div class="search-wrap">
         <label for="global-search" class="sr-only">Buscar pasajero</label>
@@ -208,6 +211,83 @@
         </div>
         <div class="card-body" id="dash-checkins" style="padding:14px 16px;"></div>
       </div>
+      <!-- Al actualizar novedades en preview, cambiar data-updates-revision para reiniciar las lecturas. -->
+      <details id="platform-updates" class="platform-updates" data-updates-revision="2026-11-05-produccion" aria-labelledby="platform-updates-title">
+        <summary class="platform-updates-header">
+          <span>
+            <span class="platform-updates-title" id="platform-updates-title">Novedades de TravelDocs</span>
+            <span class="platform-updates-description">Mejoras de la plataforma y avisos para tus pasajeros.</span>
+          </span>
+          <svg class="platform-updates-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <!-- Cada novedad nueva lleva un data-update-id unico y permanente. -->
+        <div class="platform-updates-carousel" role="region" aria-label="Tarjetas de novedades">
+          <button id="platform-updates-previous" class="btn btn-ghost platform-updates-step" type="button" aria-label="Ver novedades mas recientes" aria-controls="platform-updates-track" disabled>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m12.5 5-5 5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        <div class="platform-updates-grid" id="platform-updates-track" tabindex="0" aria-label="Novedades, de mas recientes a mas antiguas">
+          <article class="platform-update" data-update-id="2026-11-05-aviso-novedades">
+            <div class="platform-update-meta">
+              <time datetime="2026-11-05">5 de noviembre de 2026</time>
+              <span class="platform-update-tag">Nuevo</span>
+            </div>
+            <h3>Un aviso cuando hay novedades</h3>
+            <p>Si hay novedades sin leer, vas a ver "ULTIMAS NOVEDADES" en rojo arriba. Hace clic para abrir las tarjetas.</p>
+            <details>
+              <summary>Como funciona</summary>
+              <p>Al abrir las novedades, el aviso se marca como leido para tu usuario. No vuelve a aparecer al ingresar hasta que agreguemos una tarjeta nueva.</p>
+              <p>Podes volver a consultarlas con la flecha junto al titulo. Al salir del Dashboard, la seccion vuelve a quedar cerrada.</p>
+              <p>Usa las flechas del carrusel para recorrer las tarjetas, de las mas recientes a las mas antiguas.</p>
+            </details>
+          </article>
+          <article class="platform-update" data-update-id="2026-11-04-cdc-ebola">
+            <div class="platform-update-meta">
+              <time datetime="2026-11-04">4 de noviembre de 2026</time>
+              <span class="platform-update-tag platform-update-tag-alert">Aviso de viaje</span>
+            </div>
+            <h3>EE.UU: declaracion jurada por Ebola</h3>
+            <p>Para volar a EE.UU., incluso en conexion, se exige una declaracion jurada firmada antes de embarcar, salvo exencion del CDC.</p>
+            <details>
+              <summary>Requisito y formulario</summary>
+              <p>Se debe declarar que la persona no estuvo en la Republica Democratica del Congo durante los 21 dias previos al embarque. La aerolinea recibe la declaracion en papel o formato digital.</p>
+              <p>Aplica a vuelos que parten hacia EE.UU. desde el 3 de noviembre de 2026 a las 23:59 EST. La orden establece vigencia hasta el 18 de diciembre de 2026 a las 23:59 EST, salvo modificacion o revocacion previa.</p>
+              <p>Consulta con la aerolinea como presentarla y revisa la vigencia antes de viajar.</p>
+              <p><a href="https://www.cdc.gov/port-health/legal-authorities/attestation-order.html" target="_blank" rel="noopener noreferrer">Ver requisito del CDC</a></p>
+              <p><a href="https://www.cdc.gov/port-health/media/pdfs/2026/11/367886-B_FRM_EbolaAttestation_6-es_508.pdf" target="_blank" rel="noopener noreferrer">Formulario en espanol (PDF)</a></p>
+            </details>
+          </article>
+          <article class="platform-update" data-update-id="2026-11-04-pdf-checkin">
+            <div class="platform-update-meta">
+              <time datetime="2026-11-04">4 de noviembre de 2026</time>
+              <span class="platform-update-tag">Nuevo</span>
+            </div>
+            <h3>Arrastra tus PDFs al check-in</h3>
+            <p>Solta uno o varios e-tickets en la zona del PNR. Se completan los datos del viaje para que los revises antes de guardar.</p>
+            <details>
+              <summary>Como usarlo</summary>
+              <p>Abri un check-in y arrastra los PDFs desde una carpeta de tu computadora. Cuando aparezca el recuadro "Solta el PDF aca", soltalos.</p>
+              <p>Si el adjunto viene de Outlook, descargalo primero y arrastralo desde Finder o el explorador de archivos.</p>
+            </details>
+          </article>
+          <article class="platform-update" data-update-id="2026-11-04-celulares-amadeus">
+            <div class="platform-update-meta">
+              <time datetime="2026-11-04">4 de noviembre de 2026</time>
+              <span class="platform-update-tag platform-update-tag-fix">Mejora</span>
+            </div>
+            <h3>Celulares listos para Amadeus</h3>
+            <p>El string CTCM usa solo los digitos del celular, aunque lo hayas cargado con espacios, guiones o parentesis.</p>
+            <details>
+              <summary>Que cambia</summary>
+              <p>Los separadores dentro del numero se eliminan al generar el string. Se conservan el guion del comando y la asociacion al pasajero.</p>
+              <p>Revisa que el celular incluya el codigo de pais antes de copiarlo al GDS.</p>
+            </details>
+          </article>
+        </div>
+          <button id="platform-updates-next" class="btn btn-ghost platform-updates-step" type="button" aria-label="Ver novedades anteriores" aria-controls="platform-updates-track" disabled>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7.5 5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </details>
     </div>
 
     <!-- PASSENGERS -->

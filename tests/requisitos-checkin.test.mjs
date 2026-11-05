@@ -42,6 +42,87 @@ test('email del check-in: el del agente si está cargado, si no el de la agencia
   assert.equal(emailAviso('', ''), '');
 });
 
+test('mail al crear un check-in a EEUU incluye el formulario oficial del CDC en espanol', () => {
+  const { html } = buildRequisitosEmail({
+    reserva: reserva('2026-11-10T09:00', {
+      piernas: [{ fecha: '2026-11-10T09:00', vuelo: 'XX1', origen: 'EZE', destino: 'MIA', escalas: [], reservaVuelo: 'TEST01' }],
+    }),
+    pasajeros: [garcia],
+    alCrear: true,
+    now: Date.parse('2026-11-05T12:00:00-03:00'),
+  });
+  assert.match(html, /href="https:\/\/www\.cdc\.gov\/port-health\/media\/pdfs\/2026\/11\/367886-B_FRM_EbolaAttestation_6-es_508\.pdf"/);
+  assert.match(html, /href="https:\/\/www\.cdc\.gov\/port-health\/legal-authorities\/attestation-order\.html"/);
+  assert.match(html, /21 dias/);
+  assert.match(html, /18\/12\/2026/);
+});
+
+test('el aviso CDC aparece solo en Sanidad de EEUU, con los enlaces debajo del texto', () => {
+  for (const pasajeros of [[garcia], []]) {
+    const { html } = buildRequisitosEmail({
+      reserva: reserva('2026-11-10T09:00', {
+        piernas: [
+          { fecha: '2026-11-10T09:00', origen: 'EZE', destino: 'MIA', escalas: [] },
+          { fecha: '2026-11-12T09:00', origen: 'MIA', destino: 'MAD', escalas: [] },
+        ],
+      }),
+      pasajeros,
+      alCrear: true,
+    });
+    assert.equal(html.includes('EE.UU.: declaracion jurada del CDC por Ebola'), false, 'Sin bloque CDC repetido en la introduccion');
+    const usa = html.indexOf('Destino Estados Unidos');
+    const sanidad = html.indexOf('>Sanidad', usa);
+    const texto = html.indexOf('attestation', sanidad);
+    const pdf = html.indexOf('Formulario del CDC en espanol');
+    const requisito = html.indexOf('Requisito oficial y vigencia');
+    const siguiente = html.indexOf('Destino España', usa);
+    assert.ok(usa > 0 && sanidad > usa && texto > sanidad && pdf > texto && requisito > pdf);
+    assert.ok(siguiente === -1 || requisito < siguiente, 'Los enlaces pertenecen a EEUU');
+    assert.equal((html.match(/attestation\)/g) || []).length, 1, 'Una sola explicacion sanitaria');
+    assert.equal((html.match(/367886-B_FRM_EbolaAttestation_6-es_508\.pdf/g) || []).length, 1);
+  }
+});
+
+test('el formulario del CDC tambien sale con EEUU como escala o conexion entre tramos', () => {
+  const tramo = (origen, destino, escalas = []) => ({ fecha: '2026-11-10T09:00', vuelo: 'XX1', origen, destino, escalas });
+  for (const piernas of [
+    [tramo('EZE', 'MAD', ['MIA'])],
+    [tramo('EZE', 'JFK'), tramo('JFK', 'MAD')],
+    [tramo('EZE', 'JFK'), tramo('JFK', 'MIA')],
+  ]) {
+    const { html } = buildRequisitosEmail({ reserva: reserva('2026-11-10T09:00', { piernas }), pasajeros: [garcia], alCrear: true });
+    assert.equal((html.match(/367886-B_FRM_EbolaAttestation_6-es_508\.pdf/g) || []).length, 1);
+  }
+});
+
+test('el aviso CDC sale al crear y en el recordatorio aunque falte vincular al pasajero', () => {
+  for (const alCrear of [true, false]) {
+    const { html } = buildRequisitosEmail({
+      reserva: reserva('2026-11-10T09:00', {
+        piernas: [{ fecha: '2026-11-10T09:00', origen: 'EZE', destino: 'MIA', escalas: [] }],
+        pasajeros: [],
+        pendingPassengers: [{ lastname: 'PRUEBA', firstname: 'PASAJERO' }],
+      }),
+      pasajeros: [],
+      alCrear,
+      now: Date.parse('2026-11-05T12:00:00-03:00'),
+    });
+    assert.match(html, /Formulario del CDC en espanol \(PDF\)/);
+    assert.match(html, /PRUEBA, PASAJERO/);
+  }
+});
+
+test('no agrega el aviso CDC si EEUU no es destino ni escala, incluso si es el origen', () => {
+  for (const origen of ['EZE', 'MIA']) {
+    const { html } = buildRequisitosEmail({
+      reserva: reserva('2026-11-10T09:00', { piernas: [{ fecha: '2026-11-10T09:00', origen, destino: 'MAD', escalas: [] }] }),
+      pasajeros: [garcia],
+      alCrear: true,
+    });
+    assert.equal(html.includes('Formulario del CDC en espanol'), false);
+  }
+});
+
 test('creado el 29 sep para viajar el 15 oct: un solo aviso, el de la creación', () => {
   const r = reserva('2026-10-15T09:00', { createdAt: { toMillis: () => ahora } });
   assert.equal(debeEnviarRequisitos(r, { alCrear: true, now: ahora }), true);

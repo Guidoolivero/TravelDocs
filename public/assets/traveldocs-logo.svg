@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="88" viewBox="0 0 360 88" role="img" aria-labelledby="title">
+  <title id="title">TravelDocs Editorial</title>
+  <path d="M8 16h70v56H8V16Z" fill="#092A50"/>
+  <text x="17" y="59" fill="white" font-family="Georgia, serif" font-size="42" font-weight="700" letter-spacing="-2">T</text>
+  <text x="43" y="59" fill="#FF6846" font-family="Georgia, serif" font-size="29" font-weight="700" letter-spacing="-1">D</text>
+  <text x="98" y="55" fill="#092A50" font-family="Georgia, serif" font-size="33" font-weight="700" letter-spacing="-1">Travel</text>
+  <text x="198" y="55" fill="#FF6846" font-family="Georgia, serif" font-size="33" font-style="italic" font-weight="700" letter-spacing="-1">Docs</text>
+</svg>

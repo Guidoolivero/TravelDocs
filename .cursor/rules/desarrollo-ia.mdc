@@ -1,0 +1,6 @@
+---
+description: SDD y revision estructural de CaldoAI para cambios en TravelDocs.
+alwaysApply: true
+---
+
+Antes de implementar cambios, leer `docs/DESARROLLO-IA.md` y aplicar SDD con criterios de aceptacion verificables. En cambios no triviales, realizar la revision estructural de untangle-codebase dentro del alcance pedido. La guia es la fuente compartida con Codex, Claude y Grok; incluye TDD, plantilla de specs y limites del refactor completo.

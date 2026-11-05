@@ -15,7 +15,10 @@ const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http:
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':undefined),headless:true});
-const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const previousIds=[...(await readFile(publicDir+'/index.html','utf8')).matchAll(/data-update-id="([^"]+)"/g)].map(m=>m[1]);
+const previousReads=['test','otro'].flatMap(uid=>previousIds.map(id=>`platform-update_${uid}_${id}`));
+const legacyReadCount=previousReads.length;
+const page=await browser.newPage();const notifications=new Set(previousReads);let failRead=false;const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const stub=`
 window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR'}]}]};
 let pCb,rCb;
@@ -24,13 +27,19 @@ export const listenPassengers=cb=>{pCb=cb;setTimeout(()=>cb(window.fixture.passe
 export const addPassenger=async d=>{window.fixture.savedPassenger=d;window.fixture.passengers.push({id:'new',...d});pCb(window.fixture.passengers);return {id:'new'}},updatePassenger=async(id,d)=>{window.fixture.savedPassenger=d;Object.assign(window.fixture.passengers.find(p=>p.id===id),d);pCb(window.fixture.passengers)};
 export const addPassengersBatch=async ds=>{window.fixture.imported=ds;if(window.fixture.failAfter!=null){const saved=ds.slice(0,window.fixture.failAfter).map((d,i)=>({id:'partial'+i,...d}));window.fixture.passengers.push(...saved);pCb(window.fixture.passengers);const err=new Error('Firestore unavailable');err.savedIds=saved.map(p=>p.id);delete window.fixture.failAfter;throw err;}return ds.map((_,i)=>'i'+i)};
 export const addReservation=async d=>{window.fixture.savedReservation=d;window.fixture.reservations.push({id:'newres',...d});rCb(window.fixture.reservations);return {id:'newres'}},updateReservation=async(id,d)=>{window.fixture.savedReservation=d;Object.assign(window.fixture.reservations.find(r=>r.id===id),d);rCb(window.fixture.reservations)};
-export const deletePassenger=async()=>{},isNotified=async()=>true,markNotified=async()=>{},markReservationLegsNotified=async()=>{},deleteReservation=async()=>{},deleteReservations=async()=>{},getGdsCities=async()=>[],saveGdsCities=async()=>{};`;
+export const isNotified=async key=>(await (await fetch('/__notifications/'+encodeURIComponent(key))).json()).read,markNotified=async key=>{const r=await fetch('/__notifications/'+encodeURIComponent(key),{method:'POST'});if(!r.ok)throw new Error('No se pudo guardar');};
+export const deletePassenger=async()=>{},markReservationLegsNotified=async()=>{},deleteReservation=async()=>{},deleteReservations=async()=>{},getGdsCities=async()=>[],saveGdsCities=async()=>{};`;
 await page.route('**/*',async route=>{
  const u=new URL(route.request().url());
+ if(u.pathname.startsWith('/__notifications/')) {
+  const key=decodeURIComponent(u.pathname.slice('/__notifications/'.length));
+  if(route.request().method()==='POST'){if(failRead)return route.fulfill({status:503,body:'unavailable'});notifications.add(key);}
+  return route.fulfill({contentType:'application/json',body:JSON.stringify({read:notifications.has(key)})});
+ }
  const cors={'Access-Control-Allow-Origin':url,'Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Allow-Methods':'POST, GET, PATCH, OPTIONS'};
  if(u.pathname.startsWith('/.netlify/')&&route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:cors});
  if(u.hostname==='www.gstatic.com'){
-  const body=u.pathname.endsWith('firebase-app.js')?'export const initializeApp=()=>({});':`const user={uid:'test',email:'test@example.invalid',getIdToken:async()=> 'dummy',getIdTokenResult:async()=>({claims:{iat:Math.floor(Date.now()/1000),auth_time:Math.floor(Date.now()/1000),role:'owner',platformAdmin:true,firebase:{sign_in_second_factor:'totp'}}})};export const getAuth=()=>({currentUser:user}),onAuthStateChanged=(_,cb)=>setTimeout(()=>cb(user),20),signOut=async()=>{},multiFactor=()=>({enrolledFactors:[{}]});`;
+  const body=u.pathname.endsWith('firebase-app.js')?'export const initializeApp=()=>({});':`const user={uid:new URLSearchParams(location.search).get('uid')||'test',email:'test@example.invalid',getIdToken:async()=> 'dummy',getIdTokenResult:async()=>({claims:{iat:Math.floor(Date.now()/1000),auth_time:Math.floor(Date.now()/1000),role:'owner',platformAdmin:true,firebase:{sign_in_second_factor:'totp'}}})};export const getAuth=()=>({currentUser:user}),onAuthStateChanged=(_,cb)=>setTimeout(()=>cb(user),20),signOut=async()=>{},multiFactor=()=>({enrolledFactors:[{}]});`;
   return route.fulfill({contentType:'application/javascript',body});
  }
  if(u.href==='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js') return route.fulfill({contentType:'application/javascript',body:await readFile(xlsxPath,'utf8')});
@@ -59,6 +68,100 @@ try{
  await page.addInitScript(()=>sessionStorage.setItem('agencyId','previous-agency'));
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex',null,{timeout:5000});
  assert.equal(await page.evaluate(()=>sessionStorage.getItem('agencyId')),'test','El perfil vigente reemplaza la agencia guardada');
+ await page.waitForFunction(()=>!document.getElementById('platform-updates-link').hidden,null,{timeout:1500});
+ const initialNewsCount=await page.locator('.platform-update').count();
+ assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Tarjetas plegadas al entrar');
+ assert.equal(await page.locator('.platform-update').first().isVisible(),false);
+ assert.equal(await page.locator('#platform-updates-link').evaluate(el=>getComputedStyle(el).animationName),'pulse');
+ assert.equal(await page.locator('#platform-updates-link').innerText(),'ULTIMAS NOVEDADES');
+ assert.equal(await page.locator('#platform-updates-link').evaluate(el=>getComputedStyle(el).color),await page.locator('.stat-card.danger').evaluate(el=>getComputedStyle(el).borderLeftColor),'El aviso comparte el rojo de criticos');
+ assert.ok(await page.locator('#platform-updates-link').evaluate(el=>{const s=getComputedStyle(el);return parseFloat(s.fontSize)>=19&&Number(s.fontWeight)>=700;}),'Texto grande y en negrita para destacar el rojo');
+ assert.ok(previousReads.every(key=>notifications.has(key)),'El reinicio conserva las lecturas anteriores');
+ await page.setViewportSize({width:390,height:844});
+ assert.equal(await page.locator('#platform-updates-link').evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),true,'El aviso cabe en mobile');
+ await page.emulateMedia({reducedMotion:'reduce'});
+ assert.ok(parseFloat(await page.locator('#platform-updates-link').evaluate(el=>getComputedStyle(el).animationDuration))<0.01,'Respeta movimiento reducido');
+ await page.locator('#platform-updates-link').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
+ assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),true,'El aviso abre las tarjetas');
+ assert.equal(await page.locator('.platform-update').first().isVisible(),true);
+ assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('#platform-updates > summary')),true,'Foco en las novedades');
+ assert.equal(notifications.size,legacyReadCount+initialNewsCount,'Una lectura por agente y tarjeta');
+ await page.setViewportSize({width:1280,height:720});
+ await page.locator('.nav-item[data-view="passengers"]').click();
+ await page.locator('.nav-item[data-view="dashboard"]').click();
+ assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Volver al Dashboard deja las novedades plegadas');
+ await page.locator('#platform-updates > summary').click();
+ assert.match(await page.locator('.platform-update h3').first().innerText(),/aviso.*novedades/i,'La tarjeta mas reciente explica el aviso rojo');
+ const visibleNews=()=>page.locator('.platform-updates-grid').evaluate(track=>{
+  const box=track.getBoundingClientRect();
+  return [...track.children].filter(card=>{const r=card.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;}).map(card=>card.dataset.updateId);
+ });
+ assert.equal((await visibleNews()).length,3,'Tres tarjetas completas en escritorio');
+ await page.waitForFunction(()=>!document.getElementById('platform-updates-next').disabled);
+ assert.equal(await page.locator('#platform-updates-previous').isDisabled(),true);
+ assert.equal(await page.locator('#platform-updates-next').isDisabled(),false);
+ for (const width of [1280,390]) {
+  await page.setViewportSize({width,height:844});
+  await page.emulateMedia({reducedMotion:width===1280?'no-preference':'reduce'});
+  for (let index=0;index<initialNewsCount;index++) {
+   const expanded=page.locator('.platform-update').nth(index).locator('details');
+   await expanded.locator('summary').click();
+   await page.waitForFunction(index=>{
+    const details=document.querySelectorAll('.platform-update details')[index];
+    const last=details.lastElementChild.getBoundingClientRect();
+    return last.bottom<=innerHeight-8&&details.querySelector('summary').getBoundingClientRect().top>=document.querySelector('.topbar').getBoundingClientRect().bottom+4;
+   },index,{timeout:1500});
+   assert.equal(await page.locator('.platform-update details[open]').count(),1,'Abrir una tarjeta no abre las otras');
+   await expanded.locator('summary').click();
+  }
+ }
+ await page.setViewportSize({width:1280,height:720});
+ await page.locator('#platform-updates > summary').click();
+ await page.locator('#platform-updates > summary').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled&&!document.getElementById('platform-updates-next').disabled);
+ await page.locator('#platform-updates-next').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-next').disabled);
+ const oldestId=await page.locator('.platform-update').last().getAttribute('data-update-id');
+ assert.ok((await visibleNews()).includes(oldestId),'La flecha derecha muestra la tarjeta mas vieja');
+ assert.equal((await visibleNews()).length,3,'El carrusel mantiene tres columnas al avanzar');
+ await page.locator('#platform-updates-previous').focus();
+ await page.keyboard.press('Enter');
+ await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled);
+ await page.setViewportSize({width:390,height:844});
+ assert.equal((await visibleNews()).length,1,'Una tarjeta legible en celular');
+ await page.locator('#platform-updates-next').click();
+ await page.waitForFunction(()=>document.querySelector('.platform-updates-grid').scrollLeft>0);
+ await page.setViewportSize({width:1280,height:720});
+
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
+ assert.equal(await page.locator('#platform-updates-link').isVisible(),false,'Leer persiste despues de volver a entrar');
+ assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Vuelve plegado despues de leer');
+ await page.goto(url+'/?uid=otro');
+ await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex'&&!document.getElementById('platform-updates-link').hidden);
+ assert.equal(await page.locator('#platform-updates-link').isVisible(),true,'Cada agente tiene su lectura');
+ failRead=true;
+ await page.locator('#platform-updates-link').click();
+ await page.waitForFunction(()=>document.querySelector('.toast-body.error'));
+ assert.equal(await page.locator('#platform-updates-link').isVisible(),true,'No se oculta si falla el guardado');
+ failRead=false;
+ await page.locator('#platform-updates > summary').click();
+ await page.locator('#platform-updates > summary').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
+ assert.equal(notifications.size,legacyReadCount+initialNewsCount*2,'Abrir la flecha tambien marca como leido');
+ await page.route(url+'/',async route=>{
+  const html=(await readFile(publicDir+'/index.html','utf8')).replace(/(<div class="platform-updates-grid"[^>]*>)/,'$1<article class="platform-update" data-update-id="prueba-nueva"><h3>Nueva novedad de prueba</h3><p>Solo prueba local.</p></article>');
+  await route.fulfill({contentType:'text/html',body:html});
+ });
+ await page.goto(url);
+ await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex'&&!document.getElementById('platform-updates-link').hidden);
+ assert.equal(await page.locator('#platform-updates-link').isVisible(),true,'Una nueva tarjeta vuelve a mostrar el aviso');
+ await page.locator('#platform-updates-link').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
+ assert.equal(notifications.size,legacyReadCount+initialNewsCount*2+1,'Solo se marca la tarjeta nueva');
+ await page.unroute(url+'/');
+ await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
+
  await page.locator('#global-search').fill('jose ber');
  assert.match(await page.locator('#passengers-tbody').innerText(),/BERALDI/);
  await page.locator('#global-search').fill('ber jose');assert.match(await page.locator('#passengers-count').innerText(),/1 pasajero/);
@@ -181,5 +284,5 @@ try{
  await page.waitForFunction(()=>window.fixture.mfaReset?.targetUid==='other-user');
  assert.deepEqual(await page.evaluate(()=>window.fixture.mfaReset),{action:'force-reset',targetUid:'other-user'});
  assert.deepEqual(errors,[]);
- console.log('PASS browser: search, optional emergency roundtrip, pending linkage, PDF drop feedback and multi-file upload, real CSV parser to save, platform MFA reset across agencies; no external services');
+ console.log('PASS browser: platform news (per-agent read persistence, new card, save retry, mobile, reduced motion), search, optional emergency roundtrip, pending linkage, PDF drop feedback and multi-file upload, real CSV parser to save, platform MFA reset across agencies; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}
