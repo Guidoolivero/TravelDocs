@@ -503,6 +503,7 @@ textarea { resize: vertical; min-height: 72px; }
 .cat-seguro   { background: var(--green-bg); color: var(--green); }
 .cat-otro     { background: var(--surface); color: var(--text3); border: 1px solid var(--border); }
 .req-obligatorio { font-size: 11px; font-weight: 600; color: var(--red); margin-left: auto; }
+.req-incierto    { font-size: 11px; font-weight: 600; color: var(--amber); margin-left: auto; }
 .req-opcional    { font-size: 11px; color: var(--text3); margin-left: auto; }
 .req-nombre { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
 .req-desc   { font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 10px; }

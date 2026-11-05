@@ -944,7 +944,10 @@ exports.handler = async function handler(event) {
       vuelo:   sanitize(s.vuelo).toUpperCase(),
       origen:  sanitize(s.origen).toUpperCase(),
       destino: sanitize(s.destino).toUpperCase(),
-      fecha:   sanitize(s.fecha)
+      fecha:   sanitize(s.fecha),
+      hora_salida: sanitize(s.hora_salida),
+      hora_llegada: sanitize(s.hora_llegada),
+      fecha_llegada: sanitize(s.fecha_llegada),
     })).filter(s => s.vuelo && /^[A-Z0-9]{2,3}\d{1,4}$/.test(s.vuelo));
 
     if (segmentos.length === 0) {

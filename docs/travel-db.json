@@ -313,7 +313,7 @@
   },
   "centroamerica": {
    "archivo": "Requisitos_Visado_Sanidad_Centroamerica.xlsx",
-   "fecha_recopilacion": "24/05/2024",
+   "fecha_recopilacion": "5 de noviembre de 2026",
    "paises": [
     {
      "pais": "Guatemala",
@@ -326,15 +326,15 @@
       "confianza": "no"
      },
      "sanidad": {
-      "requisito": "No se encontró fuente oficial guatemalteca que establezca exigencia de certificado de fiebre amarilla para viajeros argentinos.",
-      "url_oficial": "No encontrado / no accesible (mspas.gob.gt sin resultado)",
-      "verificado": "No",
-      "confianza": "no"
+      "requisito": "Condicional: certificado de fiebre amarilla. No está confirmado si Guatemala lo exige al salir de Argentina. Riesgo parcial OMS: Misiones/Corrientes. No exime a Buenos Aires ni a EZE. Guatemala no publica esa excepción; Costa Rica sí exceptúa Argentina y Panamá. CDC 23 abr 2025 y OMS 3 ene 2023: desde 1 año, por país con riesgo o tránsito de aeropuerto de más de 12 horas. Sin página de MSPAS/IGM.",
+      "url_oficial": "https://www.cdc.gov/yellow-book/hcp/americas-caribbean/guatemala-and-belize.html",
+      "verificado": "Parcial",
+      "confianza": "parcial"
      },
      "notas": "igm.gob.gt y minex.gob.gt bloquearon el acceso automatizado (403) durante toda la sesión, incluso vía proxy/Wayback. Se recomienda verificación manual o confirmación telefónica con el IGM antes de comunicar al pasajero.",
      "normalizado": {
       "regimen": "exenta",
-      "sanidad": "fiebre_amarilla_obligatoria",
+      "sanidad": "fiebre_amarilla_condicional",
       "duracion_estadia": "90 dias"
      }
     },
@@ -3505,18 +3505,18 @@
      "fuente_visado": "Instituto Guatemalteco de Migracion (IGM) + Ministerio de Relaciones Exteriores (MINEX) - sitios con bloqueo 403, reconstruido via prensa que cita la fuente oficial",
      "verificado_visado": "Parcial",
      "confianza_visado": "parcial",
-     "fuente_sanidad": "www.who.int",
+     "fuente_sanidad": "cdc.gov/yellow-book; cdn.who.int anexo 3 ene 2023. Sin pagina MSPAS/IGM vigente al 5 nov 2026.",
      "verificado_sanidad": "Parcial",
      "confianza_sanidad": "parcial",
      "notas": "CA-4 (Guatemala, Honduras, El Salvador, Nicaragua): libre transito sin visa ni control migratorio pleno entre esos 4 paises, con plazo COMPARTIDO de 90 dias entre los cuatro (no es lo mismo que la 'Categoria A' que aplica al resto del mundo). Ecuador paso de exento a Categoria B (visa consular) desde 20/sept/2021. Venezuela en Categoria C (visa consultada) desde marzo 2018, con excepcion para titulares de visa vigente de EE.UU./Canada/Schengen. Uruguay y Paraguay no aparecieron mencionados explicitamente en las listas de paises con visa revisadas - se infieren como exentos por descarte, RECONFIRMAR. Fiebre amarilla exigida por procedencia/transito (no estrictamente por nacionalidad) a quienes llegan de: Argentina (zona parcial), Bolivia, Brasil, Colombia, Ecuador, Paraguay, Peru, Venezuela y Panama.",
      "por_nacionalidad": {
       "Argentina": {
        "visa": "No requiere visa (Categoria A). Solo pasaporte valido; ~90 dias habituales.",
-       "sanidad": "No se encontro fuente oficial guatemalteca que establezca exigencia explicita para argentinos; segun clasificacion OMS de riesgo por zona (Misiones/Corrientes) podria exigirse segun itinerario."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado si Guatemala lo exige al salir de Argentina. Riesgo parcial OMS: Misiones/Corrientes. No exime a Buenos Aires ni a EZE. Guatemala no publica esa excepción; Costa Rica sí exceptúa Argentina y Panamá. CDC 23 abr 2025 y OMS 3 ene 2023: desde 1 año, por país con riesgo o tránsito de aeropuerto de más de 12 horas. Sin página de MSPAS/IGM."
       },
       "UE / EEE": {
        "visa": "Categoria A, exenta, 90 dias. Confirmado explicitamente para Alemania, Espana, Francia, Italia; NO se confirmo el listado completo de los 27 en fuente primaria (bloqueada).",
-       "sanidad": "No exigido, salvo transito por pais de riesgo."
+       "sanidad": "No exigida: certificado internacional de fiebre amarilla, salvo llegada desde un país con riesgo o tránsito aeroportuario de más de 12 horas."
       },
       "Brasil": {
        "visa": "Categoria A, exenta, 90 dias.",

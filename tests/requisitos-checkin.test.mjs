@@ -453,6 +453,9 @@ test('pasaporte argentino: Asunción exige el certificado y Ezeiza deja la celda
   const eze = buildRequisitosEmail({ reserva: vuelo('EZE'), pasajeros: [arg] }).html;
   assert.match(eze, /Sale de Argentina\./);
   assert.match(eze, /Misiones\/Corrientes/);
+  assert.match(eze, /No está confirmado/);
+  assert.match(eze, /No exime a Buenos Aires ni a EZE/);
+  assert.match(eze, /no publica esa excepción/);
   assert.equal(/Paraguay en lista OMS/.test(eze), false);
 });
 
@@ -467,9 +470,10 @@ test('una escala en un país que exige gana a la salida que no exige', () => {
   assert.match(html, /No requiere visa\. Categoria A, exenta, 90 dias\./);
   assert.match(html, /Destino Guatemala \(GUA\)/);
   const guatemala = html.slice(html.indexOf('Destino Guatemala'));
-  assert.match(guatemala, /Sale de Paraguay\./);
-  assert.match(guatemala, /Paraguay en lista OMS de riesgo/);
-  assert.equal(/Chile no es pais de riesgo/.test(guatemala), false);
+  assert.match(guatemala, /Sale de Chile\./);
+  assert.match(guatemala, /sin horario de llegada y salida/);
+  assert.match(guatemala, /No se inventa la duracion/);
+  assert.equal(/Paraguay en lista OMS de riesgo/.test(guatemala), false);
 });
 
 test('sin columna para el país de salida no se dice que está exento', () => {
