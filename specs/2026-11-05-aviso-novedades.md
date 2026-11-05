@@ -13,7 +13,7 @@ Publicar una nueva revision del bloque de novedades. Las marcas anteriores queda
 
 El enlace muestra ULTIMAS NOVEDADES, usa el mismo rojo que el borde del indicador critico y gana tamano, peso, fondo y borde. Mantener pulso, preferencia de movimiento reducido, navegacion al carrusel, flechas y plegado al salir del Dashboard.
 
-No se borran documentos de Firebase ni se modifica main o produccion.
+La entrega inicial se mantuvo en preview sin borrar documentos de Firebase. La publicacion posterior a main y produccion fue autorizada por el usuario y se registra en specs/2026-11-05-publicacion-novedades-marca.md.
 
 ## Criterios de aceptacion
 

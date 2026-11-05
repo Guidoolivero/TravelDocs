@@ -62,6 +62,9 @@ docs/*.csv
 docs/*.png
 docs/*.rtf
 
+# Firmas personales generadas para uso local
+docs/firmas/
+
 # Fotos, capturas y documentos comerciales con datos de clientes
 docs/imagenes/
 docs/*.jpeg
