@@ -276,6 +276,24 @@ async function initPlatformUpdates(uid) {
   const link = document.getElementById('platform-updates-link');
   let unread = [...section.querySelectorAll('[data-update-id]')].map(card => `platform-update_${uid}_${card.dataset.updateId}`);
   section.open = false;
+  const track = document.getElementById('platform-updates-track');
+  const previous = document.getElementById('platform-updates-previous');
+  const next = document.getElementById('platform-updates-next');
+  const updateArrows = () => {
+    previous.disabled = track.scrollLeft <= 1;
+    next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 1;
+  };
+  const step = () => track.firstElementChild.getBoundingClientRect().width + parseFloat(getComputedStyle(track).columnGap);
+  previous.onclick = () => track.scrollBy({ left: -step() });
+  next.onclick = () => track.scrollBy({ left: step() });
+  track.addEventListener('scroll', updateArrows);
+  new ResizeObserver(updateArrows).observe(track);
+  section.addEventListener('toggle', () => {
+    if (section.open) {
+      track.scrollLeft = 0;
+      updateArrows();
+    }
+  });
   try {
     const read = await Promise.all(unread.map(key => isNotified(key)));
     unread = unread.filter((_, i) => !read[i]);
@@ -439,6 +457,7 @@ const viewTitles = {
 };
 
 window.showView = function(v) {
+  if (v !== 'dashboard') document.getElementById('platform-updates').open = false;
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.remove('active');

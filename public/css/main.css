@@ -772,7 +772,11 @@ textarea { resize: vertical; min-height: 72px; }
 .platform-updates[open] > .platform-updates-header { margin-bottom: 14px; }
 .platform-updates-title { display: block; font-size: 18px; font-weight: 600; color: var(--text); }
 .platform-updates-description { display: block; margin-top: 3px; color: var(--text2); font-size: 13px; }
-.platform-updates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.platform-updates-carousel { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 8px; align-items: center; }
+.platform-updates-grid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; align-items: start; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+.platform-updates-grid > .platform-update { scroll-snap-align: start; }
+.platform-updates-step { min-width: 44px; min-height: 44px; padding: 0; }
+.platform-updates-step:focus-visible, .platform-updates-grid:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .platform-update { display: flex; flex-direction: column; min-width: 0; min-height: 320px; padding: 20px; border: 1px solid var(--border2); border-top: 3px solid var(--accent); border-radius: var(--radius); background: var(--surface); }
 .platform-update-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; color: var(--text2); font-size: 12px; }
 .platform-update-tag { padding: 2px 9px; border-radius: var(--radius); background: var(--accent-light); color: var(--accent); font-weight: 500; }
@@ -786,8 +790,11 @@ textarea { resize: vertical; min-height: 72px; }
 .platform-update summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
 .platform-update details p { margin-top: 10px; }
 .platform-update a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 1000px) {
+  .platform-updates-grid { grid-auto-columns: calc((100% - 16px) / 2); }
+}
 @media (max-width: 640px) {
-  .platform-updates-grid { grid-template-columns: minmax(0, 1fr); }
+  .platform-updates-grid { grid-auto-columns: 100%; }
   .platform-update { padding: 16px; }
 }
 

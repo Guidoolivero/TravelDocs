@@ -66,6 +66,7 @@ try{
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex',null,{timeout:5000});
  assert.equal(await page.evaluate(()=>sessionStorage.getItem('agencyId')),'test','El perfil vigente reemplaza la agencia guardada');
  await page.waitForFunction(()=>!document.getElementById('platform-updates-link').hidden);
+ const initialNewsCount=await page.locator('.platform-update').count();
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Tarjetas plegadas al entrar');
  assert.equal(await page.locator('.platform-update').first().isVisible(),false);
  assert.equal(await page.locator('#platform-updates-link').evaluate(el=>getComputedStyle(el).animationName),'pulse');
@@ -78,8 +79,35 @@ try{
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),true,'El aviso abre las tarjetas');
  assert.equal(await page.locator('.platform-update').first().isVisible(),true);
  assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('#platform-updates > summary')),true,'Foco en las novedades');
- assert.equal(notifications.size,3,'Una lectura por agente y tarjeta');
+ assert.equal(notifications.size,initialNewsCount,'Una lectura por agente y tarjeta');
  await page.setViewportSize({width:1280,height:720});
+ await page.locator('.nav-item[data-view="passengers"]').click();
+ await page.locator('.nav-item[data-view="dashboard"]').click();
+ assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Volver al Dashboard deja las novedades plegadas');
+ await page.locator('#platform-updates > summary').click();
+ assert.match(await page.locator('.platform-update h3').first().innerText(),/aviso.*novedades/i,'La tarjeta mas reciente explica el aviso rojo');
+ const visibleNews=()=>page.locator('.platform-updates-grid').evaluate(track=>{
+  const box=track.getBoundingClientRect();
+  return [...track.children].filter(card=>{const r=card.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;}).map(card=>card.dataset.updateId);
+ });
+ assert.equal((await visibleNews()).length,3,'Tres tarjetas completas en escritorio');
+ await page.waitForFunction(()=>!document.getElementById('platform-updates-next').disabled);
+ assert.equal(await page.locator('#platform-updates-previous').isDisabled(),true);
+ assert.equal(await page.locator('#platform-updates-next').isDisabled(),false);
+ await page.locator('#platform-updates-next').click();
+ await page.waitForFunction(()=>document.getElementById('platform-updates-next').disabled);
+ const oldestId=await page.locator('.platform-update').last().getAttribute('data-update-id');
+ assert.ok((await visibleNews()).includes(oldestId),'La flecha derecha muestra la tarjeta mas vieja');
+ assert.equal((await visibleNews()).length,3,'El carrusel mantiene tres columnas al avanzar');
+ await page.locator('#platform-updates-previous').focus();
+ await page.keyboard.press('Enter');
+ await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled);
+ await page.setViewportSize({width:390,height:844});
+ assert.equal((await visibleNews()).length,1,'Una tarjeta legible en celular');
+ await page.locator('#platform-updates-next').click();
+ await page.waitForFunction(()=>document.querySelector('.platform-updates-grid').scrollLeft>0);
+ await page.setViewportSize({width:1280,height:720});
+
  await page.reload();await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
  assert.equal(await page.locator('#platform-updates-link').isVisible(),false,'Leer persiste despues de volver a entrar');
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Vuelve plegado despues de leer');
@@ -94,9 +122,9 @@ try{
  await page.locator('#platform-updates > summary').click();
  await page.locator('#platform-updates > summary').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
- assert.equal(notifications.size,6,'Abrir la flecha tambien marca como leido');
+ assert.equal(notifications.size,initialNewsCount*2,'Abrir la flecha tambien marca como leido');
  await page.route(url+'/',async route=>{
-  const html=(await readFile(publicDir+'/index.html','utf8')).replace('<div class="platform-updates-grid">','<div class="platform-updates-grid"><article class="platform-update" data-update-id="prueba-nueva"><h3>Nueva novedad de prueba</h3><p>Solo prueba local.</p></article>');
+  const html=(await readFile(publicDir+'/index.html','utf8')).replace(/(<div class="platform-updates-grid"[^>]*>)/,'$1<article class="platform-update" data-update-id="prueba-nueva"><h3>Nueva novedad de prueba</h3><p>Solo prueba local.</p></article>');
   await route.fulfill({contentType:'text/html',body:html});
  });
  await page.goto(url);
@@ -104,7 +132,7 @@ try{
  assert.equal(await page.locator('#platform-updates-link').isVisible(),true,'Una nueva tarjeta vuelve a mostrar el aviso');
  await page.locator('#platform-updates-link').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
- assert.equal(notifications.size,7,'Solo se marca la tarjeta nueva');
+ assert.equal(notifications.size,initialNewsCount*2+1,'Solo se marca la tarjeta nueva');
  await page.unroute(url+'/');
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
 
