@@ -796,14 +796,14 @@ describe('pantalla Requisitos de vuelo', () => {
     const data = pantalla({
       ruta: [
         { pais: 'Argentina', pais_codigo: 'ARG', aeropuerto_iata: 'AEP', tipo: 'origen', requisitos: [] },
-        { pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino', requisitos: [] },
+        { pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'escala_comercial', requisitos: [] },
         { pais: 'Aruba', pais_codigo: 'ABW', aeropuerto_iata: 'AUA', tipo: 'destino', requisitos: [] },
-        { pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'destino', requisitos: [] },
+        { pais: 'Peru', pais_codigo: 'PER', aeropuerto_iata: 'LIM', tipo: 'escala_comercial', requisitos: [] },
         { pais: 'Argentina', pais_codigo: 'ARG', aeropuerto_iata: 'EZE', tipo: 'destino', requisitos: [] }
       ]
     }, 'Argentina (ARG)', segmentos);
     const fa = data.ruta[2].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
-    assert.equal(data.ruta[1].tipo, 'destino');
+    assert.equal(data.ruta[1].tipo, 'escala_comercial');
     assert.equal(fa.obligatorio, false);
     assert.match(fa.descripcion, /Sale de Argentina/);
     assert.match(fa.descripcion, /1 de febrero de 2019/);
@@ -913,7 +913,8 @@ describe('pantalla Requisitos de vuelo', () => {
     }, 'Estados Unidos (USA)');
     const fa = data.ruta[1].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
     assert.match(fa.descripcion, /Sale de Chile/);
-    assert.match(fa.descripcion, /Chile no es pais de riesgo/);
+    assert.match(fa.descripcion, /No se exige por el pasaporte/);
+    assert.match(fa.descripcion, /m[aá]s de 12 horas/);
     assert.doesNotMatch(fa.descripcion, /para esta nacionalidad/);
     const visa = data.ruta[1].requisitos.find(r => /visa/i.test(r.nombre));
     assert.match(visa.descripcion, /Categoria A, exenta, 90 dias/);

@@ -136,6 +136,11 @@ export function dedupeTravelReqs(requisitos) {
   return out;
 }
 
+export function etiquetaRequisito(req) {
+  if (req && req.certeza === 'incierta') return 'A confirmar';
+  return req && req.obligatorio ? 'Obligatorio' : 'Recomendado';
+}
+
 export function splitTravelReqs(requisitos) {
   const list = Array.isArray(requisitos) ? requisitos : [];
   return {

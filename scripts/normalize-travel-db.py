@@ -144,6 +144,9 @@ def sanidad_de(texto):
         return ''
     if re.search(r'NACIONALIDAD\s*=\s*PAIS DESTINO', t):
         return ''
+    # Seguro medico obligatorio, sin mencionar fiebre amarilla, no es el certificado.
+    if 'FIEBRE AMARILLA' not in t and re.search(r'SEGURO|COBERTURA', t) and re.search(r'OBLIGATORI', t):
+        return 'seguro_obligatorio'
     head = re.split(r'\.\s+', t, maxsplit=1)[0]
     # "No obligatoria" abre con la negacion. \bOBLIGATORI tambien matchea
     # adentro de esa frase y la dejaba como exigida.

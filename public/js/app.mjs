@@ -32,6 +32,7 @@ import { opcionesPais } from './paises.mjs';
 import { alcanzaConDni } from './cabotaje.mjs';
 import { generarContrasena } from './contrasena.mjs';
 import { venceSesion } from './sesion.mjs';
+import { parseGDSSegmentos } from './gds-segmentos.mjs';
 
 let _scannerP, _itinerarioP, _travelReqsP;
 function loadScanner() { return _scannerP || (_scannerP = import('./scanner.js')); }
@@ -2819,6 +2820,7 @@ function storedPiernas(r) {
       origen: p.origen || '',
       destino: p.destino || '',
       escalas: Array.isArray(p.escalas) ? p.escalas : [],
+      transitos: Array.isArray(p.transitos) ? p.transitos : [],
       compania: p.compania || r.compania || '',               // fallback nivel reserva (compat)
       reservaVuelo: p.reservaVuelo != null ? p.reservaVuelo : (r.reservaVuelo || ''),
       checkin: !!p.checkin,
@@ -3429,6 +3431,17 @@ window.deleteReservation = async function(id) {
 // Mail de requisitos al crear el check-in. Si falla, el check-in queda
 // guardado y el cron de la mañana lo reintenta cuando el viaje entra en
 // los 30 días. No se llama al editar.
+function transitosDeEscala(p) {
+  const escalas = new Set((p.escalas || []).map(s => String(s).toUpperCase()));
+  return (Array.isArray(p.transitos) ? p.transitos : [])
+    .filter(t => escalas.has(String(t?.iata || '').toUpperCase()))
+    .map(t => ({
+      iata: String(t.iata || '').toUpperCase(),
+      minutos: Number.isFinite(t.minutos) ? t.minutos : null,
+      sinHora: !!t.sinHora || !Number.isFinite(t.minutos),
+    }));
+}
+
 async function avisarRequisitosCheckin(reservationId) {
   try {
     const currentUser = auth.currentUser;
@@ -3468,6 +3481,7 @@ window.saveReservation = async function() {
       origen: (p.origen || '').toUpperCase(),
       destino: (p.destino || '').toUpperCase(),
       escalas: Array.isArray(p.escalas) ? p.escalas.map(s => String(s).toUpperCase()) : [],
+      transitos: transitosDeEscala(p),
       compania: (p.compania || '').toUpperCase(),
       reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
       checkin: !!p.checkin,
@@ -3587,6 +3601,7 @@ window.applyInterpretedReservation = function(d) {
         origen: p.origen || '',
         destino: p.destino || '',
         escalas: Array.isArray(p.escalas) ? p.escalas : [],
+        transitos: Array.isArray(p.transitos) ? p.transitos : [],
         compania: (p.compania || _deriveCompania(p.vuelo)).toUpperCase(),
         reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
         checkin: previa ? !!previa.checkin : false,
@@ -4002,44 +4017,6 @@ window.setTravelMode = function(mode) {
   document.getElementById('tv-results').style.display = 'none';
 };
 
-// Parser de segmentos GDS (Amadeus, Galileo, Sabre, WorldSpan)
-// Acepta múltiples formatos — con o sin número de segmento, con o sin clase, con o sin horarios.
-function parseGDSSegmentos(texto) {
-  const resultados = [];
-  for (const linea of texto.split('\n')) {
-    const l = linea.toUpperCase().trim();
-    if (!l) continue;
-
-    let m;
-
-    // Formato 1: Amadeus clásico con día*ORIGDEST
-    // Ej: "2  MU 746 R 28APR 2*EZEPVG HK1  0215 1810  29APR  E  CA/QBRHFZ"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+[A-Z]\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+\d\*([A-Z]{3})([A-Z]{3})/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 2: ORIG y DEST separados por espacio, con o sin día
-    // Ej: "2  MU 746 R 28APR 2 EZE PVG HK1"  o  "MU 746 R 28APR EZE PVG"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+[A-Z]\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+(?:\d\*?\s*)?([A-Z]{3})\s+([A-Z]{3})/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 3: ORIGDEST sin día* (Galileo/Sabre/WorldSpan)
-    // Ej: "MU746 R 28APR EZEPVG HK1"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+[A-Z]\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+([A-Z]{3})([A-Z]{3})\s+(?:HK|HL|SS|UN|WK|GK|TK|RR|DK|SC|KK)/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 4: Sin clase explícita — más flexible
-    // Ej: "MU746 28APR EZE-PVG"  o  "MU 746 28APR EZEPVG"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+(?:[A-Z]\s+)?(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+(?:\d\*?\s*)?([A-Z]{3})[- ]?([A-Z]{3})/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 5: ORIG DEST DATE HORA > HORA AIRLINE FLTNUM [CLASE]
-    // Ej: "EZE MIA 15JUL 21:00 > 05:00 +1 AA 0900 V"
-    m = l.match(/^([A-Z]{3})\s+([A-Z]{3})\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+\d{1,2}:\d{2}.*?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})/);
-    if (m) { resultados.push({ vuelo: m[4]+m[5], origen: m[1], destino: m[2], fecha: m[3] }); continue; }
-  }
-  return resultados;
-}
-
 function pintarTramos(preview, segmentos) {
   if (!preview) return;
   if (!segmentos.length) {
@@ -4399,7 +4376,7 @@ window.selectTravelStop = async function(idx) {
       <div class="req-card">
         <div class="req-card-header">
           <span class="req-cat ${cls}">${label}</span>
-          <span class="${req.obligatorio ? 'req-obligatorio' : 'req-opcional'}">${req.obligatorio ? 'Obligatorio' : 'Recomendado'}</span>
+          <span class="${req.certeza === 'incierta' ? 'req-incierto' : (req.obligatorio ? 'req-obligatorio' : 'req-opcional')}">${esc(tr.etiquetaRequisito(req))}</span>
         </div>
         <div class="req-nombre">${esc(req.nombre)}</div>
         <div class="req-desc">${esc(req.descripcion)}</div>
