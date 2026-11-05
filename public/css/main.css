@@ -766,10 +766,12 @@ textarea { resize: vertical; min-height: 72px; }
 .res-pdf-drop-hint span { font-size: 13px; }
 .res-pdf-dropzone.drag-over .res-pdf-drop-hint { display: flex; }
 
-.platform-updates { margin-top: 28px; }
-.platform-updates-header { margin-bottom: 14px; }
-.platform-updates-header h2 { font-size: 18px; font-weight: 600; color: var(--text); }
-.platform-updates-header p { margin-top: 3px; color: var(--text2); font-size: 13px; }
+.platform-updates { margin-top: 28px; scroll-margin-top: 120px; }
+.platform-updates-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0; list-style: none; cursor: pointer; }
+.platform-updates-header::-webkit-details-marker { display: none; }
+.platform-updates[open] > .platform-updates-header { margin-bottom: 14px; }
+.platform-updates-title { display: block; font-size: 18px; font-weight: 600; color: var(--text); }
+.platform-updates-description { display: block; margin-top: 3px; color: var(--text2); font-size: 13px; }
 .platform-updates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
 .platform-update { display: flex; flex-direction: column; min-width: 0; min-height: 320px; padding: 20px; border: 1px solid var(--border2); border-top: 3px solid var(--accent); border-radius: var(--radius); background: var(--surface); }
 .platform-update-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; color: var(--text2); font-size: 12px; }
@@ -787,4 +789,15 @@ textarea { resize: vertical; min-height: 72px; }
 @media (max-width: 640px) {
   .platform-updates-grid { grid-template-columns: minmax(0, 1fr); }
   .platform-update { padding: 16px; }
+}
+
+.platform-updates-arrow { flex-shrink: 0; color: var(--text2); }
+.platform-updates[open] > summary .platform-updates-arrow { transform: rotate(180deg); }
+.platform-updates-link { padding: 4px 8px; border-radius: var(--radius); color: var(--red); font-size: 13px; font-weight: 500; text-align: center; animation: pulse 1.8s ease-in-out infinite; }
+.platform-updates-link[hidden] { display: none; }
+.platform-updates-link:hover { text-decoration: underline; }
+.platform-updates-link:focus-visible, .platform-updates-header:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 768px) {
+  .topbar:has(.platform-updates-link:not([hidden])) { height: auto; min-height: 56px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; row-gap: 6px; }
+  .platform-updates-link { order: 4; flex-basis: 100%; }
 }

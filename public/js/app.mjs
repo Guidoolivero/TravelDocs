@@ -269,6 +269,46 @@ function maybeShowDirectMessage(email) {
   openModal('modal-direct-message');
 }
 
+// Lectura por agente y tarjeta, persistida con las notificaciones de la agencia.
+async function initPlatformUpdates(uid) {
+  const section = document.getElementById('platform-updates');
+  const summary = section.querySelector('summary');
+  const link = document.getElementById('platform-updates-link');
+  let unread = [...section.querySelectorAll('[data-update-id]')].map(card => `platform-update_${uid}_${card.dataset.updateId}`);
+  section.open = false;
+  try {
+    const read = await Promise.all(unread.map(key => isNotified(key)));
+    unread = unread.filter((_, i) => !read[i]);
+  } catch (err) {
+    console.warn('[Novedades] No se pudo consultar la lectura:', err?.message || err);
+  }
+  link.hidden = unread.length === 0;
+  let saving = false;
+  const markRead = async () => {
+    if (saving || !unread.length) return;
+    saving = true;
+    try {
+      await Promise.all(unread.map(key => markNotified(key)));
+      unread = [];
+      link.hidden = true;
+    } catch (err) {
+      console.warn('[Novedades] No se pudo guardar la lectura:', err?.message || err);
+      showToast('No se pudo marcar como leido. Volve a abrir las novedades para reintentar.', true);
+    } finally {
+      saving = false;
+    }
+  };
+  summary.onclick = () => { if (!section.open) markRead(); };
+  link.onclick = event => {
+    event.preventDefault();
+    window.showView('dashboard');
+    section.open = true;
+    summary.focus({ preventScroll: true });
+    section.scrollIntoView({ block: 'start' });
+    markRead();
+  };
+}
+
 // Autorización multi-tenant: users/{uid} + validación en netlify/functions/_auth.cjs
 onAuthStateChanged(auth, async user => {
   if (!user) {
@@ -324,6 +364,7 @@ onAuthStateChanged(auth, async user => {
   appName = agency.branding?.appName || 'TravelDocs';
   agencyName = (agency.name || '').trim();
   applyBranding(agency.branding);
+  await initPlatformUpdates(user.uid);
 
   // Visibilidad de Administración según claim platformAdmin del JWT.
   try {
