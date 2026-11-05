@@ -1,7 +1,7 @@
 # Estadias y llegada al dia siguiente en requisitos sanitarios
 
 Estado: implementado y tests verificados; reindexacion final pendiente
-Rama: codex/corregir-escalas-pr10 (local, desde PR #10, 2522e79)
+Rama local: codex/corregir-escalas-pr10 (desde PR #10, 2522e79)
 
 ## Problema y pedido
 
@@ -17,7 +17,8 @@ comerciales y paradas tecnicas conservan la politica de transito existente.
 El campo mas_dias se conserva en el backend y desplaza la llegada cuando no
 hay fecha_llegada explicita. Una fecha de llegada explicita tiene prioridad.
 No cambiar las matrices sanitarias, reglas por pais ni strings SSR/FOID.
-Los cambios quedan locales, sin push, comentarios externos ni deploy.
+El pedido posterior autoriza actualizar la PR #10, revisarla con Astra en
+nivel medio y mergearla si no hay bloqueos y pasan los checks.
 
 ## Criterios de aceptacion
 
@@ -65,4 +66,5 @@ Los cambios quedan locales, sin push, comentarios externos ni deploy.
 ## Pendientes
 
 Reindexar cuando el servidor codebase-memory vuelva a estar disponible.
-La publicacion queda fuera del pedido: sin push ni deploy.
+Publicar el arreglo en la PR #10 y esperar la revision y los checks antes
+del merge. La revision se informa solo en el chat.
