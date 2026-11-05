@@ -57,6 +57,32 @@ test('mail al crear un check-in a EEUU incluye el formulario oficial del CDC en 
   assert.match(html, /18\/12\/2026/);
 });
 
+test('el aviso CDC aparece solo en Sanidad de EEUU, con los enlaces debajo del texto', () => {
+  for (const pasajeros of [[garcia], []]) {
+    const { html } = buildRequisitosEmail({
+      reserva: reserva('2026-11-10T09:00', {
+        piernas: [
+          { fecha: '2026-11-10T09:00', origen: 'EZE', destino: 'MIA', escalas: [] },
+          { fecha: '2026-11-12T09:00', origen: 'MIA', destino: 'MAD', escalas: [] },
+        ],
+      }),
+      pasajeros,
+      alCrear: true,
+    });
+    assert.equal(html.includes('EE.UU.: declaracion jurada del CDC por Ebola'), false, 'Sin bloque CDC repetido en la introduccion');
+    const usa = html.indexOf('Destino Estados Unidos');
+    const sanidad = html.indexOf('>Sanidad', usa);
+    const texto = html.indexOf('attestation', sanidad);
+    const pdf = html.indexOf('Formulario del CDC en espanol');
+    const requisito = html.indexOf('Requisito oficial y vigencia');
+    const siguiente = html.indexOf('Destino España', usa);
+    assert.ok(usa > 0 && sanidad > usa && texto > sanidad && pdf > texto && requisito > pdf);
+    assert.ok(siguiente === -1 || requisito < siguiente, 'Los enlaces pertenecen a EEUU');
+    assert.equal((html.match(/attestation\)/g) || []).length, 1, 'Una sola explicacion sanitaria');
+    assert.equal((html.match(/367886-B_FRM_EbolaAttestation_6-es_508\.pdf/g) || []).length, 1);
+  }
+});
+
 test('el formulario del CDC tambien sale con EEUU como escala o conexion entre tramos', () => {
   const tramo = (origen, destino, escalas = []) => ({ fecha: '2026-11-10T09:00', vuelo: 'XX1', origen, destino, escalas });
   for (const piernas of [
