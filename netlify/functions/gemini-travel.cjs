@@ -948,6 +948,7 @@ exports.handler = async function handler(event) {
       hora_salida: sanitize(s.hora_salida),
       hora_llegada: sanitize(s.hora_llegada),
       fecha_llegada: sanitize(s.fecha_llegada),
+      mas_dias: sanitize(s.mas_dias),
     })).filter(s => s.vuelo && /^[A-Z0-9]{2,3}\d{1,4}$/.test(s.vuelo));
 
     if (segmentos.length === 0) {

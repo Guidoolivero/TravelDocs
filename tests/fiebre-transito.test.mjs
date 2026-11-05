@@ -5,6 +5,8 @@ import { injectMatrizSanidad, lecturaMatriz } from '../lib/travel-matriz.mjs';
 import { buildRequisitosEmail } from '../lib/requisitos-checkin.mjs';
 import { etiquetaRequisito } from '../public/js/travel-reqs.mjs';
 import { parseGDSSegmentos } from '../public/js/gds-segmentos.mjs';
+import { fixture } from './firebase-fixture.mjs';
+import { minutosConexion } from '../lib/fiebre-transito.mjs';
 
 function parada(iso, iata, tipo, extra = {}) {
   return { pais_codigo: iso, pais: '', aeropuerto_iata: iata, tipo, requisitos: [], ...extra };
@@ -350,7 +352,8 @@ test('una escala larga no se toma como entrada: vale el umbral, o la incertidumb
     { origen: 'GRU', destino: 'GUA', fecha: '21FEB26', hora_salida: '1800', hora_llegada: '2200' },
   ], 'Chile (CHL)');
   assert.equal(sinSalida.obligatorio, true);
-  assert.match(sinSalida.descripcion, /transito aereo/i);
+  assert.match(sinSalida.descripcion, /Sale de Brasil/);
+  assert.doesNotMatch(sinSalida.descripcion, /transito aereo/i);
   assert.doesNotMatch(sinSalida.descripcion, /entrada migratoria/);
 });
 
@@ -465,6 +468,65 @@ test('la regla positiva de mas de 12 horas en pais con riesgo queda en la sanida
   assert.doesNotMatch(nota, /recomendable|llevar certificado|Argentina no es pa[ií]s de riesgo/i);
   for (const nat of ['Brasil', 'Paraguay', 'Bolivia', 'Colombia', 'Peru', 'Venezuela', 'Ecuador', 'Panama']) {
     assert.doesNotMatch(cub.por_nacionalidad[nat].sanidad, /recomendable|llevar certificado/);
+  }
+});
+
+test('una estadia en Brasil conserva la procedencia aunque el siguiente vuelo salga de GRU', () => {
+  const req = fiebre([
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'destino'),
+    parada('ABW', 'AUA', 'destino'),
+  ], [
+    { origen: 'SCL', destino: 'GRU', fecha: '20FEB26', hora_llegada: '1200' },
+    { origen: 'GRU', destino: 'AUA', fecha: '24FEB26', hora_salida: '0800' },
+  ], 'Chile (CHL)');
+  assert.equal(req.obligatorio, true);
+  assert.match(req.descripcion, /Sale de Brasil/);
+});
+
+test('el backend respeta +1 en la llegada GDS y conserva una conexion de una hora', async () => {
+  const ruta = [
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'escala_comercial'),
+    parada('GTM', 'GUA', 'destino'),
+  ];
+  class GoogleGenAI {
+    models = { generateContent: async () => ({ text: JSON.stringify({ ruta }) }) };
+  }
+  const f = fixture({
+    env: { GEMINI_API_KEY: 'dummy' },
+    modules: { '@google/genai': { GoogleGenAI, HarmCategory: {}, HarmBlockThreshold: {} } },
+  });
+  const segmentos = parseGDSSegmentos([
+    'SCL GRU 20FEB 23:00 > 03:00 +1 LA 123',
+    'GRU GUA 21FEB 04:00 > 10:00 LA 456',
+  ].join('\n'));
+  assert.equal(segmentos.length, 2);
+  const response = await f.invoke('gemini-travel', {
+    fase: 'analisis', nacionalidad: 'Chile (CHL)', segmentos,
+  });
+  assert.equal(response.statusCode, 200);
+  const req = JSON.parse(response.body).data.ruta.at(-1).requisitos.find(r => /fiebre|certificado/i.test(`${r.nombre} ${r.descripcion}`));
+  assert.ok(req);
+  assert.equal(req.obligatorio, false);
+  assert.match(req.descripcion, /\(1 hora\)/);
+});
+
+test('el desplazamiento de llegada respeta el calendario y la fecha explicita', () => {
+  for (const [fecha, mas_dias, fechaSalida, fecha_llegada] of [
+    ['28FEB26', '1', '01MAR26'],
+    ['28FEB28', '1', '29FEB28'],
+    ['31DEC', '1', '01JAN'],
+    ['31DEC26', '2', '02JAN27'],
+    ['20FEB26', '1', '22FEB26', '22FEB26'],
+    ['20FEB26', '0', '20FEB26'],
+    ['20FEB26', 'invalido', '20FEB26'],
+  ]) {
+    const conexion = minutosConexion(
+      { fecha, mas_dias, fecha_llegada, hora_llegada: '0300' },
+      { fecha: fechaSalida, hora_salida: '0400' },
+    );
+    assert.deepEqual(conexion, { minutos: 60, sinHora: false }, `${fecha} +${mas_dias}`);
   }
 });
 
