@@ -35,6 +35,9 @@ nivel medio y mergearla si no hay bloqueos y pasan los checks.
 - CA-6: repetir un pais en transito conserva la incertidumbre de una
   conexion sin horarios aunque otra tenga 45 minutos. Si alguna conexion
   conocida supera el umbral, el requisito sigue activandose.
+- CA-7: al combinar con main, el correo a EEUU conserva el aviso sanitario
+  del CDC aunque aun no haya pasajeros vinculados; el consumidor recibe
+  la lista de salidas del nuevo contexto de exposicion.
 
 ## Plan minimo
 
@@ -64,7 +67,11 @@ nivel medio y mergearla si no hay bloqueos y pasan los checks.
 - CA-6: la regresion con dos conexiones en Panama fallo primero con certeza
   vacia. Se conserva sinHora al combinar visitas y se guarda la mayor duracion
   conocida. Pasan ambos ordenes de conexion desconocida/corta y desconocida/larga.
-- npm test: 476 tests pasan, cero fallos. git diff --check: sin errores.
+- CA-7: el test de main del aviso CDC fallo al pasar el objeto de exposicion
+  como lista. Tras adaptar el consumidor a desde.salidas, pasa tambien sin
+  pasajeros vinculados. No se cambia el HTML ni el texto del correo.
+- npm test, tras integrar main: 483 tests pasan, cero fallos.
+  git diff --check: sin errores.
 - Revision Ponytail y estructural limitada al diff: se elimina la inferencia
   de estadia por coincidencia de aeropuerto y se conserva el calculo de fechas
   en minutosConexion. Sin dependencias nuevas, wrappers ni duplicacion de fechas.
@@ -77,5 +84,7 @@ nivel medio y mergearla si no hay bloqueos y pasan los checks.
 ## Pendientes
 
 Reindexar cuando el servidor codebase-memory vuelva a estar disponible.
-Publicar el arreglo en la PR #10 y esperar la revision y los checks antes
-del merge. La revision se informa solo en el chat.
+Se publicaron los primeros arreglos en la PR #10. La revision de Astra
+detecto CA-5 y CA-6, ya corregidos; el fallo de CI por integracion con main
+se reproduce y corrige en CA-7. Esperar nueva revision del mismo agente y
+checks verdes antes del merge. La revision se informa solo en el chat.
