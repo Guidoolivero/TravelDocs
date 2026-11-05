@@ -5640,11 +5640,11 @@
      "por_nacionalidad": {
       "Argentina": {
        "visa": "e-Visa de turismo obligatoria (evisacuba.cu), ~equivalente a EUR 22, 90+90 dias.",
-       "sanidad": "Sin exigencia (Argentina no es pais de riesgo OMS)."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado si Cuba lo exige al salir de Argentina. OMS, anexo 3 ene 2023, nota 5: desde los 9 meses, si se llega de un país con riesgo o el tránsito de aeropuerto supera 12 horas. Argentina es riesgo parcial (Misiones/Corrientes); eso no exime a EZE y no hay excepción publicada para Cuba. Sin página ministerial cubana en esta revisión."
       },
       "UE / EEE": {
        "visa": "e-Visa obligatoria (homogeneo, ~EUR 22, sin excepciones dentro del bloque).",
-       "sanidad": "Sin exigencia general."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia general."
       },
       "Brasil": {
        "visa": "e-Visa obligatoria.",
@@ -5652,11 +5652,11 @@
       },
       "Chile": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia (no es pais de riesgo)."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia (no es pais de riesgo)."
       },
       "Uruguay": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Paraguay": {
        "visa": "e-Visa obligatoria.",
@@ -5684,27 +5684,27 @@
       },
       "Mexico": {
        "visa": "e-Visa obligatoria (~575 MXN).",
-       "sanidad": "Sin exigencia general."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia general."
       },
       "Guatemala": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Honduras": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "El Salvador": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Nicaragua": {
        "visa": "e-Visa obligatoria (el propio comunicado MINSAP 2022 aclaro que Nicaragua NO exige certificado de fiebre amarilla).",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Costa Rica": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Panama": {
        "visa": "e-Visa obligatoria.",
@@ -5712,26 +5712,26 @@
       },
       "Belice": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Estados Unidos": {
        "visa": "e-Visa obligatoria (USD 50). ADEMAS restriccion OFAC (ley EE.UU.): turismo puro PROHIBIDO; solo 12 categorias de licencia general autorizadas (visita familiar, negocios oficiales, periodismo, investigacion, educativo, religioso, deportivo amateur, apoyo al pueblo cubano, humanitario, fundaciones privadas, exportacion de info, transacciones autorizadas). Paquetes turisticos prepagados prohibidos.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       },
       "Canada": {
        "visa": "e-Visa obligatoria (~CAD 24); en vuelos chárter directos suele venir incluida en el paquete.",
-       "sanidad": "Sin exigencia."
+       "sanidad": "No exigida: certificado de fiebre amarilla. Sin exigencia."
       }
      },
      "normalizado": {
       "Argentina": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90+90 dias"
       },
       "UE / EEE": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Brasil": {
@@ -5741,12 +5741,12 @@
       },
       "Chile": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Uruguay": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Paraguay": {
@@ -5781,32 +5781,32 @@
       },
       "Mexico": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Guatemala": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Honduras": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "El Salvador": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Nicaragua": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Costa Rica": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Panama": {
@@ -5816,23 +5816,23 @@
       },
       "Belice": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Estados Unidos": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       },
       "Canada": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "sin_requisitos",
        "duracion_estadia": ""
       }
      },
      "normalizado_arg": {
       "regimen": "evisa",
-      "sanidad": "fiebre_amarilla_obligatoria",
+      "sanidad": "fiebre_amarilla_condicional",
       "duracion_estadia": "90+90 dias"
      }
     },

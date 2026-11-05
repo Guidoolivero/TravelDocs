@@ -248,6 +248,22 @@ test('cualquier duracion, umbrales propios y reglas universales no se apagan', (
   ]);
   assert.match(pyLargo.descripcion, /Sale de Brasil/);
   assert.match(pyLargo.descripcion, /OBLIGATORIA/);
+  assert.match(pyLargo.descripcion, /transito aereo/i);
+  assert.match(pyLargo.descripcion, /nota 11/);
+  assert.doesNotMatch(pyLargo.descripcion, /entrada migratoria|inmigraci[oó]n/i);
+
+  const pyExacto = fiebre([
+    parada('ARG', 'EZE', 'origen'),
+    parada('BRA', 'GRU', 'escala_comercial'),
+    parada('PRY', 'ASU', 'destino'),
+  ], [
+    { origen: 'EZE', destino: 'GRU', fecha: '20FEB26', hora_salida: '0800', hora_llegada: '1000' },
+    { origen: 'GRU', destino: 'ASU', fecha: '21FEB26', hora_salida: '1000', hora_llegada: '1100' },
+  ]);
+  assert.match(pyExacto.descripcion, /Sale de Argentina/);
+  assert.match(pyExacto.descripcion, /24 horas/);
+  assert.doesNotMatch(pyExacto.descripcion, /Amazonas/);
+  assert.equal(pyExacto.obligatorio, false);
 
   const pyPanama = fiebre([
     parada('ARG', 'EZE', 'origen'),
@@ -295,6 +311,87 @@ test('cualquier duracion, umbrales propios y reglas universales no se apagan', (
   assert.equal(honduras.obligatorio, true);
   assert.match(honduras.descripcion, /Sale de Argentina/);
   assert.match(honduras.descripcion, /45 minutos/);
+});
+
+test('una escala larga no se toma como entrada: vale el umbral, o la incertidumbre', () => {
+  const treinta = (destinoIso, iata) => fiebre([
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'escala_comercial'),
+    parada(destinoIso, iata, 'destino'),
+  ], [
+    { origen: 'SCL', destino: 'GRU', fecha: '20FEB26', hora_salida: '0800', hora_llegada: '1000' },
+    { origen: 'GRU', destino: iata, fecha: '21FEB26', hora_salida: '1600', hora_llegada: '2000' },
+  ], 'Chile (CHL)');
+  const guatemala = treinta('GTM', 'GUA');
+  assert.equal(guatemala.obligatorio, true);
+  assert.match(guatemala.descripcion, /transito aereo/i);
+  assert.match(guatemala.descripcion, /EXIGIDO/);
+  assert.doesNotMatch(guatemala.descripcion, /entrada migratoria|inmigraci[oó]n/i);
+
+  const costa = treinta('CRI', 'SJO');
+  assert.equal(costa.obligatorio, false);
+  assert.match(costa.descripcion, /Sale de Chile/);
+  assert.doesNotMatch(costa.descripcion, /EXIGIDO/);
+
+  const sinSalida = fiebre([
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'destino'),
+    parada('GTM', 'GUA', 'destino'),
+  ], [
+    { origen: 'SCL', destino: 'GRU', fecha: '20FEB26', hora_salida: '0800', hora_llegada: '1200' },
+    { origen: 'GRU', destino: 'GUA', fecha: '21FEB26', hora_salida: '1800', hora_llegada: '2200' },
+  ], 'Chile (CHL)');
+  assert.equal(sinSalida.obligatorio, true);
+  assert.match(sinSalida.descripcion, /transito aereo/i);
+  assert.doesNotMatch(sinSalida.descripcion, /entrada migratoria/);
+});
+
+test('Cuba: Sin exigencia no se muestra Obligatorio; Australia no exige por una escala de 45 min', () => {
+  const cubaCorta = fiebre([
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'escala_comercial'),
+    parada('CUB', 'HAV', 'destino'),
+  ], [
+    { origen: 'SCL', destino: 'GRU', fecha: '20FEB26', hora_salida: '0800', hora_llegada: '1200' },
+    { origen: 'GRU', destino: 'HAV', fecha: '20FEB26', hora_salida: '1245', hora_llegada: '1800' },
+  ], 'Chile (CHL)');
+  assert.equal(cubaCorta.obligatorio, false);
+  assert.match(cubaCorta.descripcion, /No exigida/);
+  assert.match(cubaCorta.descripcion, /45 minutos/);
+  assert.doesNotMatch(cubaCorta.descripcion, /llevar certificado si procede/);
+
+  const cubaLarga = fiebre([
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'escala_comercial'),
+    parada('CUB', 'HAV', 'destino'),
+  ], [
+    { origen: 'SCL', destino: 'GRU', fecha: '20FEB26', hora_salida: '0600', hora_llegada: '1000' },
+    { origen: 'GRU', destino: 'HAV', fecha: '21FEB26', hora_salida: '0000', hora_llegada: '0400' },
+  ], 'Chile (CHL)');
+  assert.match(cubaLarga.descripcion, /Sale de Brasil/);
+  assert.match(cubaLarga.descripcion, /llevar certificado si procede/);
+
+  const cubaArg = fiebre([
+    parada('ARG', 'EZE', 'origen'),
+    parada('CUB', 'HAV', 'destino'),
+  ]);
+  assert.equal(cubaArg.obligatorio, false);
+  assert.equal(cubaArg.certeza, 'incierta');
+  assert.match(cubaArg.descripcion, /No está confirmado/);
+  assert.doesNotMatch(cubaArg.descripcion, /no es pais de riesgo OMS/);
+
+  const australia = fiebre([
+    parada('CHL', 'SCL', 'origen'),
+    parada('BRA', 'GRU', 'escala_comercial'),
+    parada('AUS', 'SYD', 'destino'),
+  ], [
+    { origen: 'SCL', destino: 'GRU', fecha: '20FEB26', hora_salida: '0800', hora_llegada: '1200' },
+    { origen: 'GRU', destino: 'SYD', fecha: '20FEB26', hora_salida: '1245', hora_llegada: '1800' },
+  ], 'Chile (CHL)');
+  assert.equal(australia.obligatorio, false);
+  assert.notEqual(australia.certeza, 'incierta');
+  assert.match(australia.descripcion, /No se exige/);
+  assert.match(australia.descripcion, /pernoctado/);
 });
 
 test('el GDS conserva las horas del transito', () => {
