@@ -41,15 +41,20 @@ CLAUSULA = (
     'Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, '
     'no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. '
 )
+# La regla positiva nombra el aeropuerto: un transito largo en otro pais no dispara.
+POS = (
+    'llegada desde un país con riesgo o tránsito aeroportuario de más de 12 horas en país con riesgo'
+)
 
 GUA_CORTO = (
     'Condicional: certificado de fiebre amarilla. '
     'No se exige por el pasaporte ni por llegada directa sin riesgo. '
-    + CLAUSULA +
-    'Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año.'
+    'Se exige si el itinerario incluye ' + POS + '. Desde 1 año. '
+    + CLAUSULA
 )
 GUA_ARG = (
     'Condicional: certificado de fiebre amarilla. '
+    'Desde 1 año, por ' + POS + '; aplicación Argentina/EZE sin excepción confirmada. '
     'No está confirmado si Guatemala lo exige al salir de Argentina (EZE incluido). '
     'Misiones/Corrientes no demuestra exención. No se encontró excepción. '
     + CLAUSULA
@@ -58,21 +63,18 @@ GUA_DOM = (
     'Condicional: certificado de fiebre amarilla. '
     'El pasaporte guatemalteco no es exención sanitaria. '
     'No se exige por una llegada directa desde Guatemala. '
-    + CLAUSULA + 'Desde 1 año.'
+    'Desde 1 año, por ' + POS + '. '
+    + CLAUSULA
 )
 
 def gua_riesgo(detalle):
     extra = f' Previo: {detalle}' if detalle else ''
-    texto = (
+    return (
         'Condicional: certificado de fiebre amarilla. '
-        + CLAUSULA +
-        'Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. '
-        'Desde 1 año.'
+        'Se exige si el itinerario incluye ' + POS + '. Desde 1 año. '
+        + CLAUSULA
         + extra
     )
-    if len(texto) > 400:
-        raise SystemExit(f'Guatemala riesgo pasa de 400: {len(texto)} {detalle}')
-    return texto
 
 GUA_RIESGO = {
     'Brasil': 'Brasil en lista OMS de riesgo.',
@@ -111,36 +113,29 @@ GUA_VIEJO = {
 CUB_CORTO = (
     'Condicional: certificado de fiebre amarilla. '
     'No se exige por el pasaporte ni por llegada directa sin riesgo. '
-    + CLAUSULA +
-    'Desde los 9 meses. OMS 3 de enero de 2023, nota 5.'
+    'Desde los 9 meses, por ' + POS + '. '
+    'OMS 3 de enero de 2023, nota 5. '
+    + CLAUSULA
 )
 CUB_ARG = (
     'Condicional: certificado de fiebre amarilla. '
+    'Desde los 9 meses, por ' + POS + '; aplicación Argentina/EZE sin excepción confirmada. '
     'No está confirmado si Cuba lo exige al salir de Argentina (EZE incluido). '
     'Misiones/Corrientes no demuestra exención. '
-    + CLAUSULA +
-    'Desde los 9 meses. OMS 3 de enero de 2023, nota 5.'
+    'OMS 3 de enero de 2023, nota 5. '
+    + CLAUSULA
 )
 CUB_RIESGO_BASE = (
     'Condicional: certificado de fiebre amarilla. '
     'No está confirmado con fuente cubana. '
-    + CLAUSULA +
-    'Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. '
-    'Desde los 9 meses.'
+    'Se exige si el itinerario incluye ' + POS + '. '
+    'Desde los 9 meses. '
+    + CLAUSULA
 )
 
-def cub_riesgo(previo):
-    texto = CUB_RIESGO_BASE + f' Nota previa, no confirmada como regla de entrada: {previo}'
-    if len(texto) > 400:
-        texto = CUB_RIESGO_BASE
-    if len(texto) > 400:
-        raise SystemExit(f'Cuba riesgo pasa de 400: {len(texto)}')
-    return texto
-
-for _name in ('GUA_CORTO', 'GUA_ARG', 'GUA_DOM', 'CUB_CORTO', 'CUB_ARG', 'CUB_RIESGO_BASE'):
-    _t = globals()[_name]
-    if len(_t) > 400:
-        raise SystemExit(f'{_name} > 400 ({len(_t)})')
+def cub_riesgo(_previo):
+    # El contexto geografico previo va a la nota AA5, no a la celda de sanidad.
+    return CUB_RIESGO_BASE
 
 CUB_VIEJO = {
     'Argentina': 'Sin exigencia (Argentina no es pais de riesgo OMS).',
@@ -169,16 +164,19 @@ CUB_VIEJO = {
 NOTA_GUA = (
     ' Revisión del 5 de noviembre de 2026 (fiebre amarilla): la frase que listaba la llegada desde Argentina como exigida queda sin efecto. '
     'Argentina, EZE incluido, sigue incierta: verificado Parcial, sin exención confirmada. '
-    'Desde 1 año, por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas '
+    'Desde 1 año, por llegada desde un país con riesgo o tránsito aeroportuario de más de 12 horas en país con riesgo '
     '(CDC Yellow Book, página del 23 de abril de 2025, leída el 5 de noviembre de 2026; '
     'OMS anexo revisado el 3 de enero de 2023, leído el 5 de noviembre de 2026, nota 5). '
     + CLAUSULA
 )
 NOTA_CUB = (
     ' Revisión del 5 de noviembre de 2026 (fiebre amarilla): regla provisional OMS revisada el 3 de enero de 2023, nota 5, desde los 9 meses, '
-    'por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. '
+    'por llegada desde un país con riesgo o tránsito aeroportuario de más de 12 horas en país con riesgo. '
     'No se leyó fuente sanitaria cubana ese día. Argentina, EZE incluido, queda incierta, sin exención confirmada. '
-    + CLAUSULA
+    + CLAUSULA +
+    'Contexto previo de exposición subnacional, pendiente de verificación; no es regla de entrada ni exención de entrada: '
+    'Brasil (Amazonia/algunos estados), Paraguay (este), Bolivia (tierras bajas/Amazonia), '
+    'Colombia (zonas de riesgo), Perú (selva), Venezuela (zonas de riesgo), Ecuador (Amazonia), Panamá (Darién).'
 )
 NOTA_REG = (
     ' Revisión del 5 de noviembre de 2026: fiebre amarilla de Guatemala, condicional al itinerario '
@@ -194,7 +192,7 @@ FRASE_AA2_NUEVA = (
     'Fiebre amarilla, revisión del 5 de noviembre de 2026: no se afirma que llegar de Argentina esté exigido. '
     'Argentina (zona parcial OMS: Misiones/Corrientes), EZE incluido, queda incierta, verificado Parcial, sin exención confirmada. '
     'Bolivia, Brasil, Colombia, Ecuador, Paraguay, Peru, Venezuela y Panama siguen en la lista previa de países con riesgo de transmisión. '
-    'El certificado, desde 1 año, depende de la llegada desde un país con riesgo o de un tránsito de aeropuerto de más de 12 horas. '
+    'El certificado, desde 1 año, depende de la llegada desde un país con riesgo o de un tránsito aeroportuario de más de 12 horas en país con riesgo. '
     + CLAUSULA.strip()
 )
 
@@ -266,6 +264,15 @@ def anexar_leyenda(ws, linea):
     return 1
 
 
+def exige_en_tarjeta(texto, etiqueta):
+    # Excel admite 32767 caracteres por celda. No se recorta la sanidad.
+    if len(texto) > 32767:
+        raise SystemExit(f'{etiqueta} supera el limite de Excel')
+    for aguja in (POS, '12 horas o menos', 'Condicional: certificado de fiebre amarilla.'):
+        if aguja not in texto:
+            raise SystemExit(f'{etiqueta} no tiene: {aguja}')
+
+
 def mapa_guatemala():
     out = {}
     for nat, viejo in GUA_VIEJO.items():
@@ -277,8 +284,7 @@ def mapa_guatemala():
             out[nat] = gua_riesgo(GUA_RIESGO[nat])
         else:
             out[nat] = GUA_CORTO
-        if len(out[nat]) > 400:
-            raise SystemExit(f'{nat} {len(out[nat])}')
+        exige_en_tarjeta(out[nat], f'Guatemala {nat}')
     return out
 
 
@@ -292,8 +298,7 @@ def mapa_cuba():
             out[nat] = cub_riesgo(CUB_VIEJO[nat])
         else:
             out[nat] = CUB_CORTO
-        if len(out[nat]) > 400:
-            raise SystemExit(f'CUB {nat} {len(out[nat])}')
+        exige_en_tarjeta(out[nat], f'Cuba {nat}')
     return out
 
 
@@ -446,7 +451,7 @@ def main():
     )
     fu_cub = (
         ' Revisado el 5 de noviembre de 2026: ' + OMS
-        + ' (anexo del 18 de noviembre de 2022, revisado el 3 de enero de 2023; Cuba nota 5, desde los 9 meses, tránsito de más de 12 horas). '
+        + ' (anexo del 18 de noviembre de 2022, revisado el 3 de enero de 2023; Cuba nota 5, desde los 9 meses, tránsito aeroportuario de más de 12 horas en país con riesgo). '
         'Sin fuente sanitaria confirmatoria cubana leída ese día. Sigue Parcial. Se conserva www.cives.ufrj.br.'
     )
     n1 = patch_matriz(

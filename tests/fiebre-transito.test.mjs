@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { injectMatrizSanidad, lecturaMatriz } from '../lib/travel-matriz.mjs';
 import { buildRequisitosEmail } from '../lib/requisitos-checkin.mjs';
 import { etiquetaRequisito } from '../public/js/travel-reqs.mjs';
@@ -414,7 +415,7 @@ test('Guatemala y Cuba: ocho procedencias de riesgo arrancan Condicional, no por
       const t = lecturaMatriz(dest, nat).sanidad.texto;
       assert.match(t, /^Condicional: certificado de fiebre amarilla\./, `${dest} ${nat}`);
       assert.match(t, clausula, `${dest} ${nat}`);
-      assert.match(t, /Se exige si el itinerario incluye llegada desde un pa[ií]s con riesgo o tr[aá]nsito de m[aá]s de 12 horas/, `${dest} ${nat}`);
+      assert.match(t, /Se exige si el itinerario incluye llegada desde un pa[ií]s con riesgo o tr[aá]nsito aeroportuario de m[aá]s de 12 horas en pa[ií]s con riesgo/, `${dest} ${nat}`);
       assert.doesNotMatch(t, /desde este pa[ií]s/i, `${dest} ${nat}`);
       assert.doesNotMatch(t, /permanencia/i, `${dest} ${nat}`);
       assert.doesNotMatch(t, /\bExigida\b/, `${dest} ${nat}`);
@@ -430,6 +431,41 @@ test('Guatemala y Cuba: ocho procedencias de riesgo arrancan Condicional, no por
   const chile = lecturaMatriz('GTM', 'CHL').sanidad.texto;
   assert.match(chile, /No se exige por el pasaporte/);
   assert.match(chile, clausula);
+  assert.match(chile, /tr[aá]nsito aeroportuario de m[aá]s de 12 horas en pa[ií]s con riesgo/);
+});
+
+test('la regla positiva de mas de 12 horas en pais con riesgo queda en la sanidad, y Cuba guarda el contexto en la nota', () => {
+  const db = JSON.parse(readFileSync(new URL('../docs/travel-db.json', import.meta.url), 'utf8'));
+  const pos = /tránsito aeroportuario de más de 12 horas en país con riesgo/;
+  const gua = db.matrices_multinacionalidad.centroamerica.destinos.find(d => d.pais === 'Guatemala');
+  const cub = db.matrices_multinacionalidad.norteamerica_caribe.destinos.find(d => d.pais === 'Cuba');
+  const reg = db.regiones.centroamerica.paises.find(p => p.pais === 'Guatemala');
+  assert.match(reg.sanidad.requisito, /Desde 1 año/);
+  assert.match(reg.sanidad.requisito, pos);
+  assert.match(reg.sanidad.requisito, /12 horas o menos/);
+  assert.match(reg.sanidad.requisito, /aplicación Argentina\/EZE sin excepción confirmada/);
+  for (const nat of ['Argentina', 'Guatemala']) {
+    assert.match(gua.por_nacionalidad[nat].sanidad, /Desde 1 año/, nat);
+    assert.match(gua.por_nacionalidad[nat].sanidad, pos, nat);
+  }
+  const cortas = ['Argentina', 'UE / EEE', 'Chile', 'Uruguay', 'Mexico', 'Guatemala', 'Honduras', 'El Salvador', 'Nicaragua', 'Costa Rica', 'Belice', 'Estados Unidos', 'Canada'];
+  for (const nat of cortas) {
+    assert.match(cub.por_nacionalidad[nat].sanidad, pos, nat);
+    assert.match(cub.por_nacionalidad[nat].sanidad, /12 horas o menos/, nat);
+    assert.match(cub.por_nacionalidad[nat].sanidad, /Desde los 9 meses/, nat);
+  }
+  assert.match(cub.por_nacionalidad.Argentina.sanidad, /aplicación Argentina\/EZE sin excepción confirmada/);
+  assert.match(cub.por_nacionalidad.Argentina.sanidad, /No está confirmado/);
+  const nota = cub.notas;
+  for (const zona of ['Amazonia/algunos estados', 'Paraguay (este)', 'tierras bajas/Amazonia', 'Perú (selva)', 'Ecuador (Amazonia)', 'Darién', 'zonas de riesgo']) {
+    assert.match(nota, new RegExp(zona.replace(/[()]/g, '\\$&')));
+  }
+  assert.match(nota, /pendiente de verificación/);
+  assert.match(nota, /no es regla de entrada ni exención de entrada/);
+  assert.doesNotMatch(nota, /recomendable|llevar certificado|Argentina no es pa[ií]s de riesgo/i);
+  for (const nat of ['Brasil', 'Paraguay', 'Bolivia', 'Colombia', 'Peru', 'Venezuela', 'Ecuador', 'Panama']) {
+    assert.doesNotMatch(cub.por_nacionalidad[nat].sanidad, /recomendable|llevar certificado/);
+  }
 });
 
 test('el GDS conserva las horas del transito', () => {
