@@ -2,9 +2,13 @@
 
 This file provides guidance to Codex (claude.ai/code) when working with code in this repository.
 
+## SDD y revision estructural (obligatorio)
+
+Antes de implementar cambios, leer `docs/DESARROLLO-IA.md`. Aplicar SDD con criterios de aceptacion verificables y mantener la spec junto al cambio. En cambios no triviales, realizar la revision estructural de untangle-codebase dentro del alcance pedido. La guia compartida define el flujo, la plantilla y los limites del refactor completo; conserva TDD, Ponytail, Humanizer y Hallmark.
+
 ## Qué es este proyecto
 
-DocTravel (marca actual: **TradingDocs**) es un sistema web multi-tenant para que agencias de viajes argentinas gestionen los documentos de sus pasajeros (DNI, pasaportes ARG/extranjeros, visas) y generen los strings SSR/FOID que se cargan en los GDS (Amadeus, Sabre, Galileo). Incluye lectura de documentos por IA (Gemini) y análisis de requisitos de vuelo por país.
+DocTravel (marca actual: **TravelDocs**) es un sistema web multi-tenant para que agencias de viajes argentinas gestionen los documentos de sus pasajeros (DNI, pasaportes ARG/extranjeros, visas) y generen los strings SSR/FOID que se cargan en los GDS (Amadeus, Sabre, Galileo). Incluye lectura de documentos por IA (Gemini) y análisis de requisitos de vuelo por país.
 
 El repo vive en `DocTravel/` (raíz git). La carpeta padre `TradingDocs/` solo contiene este proyecto más el brief original (`DocTravel_Brief_Desarrollador.md`).
 
