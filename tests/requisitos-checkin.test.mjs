@@ -428,7 +428,8 @@ test('la sanidad de Guatemala sale del país de donde sale, la visa del pasaport
     assert.match(html, /Guatemala \(GUA\)/);
     assert.match(html, /No requiere visa\. Categoria A, exenta, 90 dias\./);
     assert.match(html, /Sale de Chile\./);
-    assert.match(html, /Chile no es pais de riesgo/);
+    assert.match(html, /No se exige por el pasaporte/);
+    assert.match(html, /m[aá]s de 12 horas/);
     assert.equal(/para esta nacionalidad/.test(html), false);
     assert.equal(/Paraguay en lista OMS/.test(html), false);
   }
@@ -454,8 +455,8 @@ test('pasaporte argentino: Asunción exige el certificado y Ezeiza deja la celda
   assert.match(eze, /Sale de Argentina\./);
   assert.match(eze, /Misiones\/Corrientes/);
   assert.match(eze, /No está confirmado/);
-  assert.match(eze, /No exime a Buenos Aires ni a EZE/);
-  assert.match(eze, /no publica esa excepción/);
+  assert.match(eze, /no demuestra exenci[oó]n/);
+  assert.match(eze, /No se encontr[oó] excepci[oó]n/);
   assert.equal(/Paraguay en lista OMS/.test(eze), false);
 });
 

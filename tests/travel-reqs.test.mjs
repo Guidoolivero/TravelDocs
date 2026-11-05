@@ -913,7 +913,8 @@ describe('pantalla Requisitos de vuelo', () => {
     }, 'Estados Unidos (USA)');
     const fa = data.ruta[1].requisitos.find(r => /fiebre amarilla/i.test(r.nombre));
     assert.match(fa.descripcion, /Sale de Chile/);
-    assert.match(fa.descripcion, /Chile no es pais de riesgo/);
+    assert.match(fa.descripcion, /No se exige por el pasaporte/);
+    assert.match(fa.descripcion, /m[aá]s de 12 horas/);
     assert.doesNotMatch(fa.descripcion, /para esta nacionalidad/);
     const visa = data.ruta[1].requisitos.find(r => /visa/i.test(r.nombre));
     assert.match(visa.descripcion, /Categoria A, exenta, 90 dias/);

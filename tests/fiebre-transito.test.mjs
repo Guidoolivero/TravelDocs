@@ -87,7 +87,7 @@ test('el umbral de 12 horas es estricto y un origen de riesgo real sigue exigien
   ]);
   assert.equal(brasil.obligatorio, true);
   assert.match(brasil.descripcion, /Sale de Brasil/);
-  assert.match(brasil.descripcion, /EXIGIDO/);
+  assert.match(brasil.descripcion, /Exigida/);
 });
 
 test('varias conexiones, salida del aeropuerto, cambio de dia y huso', () => {
@@ -325,7 +325,7 @@ test('una escala larga no se toma como entrada: vale el umbral, o la incertidumb
   const guatemala = treinta('GTM', 'GUA');
   assert.equal(guatemala.obligatorio, true);
   assert.match(guatemala.descripcion, /transito aereo/i);
-  assert.match(guatemala.descripcion, /EXIGIDO/);
+  assert.match(guatemala.descripcion, /Exigida/);
   assert.doesNotMatch(guatemala.descripcion, /entrada migratoria|inmigraci[oó]n/i);
 
   const costa = treinta('CRI', 'SJO');
@@ -356,9 +356,11 @@ test('Cuba: Sin exigencia no se muestra Obligatorio; Australia no exige por una 
     { origen: 'GRU', destino: 'HAV', fecha: '20FEB26', hora_salida: '1245', hora_llegada: '1800' },
   ], 'Chile (CHL)');
   assert.equal(cubaCorta.obligatorio, false);
-  assert.match(cubaCorta.descripcion, /No exigida/);
+  assert.match(cubaCorta.descripcion, /Condicional/);
+  assert.match(cubaCorta.descripcion, /No se exige por el pasaporte/);
+  assert.match(cubaCorta.descripcion, /9 meses/);
+  assert.match(cubaCorta.descripcion, /m[aá]s de 12 horas/);
   assert.match(cubaCorta.descripcion, /45 minutos/);
-  assert.doesNotMatch(cubaCorta.descripcion, /llevar certificado si procede/);
 
   const cubaLarga = fiebre([
     parada('CHL', 'SCL', 'origen'),
@@ -369,7 +371,9 @@ test('Cuba: Sin exigencia no se muestra Obligatorio; Australia no exige por una 
     { origen: 'GRU', destino: 'HAV', fecha: '21FEB26', hora_salida: '0000', hora_llegada: '0400' },
   ], 'Chile (CHL)');
   assert.match(cubaLarga.descripcion, /Sale de Brasil/);
-  assert.match(cubaLarga.descripcion, /llevar certificado si procede/);
+  assert.match(cubaLarga.descripcion, /9 meses/);
+  assert.match(cubaLarga.descripcion, /supera 12 horas/);
+  assert.equal(cubaLarga.certeza, 'incierta');
 
   const cubaArg = fiebre([
     parada('ARG', 'EZE', 'origen'),
