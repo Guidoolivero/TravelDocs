@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { injectMatrizSanidad } from '../lib/travel-matriz.mjs';
+import { injectMatrizSanidad, lecturaMatriz } from '../lib/travel-matriz.mjs';
 import { buildRequisitosEmail } from '../lib/requisitos-checkin.mjs';
 import { etiquetaRequisito } from '../public/js/travel-reqs.mjs';
 import { parseGDSSegmentos } from '../public/js/gds-segmentos.mjs';
@@ -43,7 +43,10 @@ test('EZE-PTY-GUA 45 minutos: el transito en Panama no exige el certificado y Ar
   assert.match(req.descripcion, /No está confirmado/);
   assert.match(req.descripcion, /Misiones\/Corrientes/);
   assert.match(req.descripcion, /45 minutos/);
-  assert.match(req.descripcion, /más de 12 horas/);
+  assert.match(req.descripcion, /12 horas o menos/);
+  assert.match(req.descripcion, /no activa por s[ií] solo/);
+  assert.match(req.descripcion, /no anula un requisito por llegada/);
+  assert.match(req.descripcion, /m[aá]s de 12 horas/);
   assert.match(req.descripcion, /no es una exenci[oó]n para todos los destinos/i);
   assert.doesNotMatch(req.descripcion, /region del Darien|región del Darién/);
   assert.doesNotMatch(req.descripcion, /EZE est[aá] exent/i);
@@ -87,7 +90,9 @@ test('el umbral de 12 horas es estricto y un origen de riesgo real sigue exigien
   ]);
   assert.equal(brasil.obligatorio, true);
   assert.match(brasil.descripcion, /Sale de Brasil/);
-  assert.match(brasil.descripcion, /Exigida/);
+  assert.match(brasil.descripcion, /Condicional/);
+  assert.match(brasil.descripcion, /Se exige si el itinerario/);
+  assert.doesNotMatch(brasil.descripcion, /Exigida/);
 });
 
 test('varias conexiones, salida del aeropuerto, cambio de dia y huso', () => {
@@ -325,7 +330,9 @@ test('una escala larga no se toma como entrada: vale el umbral, o la incertidumb
   const guatemala = treinta('GTM', 'GUA');
   assert.equal(guatemala.obligatorio, true);
   assert.match(guatemala.descripcion, /transito aereo/i);
-  assert.match(guatemala.descripcion, /Exigida/);
+  assert.match(guatemala.descripcion, /Condicional/);
+  assert.match(guatemala.descripcion, /Se exige si el itinerario/);
+  assert.doesNotMatch(guatemala.descripcion, /Exigida/);
   assert.doesNotMatch(guatemala.descripcion, /entrada migratoria|inmigraci[oó]n/i);
 
   const costa = treinta('CRI', 'SJO');
@@ -372,7 +379,8 @@ test('Cuba: Sin exigencia no se muestra Obligatorio; Australia no exige por una 
   ], 'Chile (CHL)');
   assert.match(cubaLarga.descripcion, /Sale de Brasil/);
   assert.match(cubaLarga.descripcion, /9 meses/);
-  assert.match(cubaLarga.descripcion, /supera 12 horas/);
+  assert.match(cubaLarga.descripcion, /m[aá]s de 12 horas/);
+  assert.match(cubaLarga.descripcion, /No está confirmado/);
   assert.equal(cubaLarga.certeza, 'incierta');
 
   const cubaArg = fiebre([
@@ -396,6 +404,32 @@ test('Cuba: Sin exigencia no se muestra Obligatorio; Australia no exige por una 
   assert.notEqual(australia.certeza, 'incierta');
   assert.match(australia.descripcion, /No se exige/);
   assert.match(australia.descripcion, /pernoctado/);
+});
+
+test('Guatemala y Cuba: ocho procedencias de riesgo arrancan Condicional, no por pasaporte', () => {
+  const nats = ['BRA', 'PRY', 'BOL', 'COL', 'PER', 'VEN', 'ECU', 'PAN'];
+  const clausula = /12 horas o menos, sin salir del aeropuerto, no activa por s[ií] solo la condici[oó]n de tr[aá]nsito; no anula un requisito por llegada desde un pa[ií]s con riesgo/;
+  for (const dest of ['GTM', 'CUB']) {
+    for (const nat of nats) {
+      const t = lecturaMatriz(dest, nat).sanidad.texto;
+      assert.match(t, /^Condicional: certificado de fiebre amarilla\./, `${dest} ${nat}`);
+      assert.match(t, clausula, `${dest} ${nat}`);
+      assert.match(t, /Se exige si el itinerario incluye llegada desde un pa[ií]s con riesgo o tr[aá]nsito de m[aá]s de 12 horas/, `${dest} ${nat}`);
+      assert.doesNotMatch(t, /desde este pa[ií]s/i, `${dest} ${nat}`);
+      assert.doesNotMatch(t, /permanencia/i, `${dest} ${nat}`);
+      assert.doesNotMatch(t, /\bExigida\b/, `${dest} ${nat}`);
+    }
+  }
+  for (const dest of ['GTM', 'CUB']) {
+    const arg = lecturaMatriz(dest, 'ARG').sanidad.texto;
+    assert.match(arg, /No está confirmado/);
+    assert.match(arg, /EZE incluido/);
+    assert.match(arg, clausula);
+    assert.doesNotMatch(arg, /desde este pa[ií]s|permanencia/i);
+  }
+  const chile = lecturaMatriz('GTM', 'CHL').sanidad.texto;
+  assert.match(chile, /No se exige por el pasaporte/);
+  assert.match(chile, clausula);
 });
 
 test('el GDS conserva las horas del transito', () => {

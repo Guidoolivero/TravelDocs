@@ -326,12 +326,12 @@
       "confianza": "no"
      },
      "sanidad": {
-      "requisito": "Condicional: certificado de fiebre amarilla. No está confirmado si Guatemala lo exige al salir de Argentina (EZE incluido). OMS: riesgo parcial en Misiones/Corrientes; no demuestra exención. Desde 1 año por país con riesgo o tránsito aéreo de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No se encontró excepción en las fuentes consultadas. CDC 23 abr 2025; OMS nota 5.",
+      "requisito": "Condicional: certificado de fiebre amarilla. No está confirmado si Guatemala lo exige al salir de Argentina (EZE incluido). Misiones/Corrientes no demuestra exención. No se encontró excepción. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo.",
       "url_oficial": "https://www.cdc.gov/yellow-book/hcp/americas-caribbean/guatemala-and-belize.html",
       "verificado": "Parcial",
       "confianza": "parcial"
      },
-     "notas": "igm.gob.gt y minex.gob.gt bloquearon el acceso automatizado (403) durante toda la sesión, incluso vía proxy/Wayback. Se recomienda verificación manual o confirmación telefónica con el IGM antes de comunicar al pasajero. Revision 5 nov 2026: fiebre amarilla de Guatemala queda condicional al itinerario (CDC 23 abr 2025 y OMS 3 ene 2023, nota 5; más de 12 horas, no 12 exactas). Salida desde EZE sin excepción confirmada. Verificado sanitario: Parcial.",
+     "notas": "igm.gob.gt y minex.gob.gt bloquearon el acceso automatizado (403) durante toda la sesión, incluso vía proxy/Wayback. Se recomienda verificación manual o confirmación telefónica con el IGM antes de comunicar al pasajero. Revisión del 5 de noviembre de 2026: fiebre amarilla de Guatemala, condicional al itinerario (CDC 23 de abril de 2025 y OMS 3 de enero de 2023, nota 5). Salida desde EZE sin excepción confirmada. Verificado sanitario: Parcial. Sin fuente sanitaria confirmatoria. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo.",
      "normalizado": {
       "regimen": "exenta",
       "sanidad": "fiebre_amarilla_condicional",
@@ -3505,94 +3505,94 @@
      "fuente_visado": "Instituto Guatemalteco de Migracion (IGM) + Ministerio de Relaciones Exteriores (MINEX) - sitios con bloqueo 403, reconstruido via prensa que cita la fuente oficial",
      "verificado_visado": "Parcial",
      "confianza_visado": "parcial",
-     "fuente_sanidad": "www.who.int Revisado 5 nov 2026: https://www.cdc.gov/yellow-book/hcp/americas-caribbean/guatemala-and-belize.html (Yellow Book, 23 abr 2025) y https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf (anexo 18 nov 2022, revisado 3 ene 2023, nota 5). Sin pagina MSPAS/IGM. Sigue Parcial.",
+     "fuente_sanidad": "www.who.int Revisado el 5 de noviembre de 2026: https://www.cdc.gov/yellow-book/hcp/americas-caribbean/guatemala-and-belize.html (Yellow Book, página del 23 de abril de 2025) y https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf (anexo del 18 de noviembre de 2022, revisado el 3 de enero de 2023, nota 5). Sin fuente sanitaria confirmatoria MSPAS/IGM: la página migratoria del IGM leída ese día no define fiebre amarilla. Sigue Parcial.",
      "verificado_sanidad": "Parcial",
      "confianza_sanidad": "parcial",
-     "notas": "CA-4 (Guatemala, Honduras, El Salvador, Nicaragua): libre transito sin visa ni control migratorio pleno entre esos 4 paises, con plazo COMPARTIDO de 90 dias entre los cuatro (no es lo mismo que la 'Categoria A' que aplica al resto del mundo). Ecuador paso de exento a Categoria B (visa consular) desde 20/sept/2021. Venezuela en Categoria C (visa consultada) desde marzo 2018, con excepcion para titulares de visa vigente de EE.UU./Canada/Schengen. Uruguay y Paraguay no aparecieron mencionados explicitamente en las listas de paises con visa revisadas - se infieren como exentos por descarte, RECONFIRMAR. Fiebre amarilla exigida por procedencia/transito (no estrictamente por nacionalidad) a quienes llegan de: Argentina (zona parcial), Bolivia, Brasil, Colombia, Ecuador, Paraguay, Peru, Venezuela y Panama. Revision 5 nov 2026 (fiebre amarilla): desde 1 año, por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas (CDC Yellow Book 23 abr 2025; OMS anexo 3 ene 2023, nota 5). 12 horas o menos sin salir del aeropuerto no activan. No se encontró excepción para la salida desde EZE.",
+     "notas": "CA-4 (Guatemala, Honduras, El Salvador, Nicaragua): libre transito sin visa ni control migratorio pleno entre esos 4 paises, con plazo COMPARTIDO de 90 dias entre los cuatro (no es lo mismo que la 'Categoria A' que aplica al resto del mundo). Ecuador paso de exento a Categoria B (visa consular) desde 20/sept/2021. Venezuela en Categoria C (visa consultada) desde marzo 2018, con excepcion para titulares de visa vigente de EE.UU./Canada/Schengen. Uruguay y Paraguay no aparecieron mencionados explicitamente en las listas de paises con visa revisadas - se infieren como exentos por descarte, RECONFIRMAR. Fiebre amarilla, revisión del 5 de noviembre de 2026: no se afirma que llegar de Argentina esté exigido. Argentina (zona parcial OMS: Misiones/Corrientes), EZE incluido, queda incierta, verificado Parcial, sin exención confirmada. Bolivia, Brasil, Colombia, Ecuador, Paraguay, Peru, Venezuela y Panama siguen en la lista previa de países con riesgo de transmisión. El certificado, desde 1 año, depende de la llegada desde un país con riesgo o de un tránsito de aeropuerto de más de 12 horas. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Revisión del 5 de noviembre de 2026 (fiebre amarilla): la frase que listaba la llegada desde Argentina como exigida queda sin efecto. Argentina, EZE incluido, sigue incierta: verificado Parcial, sin exención confirmada. Desde 1 año, por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas (CDC Yellow Book, página del 23 de abril de 2025, leída el 5 de noviembre de 2026; OMS anexo revisado el 3 de enero de 2023, leído el 5 de noviembre de 2026, nota 5). Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo.",
      "por_nacionalidad": {
       "Argentina": {
        "visa": "No requiere visa (Categoria A). Solo pasaporte valido; ~90 dias habituales.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado si Guatemala lo exige al salir de Argentina (EZE incluido). OMS: riesgo parcial en Misiones/Corrientes; no demuestra exención. Desde 1 año por país con riesgo o tránsito aéreo de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No se encontró excepción en las fuentes consultadas. CDC 23 abr 2025; OMS nota 5."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado si Guatemala lo exige al salir de Argentina (EZE incluido). Misiones/Corrientes no demuestra exención. No se encontró excepción. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo."
       },
       "UE / EEE": {
        "visa": "Categoria A, exenta, 90 dias. Confirmado explicitamente para Alemania, Espana, Francia, Italia; NO se confirmo el listado completo de los 27 en fuente primaria (bloqueada).",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Brasil": {
        "visa": "Categoria A, exenta, 90 dias.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5. Dato previo de la celda: Brasil en lista OMS de riesgo."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año. Previo: Brasil en lista OMS de riesgo."
       },
       "Chile": {
        "visa": "Categoria A, exenta, 90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Uruguay": {
        "visa": "Categoria A (inferido por descarte, no confirmado explicitamente) - RECONFIRMAR.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Paraguay": {
        "visa": "Categoria A (inferido por descarte) - RECONFIRMAR.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5. Dato previo de la celda: Paraguay en lista OMS de riesgo."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año. Previo: Paraguay en lista OMS de riesgo."
       },
       "Bolivia": {
        "visa": "Categoria B - VISA CONSULAR OBLIGATORIA, tramite previo, hasta 90 dias si se aprueba.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Colombia": {
        "visa": "Categoria A, exenta desde el 1/jul/2013, 90 dias.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Peru": {
        "visa": "Categoria A, exenta desde el 1/jul/2013, 90 dias.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5. Dato previo de la celda: Zona amazonica."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año. Previo: Zona amazonica."
       },
       "Venezuela": {
        "visa": "Categoria C - VISA CONSULTADA (autorizacion previa via patrocinador), vigente desde marzo 2018, USD 50/150. Excepcion: con visa vigente de EE.UU./Canada/Schengen puede tramitar Categoria B directo.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Ecuador": {
        "visa": "Categoria B - VISA CONSULAR OBLIGATORIA desde el 20/sept/2021 (antes exento), hasta 90 dias prorrogable a 180.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5. Dato previo de la celda: Amazonia/Galapagos."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año. Previo: Amazonia/Galapagos."
       },
       "Mexico": {
        "visa": "Categoria A, exenta, 90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Guatemala": {
        "visa": "N/A (nacionalidad = pais destino)",
-       "sanidad": "Condicional: certificado de fiebre amarilla. El pasaporte guatemalteco no es exención sanitaria. No se exige por una llegada directa desde Guatemala. Desde 1 año, sí por llegada desde un país con riesgo o tránsito aéreo de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025; OMS nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. El pasaporte guatemalteco no es exención sanitaria. No se exige por una llegada directa desde Guatemala. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde 1 año."
       },
       "Honduras": {
        "visa": "Regimen CA-4: libre transito solo con documento de identidad/pasaporte, sin visa, plazo compartido max. 90 dias entre los 4 paises del bloque.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "El Salvador": {
        "visa": "Regimen CA-4, igual que Honduras.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Nicaragua": {
        "visa": "Regimen CA-4, igual que Honduras (la reforma migratoria nicaraguense de feb/2026 no afecta el CA-4 intracomunitario).",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Costa Rica": {
        "visa": "Categoria A (no es miembro CA-4, regimen ordinario), exenta, 90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Panama": {
        "visa": "Categoria A, exenta, 90 dias.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5. Dato previo de la celda: Region del Darien."
+       "sanidad": "Condicional: certificado de fiebre amarilla. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año. Previo: Region del Darien."
       },
       "Belice": {
        "visa": "Categoria A, exenta (pais vecino), 90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Estados Unidos": {
        "visa": "Categoria A, exenta, 90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       },
       "Canada": {
        "visa": "Categoria A, exenta, 90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año."
       }
      },
      "normalizado": {
@@ -3608,7 +3608,7 @@
       },
       "Brasil": {
        "regimen": "exenta",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90 dias"
       },
       "Chile": {
@@ -3623,32 +3623,32 @@
       },
       "Paraguay": {
        "regimen": "sin_confirmar",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Bolivia": {
        "regimen": "requiere_visa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90 dias"
       },
       "Colombia": {
        "regimen": "exenta",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90 dias"
       },
       "Peru": {
        "regimen": "exenta",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90 dias"
       },
       "Venezuela": {
        "regimen": "requiere_visa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Ecuador": {
        "regimen": "exenta",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90 dias"
       },
       "Mexico": {
@@ -3683,7 +3683,7 @@
       },
       "Panama": {
        "regimen": "exenta",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": "90 dias"
       },
       "Belice": {
@@ -5633,94 +5633,94 @@
      "fuente_visado": "Portal oficial e-Visa Cuba (evisacuba.cu) + comunicados MINREX/MINTUR (fuentes secundarias que citan la norma, dominios .cu bloqueados en esta sesion)",
      "verificado_visado": "Parcial",
      "confianza_visado": "parcial",
-     "fuente_sanidad": "www.cives.ufrj.br Revisado 5 nov 2026: https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf (anexo 18 nov 2022, revisado 3 ene 2023; Cuba nota 5, desde los 9 meses, transito de mas de 12 horas). No se leyo pagina ministerial cubana. Sigue Parcial. Se conserva www.cives.ufrj.br.",
+     "fuente_sanidad": "www.cives.ufrj.br Revisado el 5 de noviembre de 2026: https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf (anexo del 18 de noviembre de 2022, revisado el 3 de enero de 2023; Cuba nota 5, desde los 9 meses, tránsito de más de 12 horas). Sin fuente sanitaria confirmatoria cubana leída ese día. Sigue Parcial. Se conserva www.cives.ufrj.br.",
      "verificado_sanidad": "Parcial",
      "confianza_sanidad": "parcial",
-     "notas": "CAMBIO CLAVE 2025: la 'Tarjeta de Turista' en papel dejo de emitirse el 30/06/2025; desde el 01/07/2025 el tramite es 100% electronico via evisacuba.cu ('e-Visa de turismo'), entrada unica, 90+90 dias, minimo 72h antes del viaje. Debe completarse ademas el formulario D'Viajeros. Venezuela esta EXENTA de e-Visa (acuerdo bilateral). CASO SENSIBLE EE.UU.-CUBA: dos capas independientes. Cuba no distingue a los estadounidenses (misma e-Visa, USD 50). Pero la ley de EE.UU. (OFAC/CACR) PROHIBE el turismo puro para personas bajo jurisdiccion estadounidense, sin importar que Cuba los deje entrar - solo se permite viajar bajo 12 categorias de licencia general (visita familiar, negocios oficiales, periodismo, investigacion, educativo, religioso, deportivo amateur, apoyo al pueblo cubano, proyectos humanitarios, fundaciones privadas, exportacion de informacion, transacciones autorizadas). Paquetes turisticos prepagados prohibidos por ley de EE.UU. Dominios .cu bloqueados en esta sesion; reconfirmar todo directamente en evisacuba.cu o consulado cubano. Revision 5 nov 2026 (fiebre amarilla): regla provisional OMS 3 ene 2023, nota 5, desde los 9 meses, por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. No se leyó página ministerial cubana. No se encontró excepción para la salida desde EZE.",
+     "notas": "CAMBIO CLAVE 2025: la 'Tarjeta de Turista' en papel dejo de emitirse el 30/06/2025; desde el 01/07/2025 el tramite es 100% electronico via evisacuba.cu ('e-Visa de turismo'), entrada unica, 90+90 dias, minimo 72h antes del viaje. Debe completarse ademas el formulario D'Viajeros. Venezuela esta EXENTA de e-Visa (acuerdo bilateral). CASO SENSIBLE EE.UU.-CUBA: dos capas independientes. Cuba no distingue a los estadounidenses (misma e-Visa, USD 50). Pero la ley de EE.UU. (OFAC/CACR) PROHIBE el turismo puro para personas bajo jurisdiccion estadounidense, sin importar que Cuba los deje entrar - solo se permite viajar bajo 12 categorias de licencia general (visita familiar, negocios oficiales, periodismo, investigacion, educativo, religioso, deportivo amateur, apoyo al pueblo cubano, proyectos humanitarios, fundaciones privadas, exportacion de informacion, transacciones autorizadas). Paquetes turisticos prepagados prohibidos por ley de EE.UU. Dominios .cu bloqueados en esta sesion; reconfirmar todo directamente en evisacuba.cu o consulado cubano. Revisión del 5 de noviembre de 2026 (fiebre amarilla): regla provisional OMS revisada el 3 de enero de 2023, nota 5, desde los 9 meses, por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. No se leyó fuente sanitaria cubana ese día. Argentina, EZE incluido, queda incierta, sin exención confirmada. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo.",
      "por_nacionalidad": {
       "Argentina": {
        "visa": "e-Visa de turismo obligatoria (evisacuba.cu), ~equivalente a EUR 22, 90+90 dias.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado si Cuba lo exige al salir de Argentina (EZE incluido). OMS: riesgo parcial en Misiones/Corrientes; no demuestra exención. OMS 3 ene 2023, nota 5: desde los 9 meses, por país con riesgo o tránsito aéreo de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Reconfirmar; fuente antigua."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado si Cuba lo exige al salir de Argentina (EZE incluido). Misiones/Corrientes no demuestra exención. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "UE / EEE": {
        "visa": "e-Visa obligatoria (homogeneo, ~EUR 22, sin excepciones dentro del bloque).",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Brasil": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Chile": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Uruguay": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Paraguay": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Bolivia": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Colombia": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Peru": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Venezuela": {
        "visa": "EXENTA de e-Visa/tarjeta de turista (acuerdo bilateral vigente, confirmado por 3 fuentes secundarias coincidentes) - solo pasaporte valido.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Ecuador": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Mexico": {
        "visa": "e-Visa obligatoria (~575 MXN).",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Guatemala": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Honduras": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "El Salvador": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Nicaragua": {
        "visa": "e-Visa obligatoria (el propio comunicado MINSAP 2022 aclaro que Nicaragua NO exige certificado de fiebre amarilla).",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Costa Rica": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Panama": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. No está confirmado con una página cubana de 2026. OMS 3 ene 2023, nota 5, desde los 9 meses. También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No está confirmado con fuente cubana. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde los 9 meses."
       },
       "Belice": {
        "visa": "e-Visa obligatoria.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Estados Unidos": {
        "visa": "e-Visa obligatoria (USD 50). ADEMAS restriccion OFAC (ley EE.UU.): turismo puro PROHIBIDO; solo 12 categorias de licencia general autorizadas (visita familiar, negocios oficiales, periodismo, investigacion, educativo, religioso, deportivo amateur, apoyo al pueblo cubano, humanitario, fundaciones privadas, exportacion de info, transacciones autorizadas). Paquetes turisticos prepagados prohibidos.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       },
       "Canada": {
        "visa": "e-Visa obligatoria (~CAD 24); en vuelos chárter directos suele venir incluida en el paquete.",
-       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar."
+       "sanidad": "Condicional: certificado de fiebre amarilla. No se exige por el pasaporte ni por llegada directa sin riesgo. Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. Desde los 9 meses. OMS 3 de enero de 2023, nota 5."
       }
      },
      "normalizado": {
@@ -5736,7 +5736,7 @@
       },
       "Brasil": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Chile": {
@@ -5751,32 +5751,32 @@
       },
       "Paraguay": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Bolivia": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Colombia": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Peru": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Venezuela": {
        "regimen": "exenta",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Ecuador": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Mexico": {
@@ -5811,7 +5811,7 @@
       },
       "Panama": {
        "regimen": "evisa",
-       "sanidad": "fiebre_amarilla_obligatoria",
+       "sanidad": "fiebre_amarilla_condicional",
        "duracion_estadia": ""
       },
       "Belice": {

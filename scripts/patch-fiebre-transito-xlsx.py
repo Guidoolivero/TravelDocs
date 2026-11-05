@@ -37,37 +37,37 @@ NOMBRES = {
 CDC = 'https://www.cdc.gov/yellow-book/hcp/americas-caribbean/guatemala-and-belize.html'
 OMS = 'https://cdn.who.int/media/docs/default-source/travel-and-health/countries-with-risk-of-yellow-fever-transmission.pdf'
 
+CLAUSULA = (
+    'Un tránsito aeroportuario de 12 horas o menos, sin salir del aeropuerto, '
+    'no activa por sí solo la condición de tránsito; no anula un requisito por llegada desde un país con riesgo. '
+)
+
 GUA_CORTO = (
     'Condicional: certificado de fiebre amarilla. '
-    'No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. '
-    'Desde 1 año, sí si el itinerario trae llegada desde un país con riesgo '
-    'o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. '
-    'CDC 23 abr 2025 y OMS 3 ene 2023, nota 5. No se encontró excepción en las fuentes consultadas.'
+    'No se exige por el pasaporte ni por llegada directa sin riesgo. '
+    + CLAUSULA +
+    'Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. Desde 1 año.'
 )
 GUA_ARG = (
     'Condicional: certificado de fiebre amarilla. '
     'No está confirmado si Guatemala lo exige al salir de Argentina (EZE incluido). '
-    'OMS: riesgo parcial en Misiones/Corrientes; no demuestra exención. '
-    'Desde 1 año por país con riesgo o tránsito aéreo de más de 12 horas. '
-    '12 horas o menos, sin salir del aeropuerto, no activan. '
-    'No se encontró excepción en las fuentes consultadas. CDC 23 abr 2025; OMS nota 5.'
+    'Misiones/Corrientes no demuestra exención. No se encontró excepción. '
+    + CLAUSULA
 )
 GUA_DOM = (
     'Condicional: certificado de fiebre amarilla. '
     'El pasaporte guatemalteco no es exención sanitaria. '
     'No se exige por una llegada directa desde Guatemala. '
-    'Desde 1 año, sí por llegada desde un país con riesgo o tránsito aéreo de más de 12 horas. '
-    '12 horas o menos, sin salir del aeropuerto, no activan. '
-    'CDC 23 abr 2025; OMS nota 5. No se encontró excepción en las fuentes consultadas.'
+    + CLAUSULA + 'Desde 1 año.'
 )
 
 def gua_riesgo(detalle):
-    extra = f' Dato previo de la celda: {detalle}' if detalle else ''
+    extra = f' Previo: {detalle}' if detalle else ''
     texto = (
-        'Exigida: certificado de fiebre amarilla por llegada o permanencia desde este país con riesgo. '
-        'También si el tránsito de aeropuerto supera 12 horas. '
-        '12 horas o menos, sin salir del aeropuerto, no activan. No es regla del pasaporte. '
-        'Desde 1 año. CDC 23 abr 2025; OMS 3 ene 2023, nota 5.'
+        'Condicional: certificado de fiebre amarilla. '
+        + CLAUSULA +
+        'Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. '
+        'Desde 1 año.'
         + extra
     )
     if len(texto) > 400:
@@ -110,24 +110,23 @@ GUA_VIEJO = {
 
 CUB_CORTO = (
     'Condicional: certificado de fiebre amarilla. '
-    'No se exige por el pasaporte ni por una llegada directa desde un país sin riesgo. '
-    'OMS 3 ene 2023, nota 5: desde los 9 meses, si hay llegada desde un país con riesgo '
-    'o tránsito de aeropuerto de más de 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. '
-    'Fuente antigua; no se leyó página ministerial cubana en 2026. Reconfirmar.'
+    'No se exige por el pasaporte ni por llegada directa sin riesgo. '
+    + CLAUSULA +
+    'Desde los 9 meses. OMS 3 de enero de 2023, nota 5.'
 )
 CUB_ARG = (
     'Condicional: certificado de fiebre amarilla. '
     'No está confirmado si Cuba lo exige al salir de Argentina (EZE incluido). '
-    'OMS: riesgo parcial en Misiones/Corrientes; no demuestra exención. '
-    'OMS 3 ene 2023, nota 5: desde los 9 meses, por país con riesgo o tránsito aéreo de más de 12 horas. '
-    '12 horas o menos, sin salir del aeropuerto, no activan. Reconfirmar; fuente antigua.'
+    'Misiones/Corrientes no demuestra exención. '
+    + CLAUSULA +
+    'Desde los 9 meses. OMS 3 de enero de 2023, nota 5.'
 )
 CUB_RIESGO_BASE = (
-    'Exigida: certificado de fiebre amarilla por llegada o permanencia desde un país con riesgo. '
-    'No está confirmado con una página cubana de 2026. '
-    'OMS 3 ene 2023, nota 5, desde los 9 meses. '
-    'También si el tránsito de aeropuerto supera 12 horas. 12 horas o menos, sin salir del aeropuerto, no activan. '
-    'No es regla del pasaporte. La nota de zona previa no se toma como regla de entrada.'
+    'Condicional: certificado de fiebre amarilla. '
+    'No está confirmado con fuente cubana. '
+    + CLAUSULA +
+    'Se exige si el itinerario incluye llegada desde un país con riesgo o tránsito de más de 12 horas. '
+    'Desde los 9 meses.'
 )
 
 def cub_riesgo(previo):
@@ -168,19 +167,35 @@ CUB_VIEJO = {
 }
 
 NOTA_GUA = (
-    ' Revision 5 nov 2026 (fiebre amarilla): desde 1 año, por llegada desde un país con riesgo '
-    'o tránsito de aeropuerto de más de 12 horas (CDC Yellow Book 23 abr 2025; OMS anexo 3 ene 2023, nota 5). '
-    '12 horas o menos sin salir del aeropuerto no activan. No se encontró excepción para la salida desde EZE.'
+    ' Revisión del 5 de noviembre de 2026 (fiebre amarilla): la frase que listaba la llegada desde Argentina como exigida queda sin efecto. '
+    'Argentina, EZE incluido, sigue incierta: verificado Parcial, sin exención confirmada. '
+    'Desde 1 año, por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas '
+    '(CDC Yellow Book, página del 23 de abril de 2025, leída el 5 de noviembre de 2026; '
+    'OMS anexo revisado el 3 de enero de 2023, leído el 5 de noviembre de 2026, nota 5). '
+    + CLAUSULA
 )
 NOTA_CUB = (
-    ' Revision 5 nov 2026 (fiebre amarilla): regla provisional OMS 3 ene 2023, nota 5, desde los 9 meses, '
+    ' Revisión del 5 de noviembre de 2026 (fiebre amarilla): regla provisional OMS revisada el 3 de enero de 2023, nota 5, desde los 9 meses, '
     'por llegada desde un país con riesgo o tránsito de aeropuerto de más de 12 horas. '
-    'No se leyó página ministerial cubana. No se encontró excepción para la salida desde EZE.'
+    'No se leyó fuente sanitaria cubana ese día. Argentina, EZE incluido, queda incierta, sin exención confirmada. '
+    + CLAUSULA
 )
 NOTA_REG = (
-    ' Revision 5 nov 2026: fiebre amarilla de Guatemala queda condicional al itinerario '
-    '(CDC 23 abr 2025 y OMS 3 ene 2023, nota 5; más de 12 horas, no 12 exactas). '
-    'Salida desde EZE sin excepción confirmada. Verificado sanitario: Parcial.'
+    ' Revisión del 5 de noviembre de 2026: fiebre amarilla de Guatemala, condicional al itinerario '
+    '(CDC 23 de abril de 2025 y OMS 3 de enero de 2023, nota 5). '
+    'Salida desde EZE sin excepción confirmada. Verificado sanitario: Parcial. Sin fuente sanitaria confirmatoria. '
+    + CLAUSULA
+)
+FRASE_AA2_VIEJA = (
+    'Fiebre amarilla exigida por procedencia/transito (no estrictamente por nacionalidad) a quienes llegan de: '
+    'Argentina (zona parcial), Bolivia, Brasil, Colombia, Ecuador, Paraguay, Peru, Venezuela y Panama.'
+)
+FRASE_AA2_NUEVA = (
+    'Fiebre amarilla, revisión del 5 de noviembre de 2026: no se afirma que llegar de Argentina esté exigido. '
+    'Argentina (zona parcial OMS: Misiones/Corrientes), EZE incluido, queda incierta, verificado Parcial, sin exención confirmada. '
+    'Bolivia, Brasil, Colombia, Ecuador, Paraguay, Peru, Venezuela y Panama siguen en la lista previa de países con riesgo de transmisión. '
+    'El certificado, desde 1 año, depende de la llegada desde un país con riesgo o de un tránsito de aeropuerto de más de 12 horas. '
+    + CLAUSULA.strip()
 )
 
 
@@ -334,7 +349,16 @@ def snapshot_usa(path):
     return vals, ley
 
 
-def patch_matriz(path, pais, viejos, nuevos, nota, fuente_extra=None):
+def reemplazar_frase(cell, vieja, nueva):
+    actual = '' if cell.value is None else str(cell.value)
+    if nueva in actual:
+        return
+    if vieja not in actual:
+        raise SystemExit('no esta la frase vieja de la nota:\n' + vieja[:160])
+    cell.value = actual.replace(vieja, nueva)
+
+
+def patch_matriz(path, pais, viejos, nuevos, nota, fuente_extra=None, frase_vieja=None, frase_nueva=None):
     usa_antes = snapshot_usa(path) if pais == 'Cuba' else None
     wb = load_workbook(path)
     ws = wb.worksheets[0]
@@ -352,6 +376,8 @@ def patch_matriz(path, pais, viejos, nuevos, nota, fuente_extra=None):
         if fuente_extra not in actual:
             row[3].value = actual.rstrip() + fuente_extra
     notas_i = 26
+    if frase_vieja and frase_nueva:
+        reemplazar_frase(row[notas_i], frase_vieja, frase_nueva)
     anexar_nota(row[notas_i], nota)
     if not str(wb.worksheets[1]['A1'].value).lower().startswith('como usar'):
         raise SystemExit('leyenda A1 alterada')
@@ -414,15 +440,19 @@ def main():
         copias[key] = dest
     patch_regional(copias['regional'])
     fu_gua = (
-        ' Revisado 5 nov 2026: ' + CDC + ' (Yellow Book, 23 abr 2025) y ' + OMS
-        + ' (anexo 18 nov 2022, revisado 3 ene 2023, nota 5). Sin pagina MSPAS/IGM. Sigue Parcial.'
+        ' Revisado el 5 de noviembre de 2026: ' + CDC + ' (Yellow Book, página del 23 de abril de 2025) y ' + OMS
+        + ' (anexo del 18 de noviembre de 2022, revisado el 3 de enero de 2023, nota 5). '
+        'Sin fuente sanitaria confirmatoria MSPAS/IGM: la página migratoria del IGM leída ese día no define fiebre amarilla. Sigue Parcial.'
     )
     fu_cub = (
-        ' Revisado 5 nov 2026: ' + OMS
-        + ' (anexo 18 nov 2022, revisado 3 ene 2023; Cuba nota 5, desde los 9 meses, transito de mas de 12 horas). '
-        'No se leyo pagina ministerial cubana. Sigue Parcial. Se conserva www.cives.ufrj.br.'
+        ' Revisado el 5 de noviembre de 2026: ' + OMS
+        + ' (anexo del 18 de noviembre de 2022, revisado el 3 de enero de 2023; Cuba nota 5, desde los 9 meses, tránsito de más de 12 horas). '
+        'Sin fuente sanitaria confirmatoria cubana leída ese día. Sigue Parcial. Se conserva www.cives.ufrj.br.'
     )
-    n1 = patch_matriz(copias['matriz-ca'], 'Guatemala', GUA_VIEJO, mapa_guatemala(), NOTA_GUA, fu_gua)
+    n1 = patch_matriz(
+        copias['matriz-ca'], 'Guatemala', GUA_VIEJO, mapa_guatemala(), NOTA_GUA, fu_gua,
+        FRASE_AA2_VIEJA, FRASE_AA2_NUEVA,
+    )
     n2 = patch_matriz(copias['matriz-na'], 'Cuba', CUB_VIEJO, mapa_cuba(), NOTA_CUB, fu_cub)
     print(f'guatemala celdas {n1}; cuba celdas {n2}')
     for key in copias:
