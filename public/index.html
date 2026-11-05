@@ -167,7 +167,7 @@
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
     <div class="topbar-title" id="topbar-title">Dashboard</div>
-    <a id="platform-updates-link" class="platform-updates-link" href="#platform-updates" hidden>Ultimas novedades</a>
+    <a id="platform-updates-link" class="platform-updates-link" href="#platform-updates" hidden>ULTIMAS NOVEDADES</a>
     <div class="topbar-actions">
       <div class="search-wrap">
         <label for="global-search" class="sr-only">Buscar pasajero</label>
@@ -209,7 +209,8 @@
         </div>
         <div class="card-body" id="dash-checkins" style="padding:14px 16px;"></div>
       </div>
-      <details id="platform-updates" class="platform-updates" aria-labelledby="platform-updates-title">
+      <!-- Al actualizar novedades en preview, cambiar data-updates-revision para reiniciar las lecturas. -->
+      <details id="platform-updates" class="platform-updates" data-updates-revision="2026-11-05-aviso-destacado" aria-labelledby="platform-updates-title">
         <summary class="platform-updates-header">
           <span>
             <span class="platform-updates-title" id="platform-updates-title">Novedades de TravelDocs</span>
@@ -229,7 +230,7 @@
               <span class="platform-update-tag">Nuevo</span>
             </div>
             <h3>Un aviso cuando hay novedades</h3>
-            <p>Si hay novedades sin leer, vas a ver "Ultimas novedades" en rojo arriba. Hace clic para abrir las tarjetas.</p>
+            <p>Si hay novedades sin leer, vas a ver "ULTIMAS NOVEDADES" en rojo arriba. Hace clic para abrir las tarjetas.</p>
             <details>
               <summary>Como funciona</summary>
               <p>Al abrir las novedades, el aviso se marca como leido para tu usuario. No vuelve a aparecer al ingresar hasta que agreguemos una tarjeta nueva.</p>

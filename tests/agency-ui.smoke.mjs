@@ -15,7 +15,10 @@ const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http:
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':undefined),headless:true});
-const page=await browser.newPage();const notifications=new Set();let failRead=false;const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const previousIds=[...(await readFile(publicDir+'/index.html','utf8')).matchAll(/data-update-id="([^"]+)"/g)].map(m=>m[1]);
+const previousReads=['test','otro'].flatMap(uid=>previousIds.map(id=>`platform-update_${uid}_${id}`));
+const legacyReadCount=previousReads.length;
+const page=await browser.newPage();const notifications=new Set(previousReads);let failRead=false;const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const stub=`
 window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR'}]}]};
 let pCb,rCb;
@@ -65,11 +68,15 @@ try{
  await page.addInitScript(()=>sessionStorage.setItem('agencyId','previous-agency'));
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex',null,{timeout:5000});
  assert.equal(await page.evaluate(()=>sessionStorage.getItem('agencyId')),'test','El perfil vigente reemplaza la agencia guardada');
- await page.waitForFunction(()=>!document.getElementById('platform-updates-link').hidden);
+ await page.waitForFunction(()=>!document.getElementById('platform-updates-link').hidden,null,{timeout:1500});
  const initialNewsCount=await page.locator('.platform-update').count();
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Tarjetas plegadas al entrar');
  assert.equal(await page.locator('.platform-update').first().isVisible(),false);
  assert.equal(await page.locator('#platform-updates-link').evaluate(el=>getComputedStyle(el).animationName),'pulse');
+ assert.equal(await page.locator('#platform-updates-link').innerText(),'ULTIMAS NOVEDADES');
+ assert.equal(await page.locator('#platform-updates-link').evaluate(el=>getComputedStyle(el).color),await page.locator('.stat-card.danger').evaluate(el=>getComputedStyle(el).borderLeftColor),'El aviso comparte el rojo de criticos');
+ assert.ok(await page.locator('#platform-updates-link').evaluate(el=>{const s=getComputedStyle(el);return parseFloat(s.fontSize)>=19&&Number(s.fontWeight)>=700;}),'Texto grande y en negrita para destacar el rojo');
+ assert.ok(previousReads.every(key=>notifications.has(key)),'El reinicio conserva las lecturas anteriores');
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.locator('#platform-updates-link').evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),true,'El aviso cabe en mobile');
  await page.emulateMedia({reducedMotion:'reduce'});
@@ -79,7 +86,7 @@ try{
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),true,'El aviso abre las tarjetas');
  assert.equal(await page.locator('.platform-update').first().isVisible(),true);
  assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('#platform-updates > summary')),true,'Foco en las novedades');
- assert.equal(notifications.size,initialNewsCount,'Una lectura por agente y tarjeta');
+ assert.equal(notifications.size,legacyReadCount+initialNewsCount,'Una lectura por agente y tarjeta');
  await page.setViewportSize({width:1280,height:720});
  await page.locator('.nav-item[data-view="passengers"]').click();
  await page.locator('.nav-item[data-view="dashboard"]').click();
@@ -141,7 +148,7 @@ try{
  await page.locator('#platform-updates > summary').click();
  await page.locator('#platform-updates > summary').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
- assert.equal(notifications.size,initialNewsCount*2,'Abrir la flecha tambien marca como leido');
+ assert.equal(notifications.size,legacyReadCount+initialNewsCount*2,'Abrir la flecha tambien marca como leido');
  await page.route(url+'/',async route=>{
   const html=(await readFile(publicDir+'/index.html','utf8')).replace(/(<div class="platform-updates-grid"[^>]*>)/,'$1<article class="platform-update" data-update-id="prueba-nueva"><h3>Nueva novedad de prueba</h3><p>Solo prueba local.</p></article>');
   await route.fulfill({contentType:'text/html',body:html});
@@ -151,7 +158,7 @@ try{
  assert.equal(await page.locator('#platform-updates-link').isVisible(),true,'Una nueva tarjeta vuelve a mostrar el aviso');
  await page.locator('#platform-updates-link').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-link').hidden);
- assert.equal(notifications.size,initialNewsCount*2+1,'Solo se marca la tarjeta nueva');
+ assert.equal(notifications.size,legacyReadCount+initialNewsCount*2+1,'Solo se marca la tarjeta nueva');
  await page.unroute(url+'/');
  await page.goto(url);await page.waitForFunction(()=>document.querySelector('#app-root').style.display==='flex');
 

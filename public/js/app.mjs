@@ -274,7 +274,8 @@ async function initPlatformUpdates(uid) {
   const section = document.getElementById('platform-updates');
   const summary = section.querySelector('summary');
   const link = document.getElementById('platform-updates-link');
-  let unread = [...section.querySelectorAll('[data-update-id]')].map(card => `platform-update_${uid}_${card.dataset.updateId}`);
+  const revision = section.dataset.updatesRevision;
+  let unread = [...section.querySelectorAll('[data-update-id]')].map(card => `platform-update_${revision}_${uid}_${card.dataset.updateId}`);
   section.open = false;
   const track = document.getElementById('platform-updates-track');
   const previous = document.getElementById('platform-updates-previous');
