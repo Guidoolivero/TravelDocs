@@ -65,6 +65,56 @@ test('EZE-PTY-GUA 45 minutos: el transito en Panama no exige el certificado y Ar
   assert.doesNotMatch(html, /region del Darien|región del Darién/);
 });
 
+test('una estadia en Argentina conserva la incertidumbre junto a una procedencia sin riesgo', () => {
+  for (const [iso, iata] of [['GTM', 'GUA'], ['CUB', 'HAV']]) {
+    const req = fiebre([
+      parada('CHL', 'SCL', 'origen'),
+      parada('ARG', 'EZE', 'destino'),
+      parada(iso, iata, 'destino'),
+    ], undefined, 'Chile (CHL)');
+    assert.equal(req.certeza, 'incierta', iso);
+    assert.equal(etiquetaRequisito(req), 'A confirmar', iso);
+    assert.match(req.descripcion, /Sale de Argentina/);
+    assert.match(req.descripcion, /No est[aá] confirmado/);
+    const html = buildRequisitosEmail({
+      reserva: { piernas: [
+        { origen: 'SCL', destino: 'EZE', fecha: '2026-02-20T08:00' },
+        { origen: 'EZE', destino: iata, fecha: '2026-02-24T08:00' },
+      ] },
+      pasajeros: [arg],
+    }).html;
+    assert.match(html, /No est[aá] confirmado/);
+  }
+});
+
+test('dos conexiones en Panama conservan el horario desconocido aunque otra sea corta', () => {
+  const ruta = () => [
+    parada('CHL', 'SCL', 'origen'),
+    parada('PAN', 'PTY', 'escala_comercial'),
+    parada('USA', 'MIA', 'destino'),
+    parada('PAN', 'PTY', 'escala_comercial'),
+    parada('GTM', 'GUA', 'destino'),
+  ];
+  for (const [primeraDesconocida, horaSalida, incierta] of [
+    [true, '1045', true], [false, '1045', true],
+    [true, '2300', false], [false, '2300', false],
+  ]) {
+    const horarios = { hora_llegada: '1000' };
+    const salida = { hora_salida: horaSalida };
+    const req = fiebre(ruta(), [
+      { origen: 'SCL', destino: 'PTY', fecha: '20FEB26', ...(!primeraDesconocida ? horarios : {}) },
+      { origen: 'PTY', destino: 'MIA', fecha: '20FEB26', ...(!primeraDesconocida ? salida : {}) },
+      { origen: 'MIA', destino: 'PTY', fecha: '24FEB26', ...(primeraDesconocida ? horarios : {}) },
+      { origen: 'PTY', destino: 'GUA', fecha: '24FEB26', ...(primeraDesconocida ? salida : {}) },
+    ], 'Chile (CHL)');
+    assert.equal(req.certeza, incierta ? 'incierta' : '');
+    assert.equal(req.obligatorio, !incierta);
+    assert.equal(etiquetaRequisito(req), incierta ? 'A confirmar' : 'Obligatorio');
+    if (incierta) assert.match(req.descripcion, /sin horario/);
+    assert.doesNotMatch(req.descripcion, /esta escala no lo activa/);
+  }
+});
+
 test('el umbral de 12 horas es estricto y un origen de riesgo real sigue exigiendo', () => {
   const base = [
     parada('ARG', 'EZE', 'origen'),

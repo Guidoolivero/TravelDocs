@@ -29,6 +29,12 @@ nivel medio y mergearla si no hay bloqueos y pasan los checks.
   una conexion de 60 minutos y no activa el umbral de mas de 12 horas.
 - CA-4: el saneamiento del backend conserva mas_dias; el calculo respeta
   cambios de mes/anio y no suma dos veces una fecha_llegada explicita.
+- CA-5: combinar Chile y una estadia en Argentina conserva la advertencia
+  Argentina/EZE en las tarjetas y el correo para Guatemala y Cuba, sin
+  depender del orden de las procedencias.
+- CA-6: repetir un pais en transito conserva la incertidumbre de una
+  conexion sin horarios aunque otra tenga 45 minutos. Si alguna conexion
+  conocida supera el umbral, el requisito sigue activandose.
 
 ## Plan minimo
 
@@ -53,6 +59,11 @@ nivel medio y mergearla si no hay bloqueos y pasan los checks.
 - CA-4: pasan cambios de febrero a marzo, febrero bisiesto, diciembre a enero
   sin anio, +2 con anio explicito, prioridad de fecha_llegada y desplazamientos
   cero o invalidos. El test del handler cubre el saneamiento de mas_dias.
+- CA-5: la regresion SCL-EZE-GUA fallo primero con certeza vacia; tras ajustar
+  firmeSanidad pasa para Guatemala y Cuba y conserva la advertencia en el correo.
+- CA-6: la regresion con dos conexiones en Panama fallo primero con certeza
+  vacia. Se conserva sinHora al combinar visitas y se guarda la mayor duracion
+  conocida. Pasan ambos ordenes de conexion desconocida/corta y desconocida/larga.
 - npm test: 476 tests pasan, cero fallos. git diff --check: sin errores.
 - Revision Ponytail y estructural limitada al diff: se elimina la inferencia
   de estadia por coincidencia de aeropuerto y se conserva el calculo de fechas
