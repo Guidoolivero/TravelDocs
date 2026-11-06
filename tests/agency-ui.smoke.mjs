@@ -20,7 +20,7 @@ const previousReads=['test','otro'].flatMap(uid=>previousIds.map(id=>`platform-u
 const legacyReadCount=previousReads.length;
 const page=await browser.newPage();const notifications=new Set(previousReads);let failRead=false;const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const stub=`
-window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR'}]}]};
+window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR',escalas:['LIM'],transitos:[{iata:'LIM',minutos:90,sinHora:false}]}]}]};
 let pCb,rCb;
 export const initDB=()=>{},setTenantContext=()=>{},getUserAgency=async()=> 'test',getAgency=async id=>{if(id!=='test')throw new Error('permission-denied');return {status:'active',name:'TEST',branding:{appName:'TEST'},alerts:{}}};
 export const listenPassengers=cb=>{pCb=cb;setTimeout(()=>cb(window.fixture.passengers),0)},listenReservations=cb=>{rCb=cb;setTimeout(()=>cb(window.fixture.reservations),0)};
@@ -200,6 +200,7 @@ try{
  assert.match(await page.locator('#res-pax-selected').innerText(),/BERALDI/);
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
+ assert.deepEqual(saved.piernas[0].transitos,[{iata:'LIM',minutos:90,sinHora:false}],'Editar conserva el transito');
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
  await page.evaluate(()=>window.openNewReservation());
  const pdfZone=page.locator('#res-pnr-raw').locator('..').locator('..');

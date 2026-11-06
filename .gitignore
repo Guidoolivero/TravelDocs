@@ -43,6 +43,9 @@ docs/ejemplos/
 docs/backups/
 *.pdf
 *.xlsx
+# Unica excepcion: los libros que este PR modifica (reconstruidos + parche).
+# No reabre el resto de las planillas ignoradas.
+!docs/fuentes-fiebre-transito/*.xlsx
 *.bak
 firestore-debug.log
 # Itinerario sintetico (PAX UNO) que usa tests/itinerario-pdf.e2e.ts

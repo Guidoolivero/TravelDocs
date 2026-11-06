@@ -74,6 +74,7 @@ function storedPiernas(r) {
       origen: p.origen || '',
       destino: p.destino || '',
       escalas: Array.isArray(p.escalas) ? p.escalas : [],
+      transitos: Array.isArray(p.transitos) ? p.transitos : [],
       compania: p.compania || r.compania || '',               // fallback nivel reserva (compat)
       reservaVuelo: p.reservaVuelo != null ? p.reservaVuelo : (r.reservaVuelo || ''),
       checkin: !!p.checkin,
@@ -287,6 +288,17 @@ let _resPiernasWrap;
 // Mail de requisitos al crear el check-in. Si falla, el check-in queda
 // guardado y el cron de la mañana lo reintenta cuando el viaje entra en
 // los 30 días. No se llama al editar.
+function transitosDeEscala(p) {
+  const escalas = new Set((p.escalas || []).map(s => String(s).toUpperCase()));
+  return (Array.isArray(p.transitos) ? p.transitos : [])
+    .filter(t => escalas.has(String(t?.iata || '').toUpperCase()))
+    .map(t => ({
+      iata: String(t.iata || '').toUpperCase(),
+      minutos: Number.isFinite(t.minutos) ? t.minutos : null,
+      sinHora: !!t.sinHora || !Number.isFinite(t.minutos),
+    }));
+}
+
 async function avisarRequisitosCheckin(reservationId) {
   try {
     const currentUser = auth.currentUser;
@@ -827,6 +839,7 @@ export function initReservas() {
         origen: (p.origen || '').toUpperCase(),
         destino: (p.destino || '').toUpperCase(),
         escalas: Array.isArray(p.escalas) ? p.escalas.map(s => String(s).toUpperCase()) : [],
+        transitos: transitosDeEscala(p),
         compania: (p.compania || '').toUpperCase(),
         reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
         checkin: !!p.checkin,
@@ -910,6 +923,7 @@ export function initReservas() {
           origen: p.origen || '',
           destino: p.destino || '',
           escalas: Array.isArray(p.escalas) ? p.escalas : [],
+          transitos: Array.isArray(p.transitos) ? p.transitos : [],
           compania: (p.compania || _deriveCompania(p.vuelo)).toUpperCase(),
           reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
           checkin: previa ? !!previa.checkin : false,

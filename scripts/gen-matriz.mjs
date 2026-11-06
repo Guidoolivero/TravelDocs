@@ -22,6 +22,12 @@ const OUT = join(__dirname, '..', 'lib', 'requisitos', 'matriz.mjs');
 
 const db = JSON.parse(readFileSync(SRC, 'utf-8'));
 
+function textoSanidadTarjeta(texto) {
+  const s = texto || '';
+  if (s.startsWith('Condicional: certificado de fiebre amarilla.')) return s;
+  return s.slice(0, 400);
+}
+
 // Texto largo del regional (solo argentinos) cuando la celda de la matriz
 // es un shorthand ("EXIGIDA.").
 const regionalPorIso = new Map();
@@ -41,10 +47,13 @@ for (const mm of Object.values(db.matrices_multinacionalidad)) {
       porNacionalidad[nat] = {
         regimen: n.regimen,
         duracion: n.duracion_estadia || '',
-        // Texto crudo de la celda (limitado: descripciones de tarjeta).
+        // El visado de la tarjeta sigue en 400 caracteres.
+        // La sanidad de Guatemala y Cuba abre con esta frase y trae las dos
+        // reglas juntas; Excel no las limita a 400 (el tope de celda es 32767).
+        // El resto de las celdas mantiene el recorte de la tarjeta.
         texto: (celda.visa || '').slice(0, 400),
         sanidad: n.sanidad || '',
-        texto_sanidad: (celda.sanidad || '').slice(0, 400)
+        texto_sanidad: textoSanidadTarjeta(celda.sanidad)
       };
     }
     matriz.push({

@@ -57,6 +57,9 @@ test('ida y vuelta a Aruba con escala en Lima no es multi-city aunque vuelva a A
     ['EZE', 'AUA', ['LIM']],
     ['AUA', 'AEP', ['LIM']],
   ]);
+  assert.equal(data.piernas[0].transitos[0].iata, 'LIM');
+  assert.equal(data.piernas[0].transitos[0].minutos, 155);
+  assert.equal(data.piernas[0].transitos[0].sinHora, false);
 });
 
 test('conexion el mismo dia sin hora real (00:01/23:59) sigue siendo escala', async () => {

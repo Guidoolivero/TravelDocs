@@ -330,6 +330,13 @@ function groupSegmentos(segmentos) {
     if (prev && !distintaCompania && !distintaReserva && (conexionHoraria || conexionSinHora)) {
       // escala: misma pierna (< 24h en tierra, misma aerolinea y reserva)
       if (s.origen) prev.escalas.push(s.origen);
+      const sinHora = !conexionHoraria || horaSentinel(prev._tLlegada) || horaSentinel(s.salida);
+      if (!prev.transitos) prev.transitos = [];
+      prev.transitos.push({
+        iata: s.origen || '',
+        minutos: sinHora || tSalida == null || tLlegadaPrev == null ? null : Math.round((tSalida - tLlegadaPrev) / 60000),
+        sinHora,
+      });
       prev.destino = s.destino || prev.destino;
       prev._tLlegada = s.llegada;
       // completa datos de aerolinea que falten en la pierna

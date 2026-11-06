@@ -1,3 +1,4 @@
+import { parseGDSSegmentos } from './gds-segmentos.mjs';
 import { estadoImportacion } from '../importacion/pantalla.mjs';
 import { loadScanner, loadItinerario, loadTravelReqs } from '../compartido/cargas.mjs';
 import { auth } from '../compartido/firebase.mjs';
@@ -10,44 +11,6 @@ import { cargarPdfjs } from '../compartido/pdf.mjs';
 let _travelMode      = 'single'; // 'single' | 'gds' | 'pdf'
 let _parsedSegmentos = [];       // [{vuelo, origen, destino, fecha}]
 let _pdfSegmentos    = [];
-
-// Parser de segmentos GDS (Amadeus, Galileo, Sabre, WorldSpan)
-// Acepta múltiples formatos — con o sin número de segmento, con o sin clase, con o sin horarios.
-function parseGDSSegmentos(texto) {
-  const resultados = [];
-  for (const linea of texto.split('\n')) {
-    const l = linea.toUpperCase().trim();
-    if (!l) continue;
-
-    let m;
-
-    // Formato 1: Amadeus clásico con día*ORIGDEST
-    // Ej: "2  MU 746 R 28APR 2*EZEPVG HK1  0215 1810  29APR  E  CA/QBRHFZ"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+[A-Z]\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+\d\*([A-Z]{3})([A-Z]{3})/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 2: ORIG y DEST separados por espacio, con o sin día
-    // Ej: "2  MU 746 R 28APR 2 EZE PVG HK1"  o  "MU 746 R 28APR EZE PVG"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+[A-Z]\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+(?:\d\*?\s*)?([A-Z]{3})\s+([A-Z]{3})/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 3: ORIGDEST sin día* (Galileo/Sabre/WorldSpan)
-    // Ej: "MU746 R 28APR EZEPVG HK1"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+[A-Z]\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+([A-Z]{3})([A-Z]{3})\s+(?:HK|HL|SS|UN|WK|GK|TK|RR|DK|SC|KK)/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 4: Sin clase explícita — más flexible
-    // Ej: "MU746 28APR EZE-PVG"  o  "MU 746 28APR EZEPVG"
-    m = l.match(/^\s*(?:\d{1,3}\s+)?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})\s+(?:[A-Z]\s+)?(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+(?:\d\*?\s*)?([A-Z]{3})[- ]?([A-Z]{3})/);
-    if (m) { resultados.push({ vuelo: m[1]+m[2], origen: m[4], destino: m[5], fecha: m[3] }); continue; }
-
-    // Formato 5: ORIG DEST DATE HORA > HORA AIRLINE FLTNUM [CLASE]
-    // Ej: "EZE MIA 15JUL 21:00 > 05:00 +1 AA 0900 V"
-    m = l.match(/^([A-Z]{3})\s+([A-Z]{3})\s+(\d{1,2}[A-Z]{3}(?:\d{2,4})?)\s+\d{1,2}:\d{2}.*?([A-Z]{2}[0-9A-Z]?)\s*(\d{1,4})/);
-    if (m) { resultados.push({ vuelo: m[4]+m[5], origen: m[1], destino: m[2], fecha: m[3] }); continue; }
-  }
-  return resultados;
-}
 
 function pintarTramos(preview, segmentos) {
   if (!preview) return;
@@ -588,7 +551,7 @@ export function initRequisitos() {
         <div class="req-card">
           <div class="req-card-header">
             <span class="req-cat ${cls}">${label}</span>
-            <span class="${req.obligatorio ? 'req-obligatorio' : 'req-opcional'}">${req.obligatorio ? 'Obligatorio' : 'Recomendado'}</span>
+            <span class="${req.certeza === 'incierta' ? 'req-incierto' : (req.obligatorio ? 'req-obligatorio' : 'req-opcional')}">${esc(tr.etiquetaRequisito(req))}</span>
           </div>
           <div class="req-nombre">${esc(req.nombre)}</div>
           <div class="req-desc">${esc(req.descripcion)}</div>
