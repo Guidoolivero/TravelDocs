@@ -7,10 +7,11 @@ function staticGraph(entry) {
   const seen = new Set();
   function walk(file) {
     const abs = path.resolve(file);
-    if (seen.has(abs) || !fs.existsSync(abs)) return;
+    if (seen.has(abs)) return;
+    assert.ok(fs.existsSync(abs), `Import inexistente: ${abs}`);
     seen.add(abs);
     const src = fs.readFileSync(abs, 'utf8');
-    for (const m of src.matchAll(/from ['"](\.\/[^'"]+)['"]/g)) {
+    for (const m of src.matchAll(/from ['"](\.\.?\/[^'"]+)['"]/g)) {
       walk(path.resolve(path.dirname(abs), m[1]));
     }
   }

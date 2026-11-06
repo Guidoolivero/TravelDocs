@@ -1,8 +1,9 @@
 # Plan de modularizacion de TradingDocs
 
 Propuesta del 2026-11-05. Base revisada: main local, commit `cd769f7`.
-Rama del plan: `codex/plan-modularizacion`. Este documento reemplaza el plan
-historico del 2026-10-01; la nueva propuesta todavia no esta implementada.
+Rama de trabajo: `codex/modularizacion` (creada originalmente como `codex/plan-modularizacion`). Este documento reemplaza el plan
+historico del 2026-10-01. La reorganizacion esta implementada en la rama de trabajo.
+Ver [estructura actual](MODULOS.md).
 
 ## Alcance
 
@@ -11,7 +12,7 @@ lugares que hay que editar para cambiar una funcion del sistema. El primer modul
 sera Facturacion. Los nombres de carpetas seran minusculas y ASCII, por ejemplo
 `facturacion/`, para mantener imports consistentes entre macOS y Linux.
 
-Esta entrega contiene solo el plan. La implementacion se hara en cambios separados,
+El texto siguiente conserva el alcance y los criterios del plan original. La implementacion se realiza en la rama de trabajo,
 sin modificar main ni desplegar a produccion durante el trabajo de modularizacion.
 No incluye cambios de reglas de negocio, framework, base de datos ni diseno visual.
 

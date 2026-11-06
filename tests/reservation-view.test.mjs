@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { reservationViewPassengers, passengerDetailFlags, uniqueAirlineLocators, reservationViewLayout } from '../public/js/reservation-view.mjs';
+import { reservationViewPassengers, passengerDetailFlags, uniqueAirlineLocators, reservationViewLayout } from '../public/js/reservas/reservation-view.mjs';
 
 describe('passengerDetailFlags', () => {
   it('desde Pasajeros muestra SSR y acciones', () => {

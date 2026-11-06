@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapScanToForm, archivosImportacionMasiva } from '../public/js/scanner.js';
+import { mapScanToForm, archivosImportacionMasiva } from '../public/js/documentos/scanner.js';
 
 // Regresión del bug "DNI chileno lo tomaba como pasaporte": un DNI/cédula de
 // cualquier país va a la sección DNI con su país emisor; solo un PASAPORTE

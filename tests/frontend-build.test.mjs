@@ -104,3 +104,30 @@ test('un deploy conserva imports diferidos de los ultimos 7 dias y su version pr
     await rm(root, { recursive: true, force: true });
   }
 });
+
+
+test('los modulos en subcarpetas conservan imports relativos y cargas diferidas', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'frontend-modulos-'));
+  try {
+    const source = path.join(root, 'public');
+    const output = path.join(root, 'site');
+    await mkdir(path.join(source, 'js/facturacion'), { recursive: true });
+    await mkdir(path.join(source, 'js/compartido'), { recursive: true });
+    await writeFile(path.join(source, 'index.html'), '<script type="module" src="./js/app.mjs"></script>');
+    await writeFile(path.join(source, 'js/app.mjs'), "export { total, pdf } from './facturacion/pantalla.mjs';");
+    await writeFile(path.join(source, 'js/facturacion/pantalla.mjs'), "export { total } from '../compartido/importes.mjs'; export const pdf = () => import('./pdf.mjs');");
+    await writeFile(path.join(source, 'js/compartido/importes.mjs'), 'export const total = 10025;');
+    await writeFile(path.join(source, 'js/facturacion/pdf.mjs'), "export { total } from '../compartido/importes.mjs';");
+    await buildFrontend({ source, output });
+    const html = await readFile(path.join(output, 'index.html'), 'utf8');
+    const entry = html.match(/src="([^"]+)"/)[1];
+    const app = await import(pathToFileURL(path.join(output, entry)).href);
+    assert.equal(app.total, 10025);
+    assert.equal((await app.pdf()).total, 10025);
+    const compatible = await import(pathToFileURL(path.join(output, 'js/facturacion/pantalla.mjs')).href);
+    assert.equal(compatible.total, 10025);
+    assert.equal((await compatible.pdf()).total, 10025);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

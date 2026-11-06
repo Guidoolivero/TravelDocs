@@ -3,7 +3,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { injectMatrizVisas, injectMatrizSanidad, fillKnownUrls } from '../lib/travel-matriz.mjs';
+import { injectMatrizVisas, injectMatrizSanidad, fillKnownUrls } from '../lib/requisitos/travel-matriz.mjs';
 
 const stop = (iso3, tipo = 'destino', requisitos = []) => ({
   pais_codigo: iso3, pais: '', aeropuerto_iata: '', tipo, requisitos

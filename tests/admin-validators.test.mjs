@@ -5,7 +5,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { canDeleteAgency, canDeleteUser, validateUserPatch } from '../netlify/functions/lib/admin-validators.cjs';
+import { canDeleteAgency, canDeleteUser, validateUserPatch } from '../netlify/functions/lib/administracion/admin-validators.cjs';
 
 describe('canDeleteAgency', () => {
   it('rechaza si es la ultima agencia de la plataforma', () => {

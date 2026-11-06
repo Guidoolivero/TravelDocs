@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { csvField, excelRowToPassenger } from '../public/js/csv-import.mjs';
+import { csvField, excelRowToPassenger } from '../public/js/importacion/csv-import.mjs';
 
 test('importa observaciones, contacto opcional, varios FFN y asistencia sin perder direccion', () => {
   const headers = ['APELLIDO', 'NOMBRE', 'OBSERVACIONES', 'DIRECCION', 'EMERGENCIA TELEFONO', 'FFN AEROLINEA', 'FFN NUMERO', 'FFN 2 AEROLINEA', 'FFN 2 NUMERO', 'ASISTENCIA NUMERO', 'ASISTENCIA FIN', 'ASISTENCIA DURACION'];

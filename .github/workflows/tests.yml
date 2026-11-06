@@ -47,7 +47,7 @@ jobs:
       # Carga la entrada real del paquete NFT, ademas del renderer interno.
       - run: npm install --global netlify-cli@27.12.1
       - run: node scripts/bundle-functions.mjs
-      - run: node tests/billing-package.smoke.mjs "$(npm root --global)/netlify-cli"
+      - run: node tests/facturacion/billing-package.smoke.mjs "$(npm root --global)/netlify-cli"
 
   firestore-rules:
     name: Reglas de Firestore (emulador)

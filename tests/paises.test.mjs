@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PAISES, opcionesPais, nombrePais } from '../public/js/paises.mjs';
+import { PAISES, opcionesPais, nombrePais } from '../public/js/compartido/paises.mjs';
 
 test('la lista trae todas las nacionalidades ISO, con Bélgica y sin códigos repetidos', () => {
   const codigos = PAISES.map(p => p.codigo);

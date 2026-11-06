@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { esCabotaje, alcanzaConDni } from '../public/js/cabotaje.mjs';
-import { IATA_ISO2 } from '../lib/iata-iso2.mjs';
+import { esCabotaje, alcanzaConDni } from '../public/js/requisitos/cabotaje.mjs';
+import { IATA_ISO2 } from '../lib/requisitos/iata-iso2.mjs';
 
 const idaVuelta = (a, b, extra = {}) => [
   { origen: a, destino: b, escalas: extra.escalas || [] },

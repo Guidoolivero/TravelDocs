@@ -9,7 +9,7 @@ import {
   removeCity,
   persistable,
   copyValue,
-} from '../public/js/gds-cities.mjs';
+} from '../public/js/ciudades/gds-cities.mjs';
 
 describe('fromStorage', () => {
   it('lista vacia si no hay nada', () => {

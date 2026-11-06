@@ -28,7 +28,7 @@ function fixture(edit) {
     return r;
   }
   const db = { collection: name => ref(name), async runTransaction(fn) { return fn({ get: r => r.get(), update: (r, patch) => r.update(patch) }); } };
-  const url = new URL('../netlify/functions/send-alerts.cjs', import.meta.url);
+  const url = new URL('../netlify/functions/lib/alertas/send-alerts.cjs', import.meta.url);
   const nativeRequire = createRequire(url);
   const module = { exports: {} };
   class Clock extends Date { static now() { return now; } }
@@ -38,7 +38,7 @@ function fixture(edit) {
     fetch: async () => { edit(docs.get('agencies/test/reservations/res')); return { ok: true }; },
     require: id => id === 'firebase-admin' ? { apps: [{}], firestore: () => db }
       : id === 'firebase-admin/firestore' ? { FieldValue: { serverTimestamp: () => 1 }, FieldPath: { documentId: () => '__name__' } }
-      : id === './_sentry.cjs' ? { wrapHandler: fn => fn } : nativeRequire(id),
+      : id.endsWith('/_sentry.cjs') ? { wrapHandler: fn => fn } : nativeRequire(id),
   });
   return { docs, run: () => module.exports.handler({}) };
 }

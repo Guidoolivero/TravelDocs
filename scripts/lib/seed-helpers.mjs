@@ -1,7 +1,7 @@
 // ============================================================
 //  seed-helpers.mjs — vinculación usuario ↔ agencia (scripts CLI)
 //
-//  Espejo ESM de netlify/functions/lib/tenant-helpers.cjs.
+//  Espejo ESM de netlify/functions/lib/administracion/tenant-helpers.cjs.
 //  Mantener ambos sincronizados.
 //
 //  Correcciones v1.1:

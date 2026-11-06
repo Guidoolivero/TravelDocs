@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseItinerarioTexto, fechaIso, textoDesdeItems, claseItinerario, normalizarOcr } from '../public/js/itinerario-pdf.mjs';
+import { parseItinerarioTexto, fechaIso, textoDesdeItems, claseItinerario, normalizarOcr } from '../public/js/reservas/itinerario-pdf.mjs';
 
 // Misma disposicion que un itinerario emitido (Flight N, fecha en ingles,
 // IATA sueltos, "CM 328", "Non Stop", espera de conexion y +1). Sin datos de pasajero.

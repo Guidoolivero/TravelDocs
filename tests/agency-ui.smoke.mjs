@@ -49,6 +49,7 @@ await page.route('**/*',async route=>{
  if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial',createdAt:'2026-10-01'}]})});
  if(u.pathname.endsWith('/admin-api/users')&&route.request().method()==='GET') return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',displayName:'Otro',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
  if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
+ if(u.pathname.endsWith('/mfa-admin')&&route.request().method()==='GET') return route.fulfill({headers:cors,contentType:'application/json',body:'{"members":[]}'});
  if(u.pathname.endsWith('/mfa-admin')) {await page.evaluate(body=>{window.fixture.mfaReset=body},route.request().postDataJSON());return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});}
  if(u.pathname.endsWith('/gemini-scan')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({text:JSON.stringify({documentos:await page.evaluate(()=>window.fixture.scanDocuments)})})});
  if(u.pathname.endsWith('/pnr-checkin')) {
@@ -283,6 +284,16 @@ try{
  await page.locator('#confirm-ok-btn').click();
  await page.waitForFunction(()=>window.fixture.mfaReset?.targetUid==='other-user');
  assert.deepEqual(await page.evaluate(()=>window.fixture.mfaReset),{action:'force-reset',targetUid:'other-user'});
+ for(const view of ['dashboard','documents','alerts','travel','security','cities','dashboard','cities']) {
+  await page.evaluate(view=>window.showView(view),view);
+  await page.locator('#view-'+view+'.active').waitFor();
+  if(view==='cities') await page.waitForFunction(()=>!document.getElementById('gds-cities-list').textContent.includes('Cargando'));
+ }
+ await page.locator('#btn-gds-city-add').click();
+ assert.equal(await page.locator('[data-city-id]').count(),1,'Volver a la vista no duplica listeners');
+ await page.evaluate(()=>{window.showView('travel');window.setTravelMode('gds');});
+ await page.locator('#tv-gds-text').fill('2  MU 746 R 28APR 2*EZEPVG HK1');
+ await page.waitForFunction(()=>document.getElementById('gds-preview').textContent.includes('MU746'));
  assert.deepEqual(errors,[]);
  console.log('PASS browser: platform news (per-agent read persistence, new card, save retry, mobile, reduced motion), search, optional emergency roundtrip, pending linkage, PDF drop feedback and multi-file upload, real CSV parser to save, platform MFA reset across agencies; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}
