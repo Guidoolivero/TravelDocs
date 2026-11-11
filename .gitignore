@@ -79,6 +79,14 @@ docs/DEPLOY AYER*
 # Python
 __pycache__/
 
+# Lock de Deno residual (no hay Edge Functions en este repo)
+deno.lock
+
+# Config local de agentes (no versionar)
+.claude/settings.local.json
+.codex/config.toml
+.claude/skills/hallmark 2/
+
 # Copias extra de Hallmark (`npx skills add --agent '*'`). Canonical: .agents/skills/hallmark
 .adal/
 .aider-desk/
