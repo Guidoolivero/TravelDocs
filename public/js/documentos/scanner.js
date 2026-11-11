@@ -164,12 +164,18 @@ async function scanWithGemini(imageFile) {
 
 // Pasaportes y visas: el MRZ separa apellido y nombre con "<<" (un "<" solo
 // separa palabras del mismo campo). Con dos apellidos (ej. espanoles) el modelo
-// a veces mandaba el segundo apellido a "nombre": si el MRZ es legible, manda.
+// a veces mandaba el segundo apellido a "nombre". Manda lo impreso: el MRZ solo
+// mueve el corte cuando tiene las mismas palabras (corta nombres largos y no
+// tiene acentos, asi que si no coincide no se toca nada).
 export function nombresDesdeMrz(doc) {
   const linea = String(doc.mrz || '').split('\n').map(l => l.replace(/\s+/g, '')).find(l => /^[PV]/.test(l) && l.includes('<<'));
   if (!linea) return;
-  const [apellido, nombre] = linea.slice(5).split('<<').map(s => s.replace(/<+/g, ' ').trim());
-  if (apellido && nombre) Object.assign(doc, { apellido, nombre });
+  const [apeMrz, nomMrz] = linea.slice(5).split('<<').map(s => s.split('<').filter(Boolean));
+  const palabras = `${doc.apellido || ''} ${doc.nombre || ''}`.trim().split(/\s+/);
+  const sinAcentos = palabras.join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  if (!apeMrz?.length || !nomMrz?.length || sinAcentos !== [...apeMrz, ...nomMrz].join(' ')) return;
+  doc.apellido = palabras.slice(0, apeMrz.length).join(' ');
+  doc.nombre = palabras.slice(apeMrz.length).join(' ');
 }
 
 function fileToBase64(file) {

@@ -44,8 +44,9 @@ Devolvé ÚNICAMENTE un JSON con esta estructura exacta (string vacío "" si el 
 
 Reglas:
 - Fechas SIEMPRE en YYYY-MM-DD
-- Si el MRZ (líneas <<< al pie) está presente, priorizarlo sobre el texto visible
-- Apellidos compuestos (ej. pasaportes españoles con dos apellidos en dos renglones): TODOS los apellidos van en "apellido" y solo los nombres de pila en "nombre". En el MRZ, "<<" separa apellidos de nombres
+- Si el MRZ (líneas <<< al pie) está presente, priorizarlo sobre el texto visible, SALVO apellido y nombre
+- "apellido" y "nombre" se toman de lo impreso bajo las etiquetas "Apellidos/Surname" y "Nombre/Given names", con sus acentos (el MRZ corta nombres largos y no tiene acentos)
+- Apellidos compuestos (ej. pasaportes españoles con dos apellidos en dos renglones): TODOS los renglones bajo "Apellidos" van en "apellido" y solo lo que está bajo "Nombre" va en "nombre"
 - DNI / cédula de identidad / documento nacional de identidad de CUALQUIER país (argentino, chileno, español, etc.): tipo = "DNI" con pais_emisor = país que lo emitió. NO lo clasifiques como pasaporte.
 - MULTIDOCUMENTO: si el archivo tiene varios documentos de la MISMA persona (ej. pasaporte + visa), devolvé uno por elemento del array "documentos", cada uno con su "tipo" correspondiente. NO juntes dos documentos en uno solo.
 - Si el archivo contiene documentos de DISTINTAS personas, incluÍ ÚNICAMENTE los documentos de la PRIMERA persona detectada y descartá todos los de las demás personas. Los documentos de la primera persona pueden ser varios (pasaporte + visa + etc.) y todos van en el array.
