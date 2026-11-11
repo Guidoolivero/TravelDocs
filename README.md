@@ -1,4 +1,4 @@
-# TravelDocs (DocTravel)
+# TravelDocs
 
 Sistema web multi-tenant para agencias de viajes argentinas. Gestiona documentos
 de pasajeros (DNI, pasaportes ARG/extranjeros, visas), genera strings SSR/FOID
