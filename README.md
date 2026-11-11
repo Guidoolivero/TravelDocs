@@ -198,3 +198,5 @@ produccion: `netlify deploy` (draft) o un alias
 | `docs/ONBOARDING-AGENCIA.md` | Alta manual de una agencia |
 | `docs/DESARROLLO-IA.md` | SDD + revision estructural compartida |
 | `AGENTS.md` | Guia operativa completa para agentes |
+
+Test de integración Slack - 11/11/2026
