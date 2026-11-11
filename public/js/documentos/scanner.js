@@ -156,9 +156,20 @@ async function scanWithGemini(imageFile) {
     d.fecha_nacimiento  = normalizeDate(d.fecha_nacimiento  || '');
     d.fecha_emision     = normalizeDate(d.fecha_emision     || '');
     d.fecha_vencimiento = normalizeDate(d.fecha_vencimiento || '');
+    nombresDesdeMrz(d);
   }
 
   return docs;
+}
+
+// Pasaportes y visas: el MRZ separa apellido y nombre con "<<" (un "<" solo
+// separa palabras del mismo campo). Con dos apellidos (ej. espanoles) el modelo
+// a veces mandaba el segundo apellido a "nombre": si el MRZ es legible, manda.
+export function nombresDesdeMrz(doc) {
+  const linea = String(doc.mrz || '').split('\n').map(l => l.replace(/\s+/g, '')).find(l => /^[PV]/.test(l) && l.includes('<<'));
+  if (!linea) return;
+  const [apellido, nombre] = linea.slice(5).split('<<').map(s => s.replace(/<+/g, ' ').trim());
+  if (apellido && nombre) Object.assign(doc, { apellido, nombre });
 }
 
 function fileToBase64(file) {

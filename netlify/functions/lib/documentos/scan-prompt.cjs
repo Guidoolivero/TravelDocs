@@ -36,7 +36,8 @@ Devolvé ÚNICAMENTE un JSON con esta estructura exacta (string vacío "" si el 
       "tipo_visa": "solo para visas: T para B1/B2, S para F1/F2, I para inmigrante. Para ESTA usar 'E'",
       "producto": "solo para ASISTENCIA: el nombre o código del plan/producto (ej: 'AC300', 'Excellence Anual 30 Días [R] 35% OFF Menores free')",
       "cobertura": "solo para ASISTENCIA: el importe máximo de la cobertura de asistencia médica principal que aparece en el voucher (ej: 'USD 300.000' o 'USD 150.000')",
-      "aerolinea": "solo para FFN: código IATA de 2 letras de la aerolínea que aparezca, la que sea (ejemplos: CM, AA, AR, LA, QF, TK). No es una lista cerrada"
+      "aerolinea": "solo para FFN: código IATA de 2 letras de la aerolínea que aparezca, la que sea (ejemplos: CM, AA, AR, LA, QF, TK). No es una lista cerrada",
+      "mrz": "solo para PASAPORTE y VISA: las líneas MRZ del pie copiadas carácter por carácter, con todos los '<', una por renglón separadas por \\n"
     }
   ]
 }
@@ -44,6 +45,7 @@ Devolvé ÚNICAMENTE un JSON con esta estructura exacta (string vacío "" si el 
 Reglas:
 - Fechas SIEMPRE en YYYY-MM-DD
 - Si el MRZ (líneas <<< al pie) está presente, priorizarlo sobre el texto visible
+- Apellidos compuestos (ej. pasaportes españoles con dos apellidos en dos renglones): TODOS los apellidos van en "apellido" y solo los nombres de pila en "nombre". En el MRZ, "<<" separa apellidos de nombres
 - DNI / cédula de identidad / documento nacional de identidad de CUALQUIER país (argentino, chileno, español, etc.): tipo = "DNI" con pais_emisor = país que lo emitió. NO lo clasifiques como pasaporte.
 - MULTIDOCUMENTO: si el archivo tiene varios documentos de la MISMA persona (ej. pasaporte + visa), devolvé uno por elemento del array "documentos", cada uno con su "tipo" correspondiente. NO juntes dos documentos en uno solo.
 - Si el archivo contiene documentos de DISTINTAS personas, incluÍ ÚNICAMENTE los documentos de la PRIMERA persona detectada y descartá todos los de las demás personas. Los documentos de la primera persona pueden ser varios (pasaporte + visa + etc.) y todos van en el array.

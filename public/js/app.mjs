@@ -56,7 +56,7 @@ llenarSelectPais('form-dni-country');
 llenarSelectPais('form-pext-country', { vacio: '— No tiene —' });
 initDB(app);
 
-// Sesion de 3h desde el ultimo login (regla en sesion.mjs). Vence aunque la
+// Sesion de 5h desde el ultimo login (regla en sesion.mjs). Vence aunque la
 // pestana quede abierta: se chequea cada minuto y al volver a la pestana (con
 // la Mac dormida los timers se frenan). Despues hay que entrar con 2FA de nuevo.
 let _venceSesion = Infinity;
@@ -177,7 +177,7 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  // Sesion de 3h: el token forzado trae iat del server (ver sesion.mjs).
+  // Sesion de 5h: el token forzado trae iat del server (ver sesion.mjs).
   const freshToken = await user.getIdTokenResult(true);
   if (REQUIRE_2FA && freshToken.claims.firebase?.sign_in_second_factor !== 'totp') {
     clearStoredAgencyId();
