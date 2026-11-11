@@ -1,11 +1,1 @@
-{
-  "mcpServers": {
-    "e2e": {
-      "command": "npx",
-      "args": [
-        "e2e",
-        "mcp"
-      ]
-    }
-  }
-}
+.agents/mcp.json

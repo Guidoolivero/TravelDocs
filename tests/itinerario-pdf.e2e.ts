@@ -2,7 +2,7 @@ import { test } from '@e2e-dev/web';
 import { expect, credentials, secrets } from 'e2e';
 
 // Este archivo corre contra el working tree:
-// npx e2e run --config e2e.local.config.ts tests/itinerario-pdf.e2e.ts
+// npx e2e run --config e2e/e2e.local.config.ts tests/itinerario-pdf.e2e.ts
 // traveldocs.com.ar no tiene la pestana hasta un deploy.
 
 test.setup('entra a la agencia e2e', { sessions: ['pdf'] }, async ({ app, screen, session, browser }) => {

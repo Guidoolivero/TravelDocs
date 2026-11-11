@@ -8,7 +8,7 @@ import {
 } from '@firebase/rules-unit-testing';
 
 const PROJECT_ID = 'doctravel-rules-test';
-const RULES = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
+const RULES = readFileSync(new URL('../firebase/firestore.rules', import.meta.url), 'utf8');
 const HAS_EMULATOR = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
 const AGENCY_A = 'trading-travel';

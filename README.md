@@ -23,8 +23,8 @@ Repo privado: `Guidoolivero/TravelDocs`. Raiz git: este directorio (`DocTravel/`
 
 Aislamiento multi-tenant: todo dato de pasajero vive bajo
 `/agencies/{agencyId}/passengers|notifications|...`. El JWT lleva custom claims
-`{ agencyId, role }` (`owner` | `admin` | `agent`). `firestore.rules` niega por
-defecto y valida membresia + MFA TOTP.
+`{ agencyId, role }` (`owner` | `admin` | `agent`). `firebase/firestore.rules`
+niega por defecto y valida membresia + MFA TOTP.
 
 ## Stack
 
@@ -127,50 +127,28 @@ Rutas frecuentes se pueden promover a `docs/conocidos.json` y regenerar
 
 ```text
 public/                 # Unico codigo servido al browser
-netlify/functions/      # Entradas HTTP + lib por modulo
-lib/requisitos/         # Logica backend compartida (no publica)
-scripts/                # Build, seeds, migraciones, generadores
-tests/                  # Unitarios, smokes, emulador
-docs/                   # Operacion, matrices, planes
-specs/                  # Specs SDD por cambio
-.github/workflows/      # CI + deploy a prod si tests OK
-package.json            # Scripts npm y dependencias
-netlify.toml            # Build, Functions, cron
-firestore.rules         # Aislamiento multi-tenant
-firebase.json           # Emuladores / proyecto
-e2e.config.ts           # Runner e2e (convencion del CLI: raiz)
-e2e.local.config.ts
+netlify/                # Functions + lib por modulo
+firebase/               # firestore.rules + indexes
+lib/                    # Logica backend compartida (no publica)
+e2e/                    # Configs del runner e2e
+scripts/ tests/ docs/ specs/
+.agents/                # Guia PROJECT.md, skills, locks, mcp
+.github/                # CI + deploy
 ```
 
-### Que es necesario para el producto
+En la raiz quedan solo archivos que las herramientas exigen ahi:
 
-Esencial para correr, desplegar o mantener la app:
-
-`public/`, `netlify/`, `lib/`, `scripts/`, `tests/`, `package.json`,
-`package-lock.json`, `netlify.toml`, `firestore.rules`, `firestore.indexes.json`,
-`firebase.json`, `.github/`, `.gitignore`.
-
-Utiles pero no runtime: `docs/`, `specs/`, `README.md`.
-
-### Tooling de agentes (no runtime)
-
-Las herramientas de IA buscan entradas fijas en la raiz; no se pueden esconder
-sin romper Codex/Claude/Cursor/Grok:
-
-| Item | Rol |
+| Archivo | Por que no se mueve |
 | --- | --- |
-| `AGENTS.md` / `CLAUDE.md` / `GROK.md` | Guia por herramienta |
-| `.agents/skills/` | Skills canonicas (Hallmark, untangle, e2e, ...) |
-| `.claude/` `.codex/` `.cursor/` `.grok/` | Symlinks + reglas del cliente |
-| `skills-lock.json` | Lock de instalacion Hallmark |
-| `.mcp.json` | MCP local (e2e) |
-| `e2e*.config.ts` | Config del runner e2e |
+| `package.json` / `package-lock.json` | npm |
+| `netlify.toml` | Netlify |
+| `firebase.json` | Firebase CLI (apunta a `firebase/`) |
+| `README.md` / `.gitignore` | GitHub / git |
+| `AGENTS.md` `CLAUDE.md` `GROK.md` | Stubs de descubrimiento de agentes |
+| `.mcp.json` | Symlink a `.agents/mcp.json` |
 
-Detalle: `.agents/README.md`. Los clientes solo enlazan a `.agents/skills/`;
-no hay copias duplicadas del skill.
-
-En disco local pueden aparecer muchas mas carpetas (`.netlify/`, `node_modules/`,
-caches de otros IDEs). Estan en `.gitignore` y **no** salen en GitHub.
+Detalle de agentes: `.agents/README.md`. Skills canonicos en `.agents/skills/`;
+los clientes solo tienen symlinks.
 
 ## Comandos
 

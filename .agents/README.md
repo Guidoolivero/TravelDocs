@@ -1,13 +1,19 @@
 # Tooling de agentes (no es runtime)
 
-Esta carpeta y los punteros en la raiz existen para Codex, Claude, Cursor y Grok.
-Netlify no publica ni ejecuta nada de aca.
+Netlify no publica ni ejecuta nada de esta carpeta.
 
-## Fuente unica de skills
+## Guia del proyecto
 
-`skills/` es la copia canonica (Hallmark, untangle-codebase, e2e, etc.).
+`.agents/guides/PROJECT.md` es la fuente unica. En la raiz solo quedan stubs
+cortos que las herramientas descubren solas:
 
-Los clientes solo enlazan aca:
+- `AGENTS.md` → Codex / Grok
+- `CLAUDE.md` → Claude Code
+- `GROK.md` → Grok
+
+## Skills
+
+`skills/` es la copia canonica (Hallmark, untangle-codebase, e2e, ...).
 
 | Cliente | Enlace |
 | --- | --- |
@@ -16,17 +22,7 @@ Los clientes solo enlazan aca:
 | Cursor | `.cursor/skills/*` → `.agents/skills/*` |
 | Grok | `.grok/skills/*` → `.agents/skills/*` |
 
-## Entradas obligatorias en la raiz del repo
+## Otros
 
-Las herramientas las buscan ahi; no moverlas:
-
-- `AGENTS.md` (Codex / Grok)
-- `CLAUDE.md` (Claude Code)
-- `GROK.md` (Grok; misma guia operativa)
-- `.cursor/rules/` (reglas Cursor)
-- `docs/DESARROLLO-IA.md` (SDD compartido)
-
-## Lock
-
-`skills-lock.json` (raiz) registra la revision instalada de Hallmark.
-No editar a mano salvo reinstalacion del skill.
+- `skills-lock.json` — revision instalada de Hallmark
+- `mcp.json` — MCP e2e (la raiz tiene symlink `.mcp.json`)

@@ -1,11 +1,11 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { grok } from 'e2e/oauth/grok';
-import { totp } from './tests/e2e-totp.mjs';
+import { totp } from '../tests/e2e-totp.mjs';
 
 process.loadEnvFile('.env');
 
-// Misma agencia e2e que e2e.config.ts, pero sirve este working tree.
+// Misma agencia e2e que e2e/e2e.config.ts, pero sirve este working tree.
 // traveldocs.com.ar no tiene la pestaña hasta un deploy.
 const context = [
   'TravelDocs es la app de una agencia de viajes. En pantalla la marca puede decir TradingDocs.',

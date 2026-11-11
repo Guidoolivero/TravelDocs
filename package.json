@@ -27,7 +27,7 @@
     "pilot:seed-passengers": "node scripts/seed-pilot-passengers.mjs",
     "mfa:enable-totp": "node scripts/enable-totp-mfa.mjs",
     "mfa:set-email-verified": "node scripts/set-email-verified.mjs",
-    "test:e2e": "e2e run",
+    "test:e2e": "e2e run --config e2e/e2e.config.ts",
     "measure:perf": "node scripts/measure-perf.mjs",
     "test:billing:emulator": "firebase emulators:exec --only firestore --project demo-billing --config tests/facturacion/billing-emulator.json \"node --test tests/facturacion/billing-store.test.mjs tests/facturacion/billing-service.test.mjs\"",
     "test:billing:ui": "node tests/facturacion/billing-ui.smoke.mjs"

@@ -36,12 +36,17 @@ Una refactorizacion debe conservar el comportamiento pactado y pasar los tests r
 
 | Herramienta | Entrada del proyecto |
 | --- | --- |
-| Codex | `AGENTS.md` y `.codex/skills/untangle-codebase` |
-| Claude Code | `CLAUDE.md` y `.claude/skills/untangle-codebase` |
-| Grok CLI | `AGENTS.md` y `.grok/skills/untangle-codebase` |
+| Codex | `AGENTS.md` → `.agents/guides/PROJECT.md` y `.codex/skills/untangle-codebase` |
+| Claude Code | `CLAUDE.md` → `.agents/guides/PROJECT.md` y `.claude/skills/untangle-codebase` |
+| Grok CLI | `GROK.md` / `AGENTS.md` → `.agents/guides/PROJECT.md` y `.grok/skills/untangle-codebase` |
 | Cursor | `.cursor/rules/desarrollo-ia.mdc` y `.cursor/skills/untangle-codebase` |
 
-Los cuatro enlaces del skill apuntan a `.agents/skills/untangle-codebase/`. Su `SKILL.md` se conserva original; la procedencia, revision y licencia quedan en esa carpeta. Para actualizarlo, revisar la nueva revision y reemplazar la copia compartida, conservando las reglas de alcance de esta guia.
+La guia operativa completa vive en `.agents/guides/PROJECT.md`. Los archivos de
+raiz son stubs de descubrimiento. Los cuatro enlaces del skill apuntan a
+`.agents/skills/untangle-codebase/`. Su `SKILL.md` se conserva original; la
+procedencia, revision y licencia quedan en esa carpeta. Para actualizarlo,
+revisar la nueva revision y reemplazar la copia compartida, conservando las
+reglas de alcance de esta guia.
 
 Estas instrucciones viven en este proyecto. En sesiones nuevas o con instrucciones recargadas, cada herramienta debe leer su entrada. Verificar la carga en cada cliente; la existencia de archivos no prueba por si sola que una sesion ya abierta los haya incorporado.
 

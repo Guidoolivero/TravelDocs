@@ -1,7 +1,7 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { grok } from 'e2e/oauth/grok';
-import { totp } from './tests/e2e-totp.mjs';
+import { totp } from '../tests/e2e-totp.mjs';
 
 process.loadEnvFile('.env');
 
