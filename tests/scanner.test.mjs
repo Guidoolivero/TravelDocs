@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapScanToForm, archivosImportacionMasiva } from '../public/js/documentos/scanner.js';
+import { mapScanToForm, archivosImportacionMasiva, nombresDesdeMrz } from '../public/js/documentos/scanner.js';
 
 // Regresión del bug "DNI chileno lo tomaba como pasaporte": un DNI/cédula de
 // cualquier país va a la sección DNI con su país emisor; solo un PASAPORTE
@@ -131,5 +131,55 @@ describe('archivosImportacionMasiva', () => {
       archivosImportacionMasiva(files).map(f => f.name),
       ['foto.jpg', 'visa.png', 'pasaporte.pdf']
     );
+  });
+});
+
+// Regresion: pasaporte espanol con dos apellidos (SALADINO FERNANDEZ, BALTAZAR).
+// El modelo ponia el segundo apellido en "nombre". Manda lo impreso; el MRZ
+// ("<<" separa apellido de nombre) solo corrige DONDE se corta, si las
+// palabras coinciden. El MRZ corta nombres largos y no tiene acentos.
+describe('nombresDesdeMrz', () => {
+  const mrz = 'P<ESPSALADINO<FERNANDEZ<<BALTAZAR<<<<<<<<<<<<\nXDF9425085ESP2211020M2807292RE20260617933048';
+
+  it('pasaporte espanol: los dos apellidos van a apellido', () => {
+    const d = { apellido: 'SALADINO', nombre: 'FERNANDEZ BALTAZAR', mrz };
+    nombresDesdeMrz(d);
+    assert.equal(d.apellido, 'SALADINO FERNANDEZ');
+    assert.equal(d.nombre, 'BALTAZAR');
+  });
+
+  it('conserva los acentos de lo impreso', () => {
+    const d = { apellido: 'SALADINO', nombre: 'FERNÁNDEZ BALTAZAR', mrz };
+    nombresDesdeMrz(d);
+    assert.equal(d.apellido, 'SALADINO FERNÁNDEZ');
+    assert.equal(d.nombre, 'BALTAZAR');
+  });
+
+  it('tolera espacios que mete el modelo al transcribir el MRZ', () => {
+    const d = { apellido: 'SALADINO', nombre: 'FERNANDEZ BALTAZAR', mrz: 'P < ESP SALADINO < FERNANDEZ << BALTAZAR <<<<' };
+    nombresDesdeMrz(d);
+    assert.equal(d.apellido, 'SALADINO FERNANDEZ');
+    assert.equal(d.nombre, 'BALTAZAR');
+  });
+
+  it('visa: tambien usa la linea de nombres', () => {
+    const d = { apellido: 'GARCIA', nombre: 'LOPEZ ANA MARIA', mrz: 'VNUSAGARCIA<LOPEZ<<ANA<MARIA<<<<<<<<<<<<<<<<<' };
+    nombresDesdeMrz(d);
+    assert.equal(d.apellido, 'GARCIA LOPEZ');
+    assert.equal(d.nombre, 'ANA MARIA');
+  });
+
+  it('nombre largo cortado en el MRZ: no pisa lo impreso', () => {
+    const d = { apellido: 'RODRIGUEZ DE LA FUENTE', nombre: 'MARIA DE LOS ANGELES', mrz: 'P<ESPRODRIGUEZ<DE<LA<FUENTE<<MARIA<DE<LOS<A' };
+    nombresDesdeMrz(d);
+    assert.deepEqual([d.apellido, d.nombre], ['RODRIGUEZ DE LA FUENTE', 'MARIA DE LOS ANGELES']);
+  });
+
+  it('sin MRZ, sin separador "<<" o con otras palabras: no toca nada', () => {
+    for (const m of [undefined, '', 'P<ESPSALADINO<FERNANDEZ<BALTAZAR', 'IDARG12345678<<<<<<<', 'P<ESPPEREZ<<JUAN<<<<']) {
+      const d = { apellido: 'SALADINO', nombre: 'BALTAZAR', mrz: m };
+      nombresDesdeMrz(d);
+      assert.deepEqual([d.apellido, d.nombre], ['SALADINO', 'BALTAZAR'], String(m));
+    }
   });
 });

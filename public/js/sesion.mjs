@@ -1,8 +1,8 @@
-// Sesion de 3 horas desde el ultimo login (password + 2FA).
+// Sesion de 5 horas desde el ultimo login (password + 2FA).
 // Se mide con los claims del JWT de Firebase: auth_time (cuando entro) e
 // iat (cuando el server emitio el token). Usar iat y no la hora de la PC
 // evita que un reloj desfasado corte la sesion de entrada o la estire.
-export const SESION_MAX_MS = 3 * 60 * 60 * 1000;
+export const SESION_MAX_MS = 5 * 60 * 60 * 1000;
 
 // Devuelve el momento, en el reloj local, en que vence la sesion.
 // claims: { auth_time, iat } en segundos, de un token recien emitido.
