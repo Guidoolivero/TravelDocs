@@ -424,6 +424,8 @@ export function initPasajeros() {
     clearForm();
     clearScanUI();
     openModal('modal-passenger');
+    // Siempre arranca arriba, en la zona para adjuntar documentos.
+    document.querySelector('#modal-passenger .modal-body').scrollTop = 0;
   };
 
   window.openEdit = function(id) {

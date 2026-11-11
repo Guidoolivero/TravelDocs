@@ -5,12 +5,12 @@ import { matchesPassenger } from '../pasajeros/passenger-search.mjs';
 import { addReservation, updateReservation, deleteReservation } from '../db.js';
 import { fmtDate, escStr } from '../compartido/utils.js';
 import { requisitosAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje } from '../alertas/alert-core.mjs';
-import { reservationViewPassengers, reservationViewLayout } from './reservation-view.mjs';
+import { reservationViewPassengers, reservationViewLayout, reservationMatchesSearch } from './reservation-view.mjs';
 import { alcanzaConDni } from '../requisitos/cabotaje.mjs';
 import { auth } from '../compartido/firebase.mjs';
 import { esc, showToast } from '../compartido/ui.mjs';
 import { _airlineBadgeHtml, _deriveCompania } from '../compartido/aerolineas-ui.mjs';
-import { stripDiacritics, normDupName } from '../pasajeros/duplicados.mjs';
+import { normDupName } from '../pasajeros/duplicados.mjs';
 
 
 // ==================== RESERVAS / CHECK-IN ====================
@@ -427,13 +427,9 @@ export function initReservas() {
     const count = document.getElementById('reservations-count');
     if (!list) return;
 
-    // Buscador del sector Check ins: filtra por nombre o apellido del pasajero
-    const q = stripDiacritics((document.getElementById('reservations-search')?.value || '').toLowerCase());
-    const matchesSearch = r => !q || (r.pasajeros || []).some(id => {
-      const p = estado.passengers.find(x => x.id === id);
-      return p && stripDiacritics(`${p.lastname} ${p.firstname}`.toLowerCase()).includes(q);
-    });
-    const filtered = estado.reservations.filter(matchesSearch);
+    // Buscador del sector Check ins: pasajeros vinculados y sin vincular
+    const q = document.getElementById('reservations-search')?.value || '';
+    const filtered = estado.reservations.filter(r => reservationMatchesSearch(r, estado.passengers, q));
 
     if (count) count.textContent = q
       ? `${filtered.length} de ${estado.reservations.length} check-in(s)`

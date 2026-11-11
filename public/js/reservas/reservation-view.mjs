@@ -18,6 +18,15 @@ export function reservationViewPassengers(r, passengers) {
   }).filter(Boolean);
 }
 
+// Buscador de Check ins: nombre o apellido de pasajeros vinculados y sin vincular.
+export function reservationMatchesSearch(r, passengers, query) {
+  const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const q = norm(query);
+  if (!q) return true;
+  return [...reservationViewPassengers(r, passengers), ...(r.pendingPassengers || [])]
+    .some(p => norm(`${p.lastname} ${p.firstname}`).includes(q));
+}
+
 export function uniqueAirlineLocators(piernas) {
   const seen = new Set();
   const out = [];
