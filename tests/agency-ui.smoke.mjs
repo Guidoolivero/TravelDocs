@@ -93,7 +93,7 @@ try{
  await page.locator('.nav-item[data-view="dashboard"]').click();
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Volver al Dashboard deja las novedades plegadas');
  await page.locator('#platform-updates > summary').click();
- assert.match(await page.locator('.platform-update h3').first().innerText(),/aviso.*novedades/i,'La tarjeta mas reciente explica el aviso rojo');
+ assert.match(await page.locator('.platform-update h3').first().innerText(),/Busca pasajeros sin vincular en Check ins/,'La tarjeta mas reciente explica la busqueda en check-ins');
  const visibleNews=()=>page.locator('.platform-updates-grid').evaluate(track=>{
   const box=track.getBoundingClientRect();
   return [...track.children].filter(card=>{const r=card.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;}).map(card=>card.dataset.updateId);
@@ -121,13 +121,27 @@ try{
  await page.locator('#platform-updates > summary').click();
  await page.locator('#platform-updates > summary').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled&&!document.getElementById('platform-updates-next').disabled);
- await page.locator('#platform-updates-next').click();
+ for (let i=0;i<initialNewsCount-3;i++) {
+  await page.locator('#platform-updates-next').click();
+  await page.waitForFunction(i=>{
+   const t=document.getElementById('platform-updates-track');
+   const step=t.firstElementChild.getBoundingClientRect().width+parseFloat(getComputedStyle(t).columnGap);
+   return Math.abs(t.scrollLeft-Math.min((i+1)*step,t.scrollWidth-t.clientWidth))<2;
+  },i);
+ }
  await page.waitForFunction(()=>document.getElementById('platform-updates-next').disabled);
  const oldestId=await page.locator('.platform-update').last().getAttribute('data-update-id');
  assert.ok((await visibleNews()).includes(oldestId),'La flecha derecha muestra la tarjeta mas vieja');
  assert.equal((await visibleNews()).length,3,'El carrusel mantiene tres columnas al avanzar');
  await page.locator('#platform-updates-previous').focus();
- await page.keyboard.press('Enter');
+ for (let i=initialNewsCount-4;i>=0;i--) {
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(i=>{
+   const t=document.getElementById('platform-updates-track');
+   const step=t.firstElementChild.getBoundingClientRect().width+parseFloat(getComputedStyle(t).columnGap);
+   return Math.abs(t.scrollLeft-i*step)<2;
+  },i);
+ }
  await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled);
  await page.setViewportSize({width:390,height:844});
  assert.equal((await visibleNews()).length,1,'Una tarjeta legible en celular');
