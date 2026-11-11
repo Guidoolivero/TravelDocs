@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { reservationViewPassengers, passengerDetailFlags, uniqueAirlineLocators, reservationViewLayout } from '../public/js/reservation-view.mjs';
+import { reservationViewPassengers, passengerDetailFlags, uniqueAirlineLocators, reservationViewLayout, reservationMatchesSearch } from '../public/js/reservas/reservation-view.mjs';
 
 describe('passengerDetailFlags', () => {
   it('desde Pasajeros muestra SSR y acciones', () => {
@@ -82,3 +82,25 @@ describe('reservationViewLayout', () => {
 });
 
 
+
+describe('reservationMatchesSearch', () => {
+  const pax = [{ id: 'a', lastname: 'PEREZ', firstname: 'JUAN' }];
+  const r = { pasajeros: ['a'], pendingPassengers: [{ lastname: 'NUÑEZ BARACH', firstname: 'AGUSTINA' }] };
+
+  it('sin texto muestra todos los check-ins', () => {
+    assert.equal(reservationMatchesSearch(r, pax, ''), true);
+  });
+
+  it('encuentra por pasajero vinculado', () => {
+    assert.equal(reservationMatchesSearch(r, pax, 'perez'), true);
+  });
+
+  it('encuentra por pasajero sin vincular, sin importar acentos ni mayusculas', () => {
+    assert.equal(reservationMatchesSearch(r, pax, 'nunez'), true);
+    assert.equal(reservationMatchesSearch(r, pax, 'Agustina'), true);
+  });
+
+  it('no encuentra un nombre que no esta en el check-in', () => {
+    assert.equal(reservationMatchesSearch(r, pax, 'gomez'), false);
+  });
+});

@@ -20,7 +20,7 @@ const previousReads=['test','otro'].flatMap(uid=>previousIds.map(id=>`platform-u
 const legacyReadCount=previousReads.length;
 const page=await browser.newPage();const notifications=new Set(previousReads);let failRead=false;const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const stub=`
-window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR'}]}]};
+window.fixture={passengers:[{id:'jose',lastname:'BERALDI',firstname:'JOSE',dob:'1980-01-01',gender:'M',nationality:'ARG'}],reservations:[{id:'pending',pasajeros:[],pendingPassengers:[{lastname:'BERALDI',firstname:'JOSE'}],piernas:[{fecha:'2027-01-01T12:00',vuelo:'AR123',origen:'EZE',destino:'MAD',compania:'AR',escalas:['LIM'],transitos:[{iata:'LIM',minutos:90,sinHora:false}]}]}]};
 let pCb,rCb;
 export const initDB=()=>{},setTenantContext=()=>{},getUserAgency=async()=> 'test',getAgency=async id=>{if(id!=='test')throw new Error('permission-denied');return {status:'active',name:'TEST',branding:{appName:'TEST'},alerts:{}}};
 export const listenPassengers=cb=>{pCb=cb;setTimeout(()=>cb(window.fixture.passengers),0)},listenReservations=cb=>{rCb=cb;setTimeout(()=>cb(window.fixture.reservations),0)};
@@ -49,6 +49,7 @@ await page.route('**/*',async route=>{
  if(u.pathname.endsWith('/admin-api/agencies')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({agencies:[{id:'other',name:'Otra agencia',status:'active',plan:'trial',createdAt:'2026-10-01'}]})});
  if(u.pathname.endsWith('/admin-api/users')&&route.request().method()==='GET') return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',displayName:'Otro',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
  if(u.pathname.endsWith('/admin-api/agencies/other/members')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({members:[{uid:'other-user',email:'other@example.invalid',role:'owner',active:true,agencyId:'other',agencyName:'Otra agencia',createdAt:'2026-10-02'}]})});
+ if(u.pathname.endsWith('/mfa-admin')&&route.request().method()==='GET') return route.fulfill({headers:cors,contentType:'application/json',body:'{"members":[]}'});
  if(u.pathname.endsWith('/mfa-admin')) {await page.evaluate(body=>{window.fixture.mfaReset=body},route.request().postDataJSON());return route.fulfill({headers:cors,contentType:'application/json',body:'{"ok":true}'});}
  if(u.pathname.endsWith('/gemini-scan')) return route.fulfill({headers:cors,contentType:'application/json',body:JSON.stringify({text:JSON.stringify({documentos:await page.evaluate(()=>window.fixture.scanDocuments)})})});
  if(u.pathname.endsWith('/pnr-checkin')) {
@@ -92,7 +93,7 @@ try{
  await page.locator('.nav-item[data-view="dashboard"]').click();
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Volver al Dashboard deja las novedades plegadas');
  await page.locator('#platform-updates > summary').click();
- assert.match(await page.locator('.platform-update h3').first().innerText(),/aviso.*novedades/i,'La tarjeta mas reciente explica el aviso rojo');
+ assert.match(await page.locator('.platform-update h3').first().innerText(),/Busca pasajeros sin vincular en Check ins/,'La tarjeta mas reciente explica la busqueda en check-ins');
  const visibleNews=()=>page.locator('.platform-updates-grid').evaluate(track=>{
   const box=track.getBoundingClientRect();
   return [...track.children].filter(card=>{const r=card.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;}).map(card=>card.dataset.updateId);
@@ -120,13 +121,27 @@ try{
  await page.locator('#platform-updates > summary').click();
  await page.locator('#platform-updates > summary').click();
  await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled&&!document.getElementById('platform-updates-next').disabled);
- await page.locator('#platform-updates-next').click();
+ for (let i=0;i<initialNewsCount-3;i++) {
+  await page.locator('#platform-updates-next').click();
+  await page.waitForFunction(i=>{
+   const t=document.getElementById('platform-updates-track');
+   const step=t.firstElementChild.getBoundingClientRect().width+parseFloat(getComputedStyle(t).columnGap);
+   return Math.abs(t.scrollLeft-Math.min((i+1)*step,t.scrollWidth-t.clientWidth))<2;
+  },i);
+ }
  await page.waitForFunction(()=>document.getElementById('platform-updates-next').disabled);
  const oldestId=await page.locator('.platform-update').last().getAttribute('data-update-id');
  assert.ok((await visibleNews()).includes(oldestId),'La flecha derecha muestra la tarjeta mas vieja');
  assert.equal((await visibleNews()).length,3,'El carrusel mantiene tres columnas al avanzar');
  await page.locator('#platform-updates-previous').focus();
- await page.keyboard.press('Enter');
+ for (let i=initialNewsCount-4;i>=0;i--) {
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(i=>{
+   const t=document.getElementById('platform-updates-track');
+   const step=t.firstElementChild.getBoundingClientRect().width+parseFloat(getComputedStyle(t).columnGap);
+   return Math.abs(t.scrollLeft-i*step)<2;
+  },i);
+ }
  await page.waitForFunction(()=>document.getElementById('platform-updates-previous').disabled);
  await page.setViewportSize({width:390,height:844});
  assert.equal((await visibleNews()).length,1,'Una tarjeta legible en celular');
@@ -199,6 +214,7 @@ try{
  assert.match(await page.locator('#res-pax-selected').innerText(),/BERALDI/);
  await page.evaluate(()=>window.saveReservation());
  const saved=await page.evaluate(()=>window.fixture.savedReservation);
+ assert.deepEqual(saved.piernas[0].transitos,[{iata:'LIM',minutos:90,sinHora:false}],'Editar conserva el transito');
  assert.deepEqual(saved.pasajeros,['jose']);assert.deepEqual(saved.pendingPassengers,[]);
  await page.evaluate(()=>window.openNewReservation());
  const pdfZone=page.locator('#res-pnr-raw').locator('..').locator('..');
@@ -283,6 +299,16 @@ try{
  await page.locator('#confirm-ok-btn').click();
  await page.waitForFunction(()=>window.fixture.mfaReset?.targetUid==='other-user');
  assert.deepEqual(await page.evaluate(()=>window.fixture.mfaReset),{action:'force-reset',targetUid:'other-user'});
+ for(const view of ['dashboard','documents','alerts','travel','security','cities','dashboard','cities']) {
+  await page.evaluate(view=>window.showView(view),view);
+  await page.locator('#view-'+view+'.active').waitFor();
+  if(view==='cities') await page.waitForFunction(()=>!document.getElementById('gds-cities-list').textContent.includes('Cargando'));
+ }
+ await page.locator('#btn-gds-city-add').click();
+ assert.equal(await page.locator('[data-city-id]').count(),1,'Volver a la vista no duplica listeners');
+ await page.evaluate(()=>{window.showView('travel');window.setTravelMode('gds');});
+ await page.locator('#tv-gds-text').fill('2  MU 746 R 28APR 2*EZEPVG HK1');
+ await page.waitForFunction(()=>document.getElementById('gds-preview').textContent.includes('MU746'));
  assert.deepEqual(errors,[]);
  console.log('PASS browser: platform news (per-agent read persistence, new card, save retry, mobile, reduced motion), search, optional emergency roundtrip, pending linkage, PDF drop feedback and multi-file upload, real CSV parser to save, platform MFA reset across agencies; no external services');
 }catch(e){console.error('Browser errors',errors);console.error('Toast',await page.locator('#toast-text').innerText());throw e;}finally{await browser.close();server.close();}

@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { generarContrasena } from '../public/js/contrasena.mjs';
+import { generarContrasena } from '../public/js/compartido/contrasena.mjs';
 
 const CONSONANTES = 'bcdfghjkmnpqrstvwxyz';
 const VOCALES = 'aeiou';

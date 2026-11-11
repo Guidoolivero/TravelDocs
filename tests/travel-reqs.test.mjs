@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { planTravelStopView, splitTravelReqs, injectKnownForms, injectKnownAlerts, dedupeTravelReqs, sameVisa, isSchengenVisa, flagUnverifiedRoute, paradasVisibles } from '../public/js/travel-reqs.mjs';
-import { injectMatrizVisas, injectMatrizSanidad } from '../lib/travel-matriz.mjs';
+import { planTravelStopView, splitTravelReqs, injectKnownForms, injectKnownAlerts, dedupeTravelReqs, sameVisa, isSchengenVisa, flagUnverifiedRoute, paradasVisibles } from '../public/js/requisitos/travel-reqs.mjs';
+import { injectMatrizVisas, injectMatrizSanidad } from '../lib/requisitos/travel-matriz.mjs';
 
 describe('splitTravelReqs', () => {
   it('separa PLF/tasas de salud', () => {

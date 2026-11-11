@@ -21,7 +21,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { storeAgencyId } from './tenant.js';
 import { snapshotChanged } from './snapshot.mjs';
-import { markNotifiedLegs } from './alert-core.mjs';
+import { markNotifiedLegs } from './alertas/alert-core.mjs';
 
 let db;
 let agencyId = null;

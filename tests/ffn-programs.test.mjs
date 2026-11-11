@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { programaFfn } from '../public/js/ffn-programs.mjs';
+import { programaFfn } from '../public/js/compartido/ffn-programs.mjs';
 
 describe('programaFfn', () => {
   it('sigue con los programas que ya estaban en la ficha', () => {

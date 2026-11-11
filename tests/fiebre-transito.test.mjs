@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { injectMatrizSanidad, lecturaMatriz } from '../lib/travel-matriz.mjs';
-import { buildRequisitosEmail } from '../lib/requisitos-checkin.mjs';
-import { etiquetaRequisito } from '../public/js/travel-reqs.mjs';
-import { parseGDSSegmentos } from '../public/js/gds-segmentos.mjs';
+import { injectMatrizSanidad, lecturaMatriz } from '../lib/requisitos/travel-matriz.mjs';
+import { buildRequisitosEmail } from '../lib/requisitos/requisitos-checkin.mjs';
+import { etiquetaRequisito } from '../public/js/requisitos/travel-reqs.mjs';
+import { parseGDSSegmentos } from '../public/js/requisitos/gds-segmentos.mjs';
 import { fixture } from './firebase-fixture.mjs';
-import { minutosConexion } from '../lib/fiebre-transito.mjs';
+import { minutosConexion } from '../lib/requisitos/fiebre-transito.mjs';
 
 function parada(iso, iata, tipo, extra = {}) {
   return { pais_codigo: iso, pais: '', aeropuerto_iata: iata, tipo, requisitos: [], ...extra };

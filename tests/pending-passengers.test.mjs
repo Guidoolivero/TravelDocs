@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchItineraryPassengers, mergePendingPassengers } from '../public/js/pending-passengers.mjs';
+import { matchItineraryPassengers, mergePendingPassengers } from '../public/js/pasajeros/pending-passengers.mjs';
 
 test('conserva nombres sin ficha y no enlaza coincidencias ambiguas', () => {
  const input = [{apellido:'Beraldi',nombre:'Jose'}, {apellido:'Perez',nombre:'Ana'}];

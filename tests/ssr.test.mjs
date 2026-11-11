@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSSRStrings } from '../public/js/ssr.js';
+import { buildSSRStrings } from '../public/js/documentos/ssr.js';
 
 // Busca el item de email (CTCE) para el GDS dado
 function ctceItem(p, gds) {

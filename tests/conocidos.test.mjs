@@ -1,4 +1,4 @@
-// Test de docs/conocidos.json / public/js/conocidos.mjs (fuente unica de
+// Test de docs/conocidos.json / public/js/requisitos/conocidos.mjs (fuente unica de
 // PAISES_CONOCIDOS + ALERTAS_CONOCIDAS). Detecta ediciones malas del JSON
 // antes de regenerar: sameAs que no compila, entradas sin matcher, reqs
 // sin campos obligatorios.
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PAISES_CONOCIDOS, ALERTAS_CONOCIDAS } from '../public/js/conocidos.mjs';
+import { PAISES_CONOCIDOS, ALERTAS_CONOCIDAS } from '../public/js/requisitos/conocidos.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const json = JSON.parse(readFileSync(join(__dirname, '..', 'docs', 'conocidos.json'), 'utf-8'));

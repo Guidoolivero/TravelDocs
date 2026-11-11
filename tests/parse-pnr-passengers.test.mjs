@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parsePnrPassengers, isAirlineLocatorName } from '../public/js/parse-pnr-passengers.mjs';
-import { matchItineraryPassengers } from '../public/js/pending-passengers.mjs';
+import { parsePnrPassengers, isAirlineLocatorName } from '../public/js/reservas/parse-pnr-passengers.mjs';
+import { matchItineraryPassengers } from '../public/js/pasajeros/pending-passengers.mjs';
 
 test('conserva la D de D IMPERIO despues del numero de pasajero', () => {
   const pnr = `BERALDI/JOSE PEDRO   2.D IMPERIO/MIGUEL ANGEL

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { markNotifiedLegs } from '../public/js/alert-core.mjs';
+import { markNotifiedLegs } from '../public/js/alertas/alert-core.mjs';
 
 export function dbFixture(sdk) {
   const source = readFileSync(new URL('../public/js/db.js', import.meta.url), 'utf8')

@@ -8,7 +8,7 @@ import {
   passengerOverallStatus,
   docStatus,
   daysUntil
-} from '../public/js/utils.js';
+} from '../public/js/compartido/utils.js';
 import {
   parseFechaART,
   hoyART,
@@ -25,7 +25,7 @@ import {
   reservationStale,
   isBirthdayToday,
   buildAlertEmail
-} from '../public/js/alert-core.mjs';
+} from '../public/js/alertas/alert-core.mjs';
 
 function daysFromNow(n) {
   const d = new Date();

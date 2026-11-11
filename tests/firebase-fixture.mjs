@@ -96,8 +96,10 @@ export function fixture({ active = true, missing = false, revoked = false, env =
     const require = id => {
       if (id === 'firebase-admin') return admin;
       if (id === 'firebase-admin/firestore') return { FieldValue: firestore.FieldValue };
-      if (id === './_sentry.cjs') return { wrapHandler: fn => fn };
+      if (id.endsWith('/_sentry.cjs')) return { wrapHandler: fn => fn };
       if (Object.hasOwn(modules, id)) return modules[id];
+      const mocked = Object.keys(modules).find(key => key.startsWith('.') && new URL(key, new URL('../netlify/functions/', import.meta.url)).href === new URL(id, url).href);
+      if (mocked) return modules[mocked];
       return id.startsWith('.') && !id.endsWith('.mjs') ? load(new URL(id, url)) : nativeRequire(id);
     };
     runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer,

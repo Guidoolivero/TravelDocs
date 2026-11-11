@@ -1,64 +1,217 @@
-# Futura modularización TravelDocs
+# Plan de modularizacion de TradingDocs
 
-Aprobado el 2026-10-01. Guardado para hacerlo más adelante. No está implementado.
+Propuesta del 2026-11-05. Base revisada: main local, commit `cd769f7`.
+Rama de trabajo: `codex/modularizacion` (creada originalmente como `codex/plan-modularizacion`). Este documento reemplaza el plan
+historico del 2026-10-01. La reorganizacion esta implementada en la rama de trabajo.
+Ver [estructura actual](MODULOS.md).
 
-## Decisión
+## Alcance
 
-`js/app.mjs` tiene 5018 líneas. Si más adelante se sacan las pantallas grandes, el archivo que queda (Firebase, sesión, listas de pasajeros y reservas, cambio de vista, dashboard, lista, documentos, alertas, detalle) baja a cerca de 1200. El resto queda en archivos de reservas, admin, requisitos, formulario, scanner, importación y ciudades. Ninguno pasa de unas 700 líneas.
+Organizar las funcionalidades en carpetas reconocibles y reducir la cantidad de
+lugares que hay que editar para cambiar una funcion del sistema. El primer modulo
+sera Facturacion. Los nombres de carpetas seran minusculas y ASCII, por ejemplo
+`facturacion/`, para mantener imports consistentes entre macOS y Linux.
 
-No se hace de una sola vez. El código pinta el DOM, cuelga funciones de `window` y usa las listas que viven en el mismo archivo. No hay tests de navegador. `npm test` no avisa si se rompió guardar un pasajero, el check-in o el OCR. En Reservas, `document.getElementById('res-piernas')` (línea 3278, al 2026-10-01) corre al cargar el archivo: mover el bloque mal tira abajo la pantalla, que hoy anda y está en producción.
+El texto siguiente conserva el alcance y los criterios del plan original. La implementacion se realiza en la rama de trabajo,
+sin modificar main ni desplegar a produccion durante el trabajo de modularizacion.
+No incluye cambios de reglas de negocio, framework, base de datos ni diseno visual.
 
-Cuando una feature ya obligue a tocar una pantalla, esa pantalla se muda en ese mismo cambio. El resto se queda donde está.
+## Situacion revisada
 
-`js/conocidos.mjs` no entra. Lo genera un script desde `docs/conocidos.json`.
+- `public/js/app.mjs` tiene 5526 lineas. Contiene inicio de sesion, estado de
+  pasajeros y reservas, pantallas, administracion y facturacion. Sus handlers usan
+  variables compartidas y varios listeners se registran al importar el archivo.
+- Ya existen modulos aprovechables: `csv-import.mjs`, `reservation-view.mjs`,
+  `billing-form.mjs`, `billing-feedback.mjs`, `scanner.js`, `travel-reqs.mjs` y otros.
+  Se conservaran sus reglas y exports durante los movimientos.
+- `public/js/db.js` centraliza Firestore y el contexto tenant. No conviene duplicar
+  ese contexto al separar pasajeros y reservas.
+- Facturacion ya tiene servicio, persistencia, validaciones, auditoria y PDF en
+  `netlify/functions/lib/`. La pantalla sigue mezclada con administracion en
+  `app.mjs`. `admin-api.cjs` tambien gestiona perfiles de facturacion.
+- El frontend se genera desde `public/` hacia `.netlify/site`. El build recorre
+  `public/js` de forma recursiva, crea carpetas versionadas y retiene versiones
+  anteriores. Las nuevas rutas deben respetar ese mecanismo.
+- `scripts/bundle-functions.mjs` descubre entradas `.cjs` directamente dentro de
+  `netlify/functions/`. Mover esas entradas a subcarpetas cambiaria el empaquetado.
+- Hay tests unitarios, emuladores y smoke tests de navegador. `npm test` enumera
+  archivos explicitamente; no cubre por si solo todos los tests existentes.
 
-## Archivos, cuando se haga
+Estas observaciones corresponden al main local indicado arriba. Antes de implementar
+se debe comparar con el main vigente y actualizar el inventario. El indice MCP
+excluyo `public/` y `scripts/`; esas partes se revisaron directamente en archivos.
 
-| Archivo | Qué se lleva | Líneas |
+## Estructura propuesta
+
+La misma funcionalidad tendra su carpeta en cada entorno. Solo el codigo de
+navegador puede vivir en `public/`. Una carpeta unica con todo el frontend y backend
+exigiria cambiar el build y aumentaria el riesgo de publicar archivos privados.
+
+```text
+public/
+  index.html                      # Conserva el HTML de las vistas al principio
+  css/                            # Estilos actuales; separar solo al extraer una vista
+  js/
+    app.mjs                       # Inicio, sesion, navegacion y coordinacion
+    facturacion/                  # Pantalla, formulario, mensajes, visor de PDF
+    administracion/               # Agencias, usuarios y reporte de uso
+    pasajeros/                    # Lista, detalle, formulario y busqueda
+    documentos/                   # Documentos, scanner y strings SSR/FOID
+    reservas/                     # Lista, formulario, PNR e itinerarios
+    requisitos/                   # Pantalla, analisis y datos publicos generados
+    alertas/                      # Reglas, listado y envio fallback del cliente
+    importacion/                  # Importador de Excel/CSV y validacion de filas
+    ciudades/                     # Catalogo GDS y su pantalla
+    compartido/                   # Solo utilidades utilizadas por varios modulos
+netlify/
+  functions/
+    billing-api.cjs                # Entrada HTTP con el nombre actual
+    billing-pdf.cjs                # Entrada HTTP con el nombre actual
+    admin-api.cjs                  # Conserva sus rutas actuales
+    ...                           # Otras entradas y helpers de infraestructura
+    lib/
+      facturacion/                # Servicio, store, reglas, auditoria y renderer
+      administracion/             # Validaciones y logica del panel
+      documentos/                 # Extraccion OCR si requiere separar implementacion
+      requisitos/                 # Implementacion de requisitos del backend
+      alertas/                    # Implementacion de envios programados
+lib/                              # Logica backend existente; mover por etapa
+scripts/                          # Herramientas de build, generacion y operacion
+  facturacion/                    # Scripts propios al migrar el modulo
+tests/
+  facturacion/                    # Tests y fixtures seguros del modulo
+  ...                             # Otras carpetas al migrar cada funcionalidad
+docs/
+  facturacion/                    # Documentacion operativa propia del modulo
+```
+
+El arbol es un destino, no una lista de carpetas vacias a crear. Login, landing,
+configuracion Firebase, tenant, telemetria y loader pueden conservar sus entradas
+actuales. `compartido/` se forma solo con codigo que ya tenga varios consumidores.
+No se agrega un registro de plugins, un bus de eventos ni una capa generica de servicios.
+
+## Responsabilidad y origen de cada modulo
+
+| Modulo | Contenido que se agrupa | Dependencias que conserva |
 | --- | --- | --- |
-| `js/reservas-modelo.mjs` | Piernas, fechas, duplicado | ~250 |
-| `js/reservas-lista.mjs` | Lista de check-in | ~180 |
-| `js/reservas-form.mjs` | Modal y guardar | ~300 |
-| `js/reservas-pnr.mjs` | PNR y PDF | ~220 |
-| `js/admin.mjs` | Agencias, usuarios, uso | ~650 |
-| `js/requisitos-ui.mjs` | Requisitos y parser GDS | ~500 |
-| `js/formulario-pasajero.mjs` | Alta, visas, asistencia, viajero frecuente | ~465 |
-| `js/scanner-ui.mjs` | OCR y la ficha | ~460 |
-| `js/importar.mjs` | Import masivo y Excel | ~520 |
-| `js/ciudades-ui.mjs` | Ciudades GDS | ~190 |
+| Facturacion | Bloque billing de `app.mjs`, `billing-form.mjs`, `billing-feedback.mjs`, `billing*.cjs`, `invoice-pdf.cjs`, fuentes y assets privados | Autenticacion de plataforma, perfiles de agencias, transporte HTTP y SDK fiscal actuales |
+| Administracion | Pantallas administrativas de `app.mjs`, validadores de admin, operaciones de `admin-api.cjs` | Facturacion para perfiles fiscales y estado; `_usage.cjs` para medicion |
+| Pasajeros | Listado, detalle y formulario de `app.mjs`, `passenger-search.mjs`, `pending-passengers.mjs` | Persistencia tenant, documentos, reservas y catalogos |
+| Documentos | Pantallas de documentos y OCR, `scanner.js`, `ssr.js`, implementacion de `gemini-scan.cjs` y prompt | Pasajero seleccionado, autenticacion, proveedores IA y medicion |
+| Reservas | Secciones de reservas, `reservation-view.mjs`, `parse-pnr-passengers.mjs`, `itinerario-pdf.mjs`, implementacion de `pnr-checkin.cjs` | Pasajeros, ciudades, requisitos y persistencia tenant |
+| Requisitos | Pantalla de consulta, `travel-reqs.mjs`, `conocidos.mjs`, implementacion de `gemini-travel.cjs` y `checkin-reqs.cjs`, logica de `lib/` correspondiente | Generadores, cache, nacionalidad, rutas y proveedores IA |
+| Alertas | Pantalla, fallback cliente, `alert-core.mjs`, reglas correspondientes de `utils.js`, implementacion de `send-alerts.cjs` | Pasajeros, reservas, configuracion por agencia y marcas de deduplicacion |
+| Importacion | Pantalla de importacion y `csv-import.mjs` | Alta de pasajeros y catalogos existentes |
+| Ciudades | Pantalla y `gds-cities.mjs` | Persistencia del catalogo GDS |
 
-Reservas sola tiene ~950 líneas, por eso va en cuatro archivos. El resto, un archivo por pantalla.
+Catalogos como paises, aerolineas y programas de viajeros frecuentes siguen siendo
+compartidos cuando los consumen varios modulos. La medicion de uso es infraestructura;
+el reporte pertenece a Administracion. No trasladar todo `_usage.cjs` a Facturacion.
 
-## Cómo se conectan
+## Interfaces y estado
 
-Cada archivo exporta `init(deps)` y no importa `app.mjs`. `app.mjs` los importa y les pasa leer pasajeros, leer reservas, `esc`, `showToast`, abrir y cerrar modal, y refrescar la vista.
+`app.mjs` inicia la aplicacion y conecta las pantallas. Cada pantalla extraida recibe
+solo las dependencias que usa: lectura del estado actual, operaciones de datos,
+notificaciones visuales y navegacion. No importa `app.mjs` ni recibe un objeto global
+con todas las funciones de la aplicacion.
 
-Los `window.saveReservation` y el resto se asignan dentro de `init`, no al cargar el archivo.
+El estado de formulario, filtros y visor pertenece al modulo de la pantalla.
+Pasajeros, reservas y sesion mantienen una unica fuente de verdad. Cuando una pantalla
+necesita esos datos, recibe un getter o una actualizacion explicita del coordinador;
+no guarda una copia que pueda quedar desactualizada al cambiar de agencia.
 
-Antes de sacar Reservas: el `getElementById('res-piernas')` de la línea 3278 pasa adentro del handler. Hoy la sección no carga sola. Probado en Node el 2026-10-01: al importarla, `window` no existe; con un `window` vacío, revienta ese `getElementById`.
+Durante la extraccion se conservan los handlers de `window` que usa el HTML actual.
+Se registran al inicializar la pantalla, con el DOM disponible. La inicializacion
+ocurre una vez; la salida de sesion limpia suscripciones, listeners y URLs de blobs
+segun corresponda. Cambiar de vista repetidamente no debe duplicar acciones.
 
-`findDuplicateReservation` no se mueve sola. Cierra sobre `passengers` y `reservations`. Hay que pasarle las dos listas.
+`db.js` conserva inicialmente inicializacion, contexto tenant y suscripciones. Si
+luego se separan operaciones por entidad, todas usaran esa misma instancia y contexto.
+No se modifica el orden autenticacion -> tenant -> suscripciones.
 
-## Qué ya se probó en Node, sin editar el repo
+## Primera migracion: Facturacion
 
-- Fechas de Excel (líneas 2248–2396): `15DEC86` da `1986-12-15`, `4 de julio de 1997` da `1997-07-04`, serial `1` da `1899-12-31`. La fila Rosende / Rodolfo / 15DEC86 / 30111222 arma el pasajero. Viaja con `importar.mjs`.
-- `parseGDSSegmentos` (líneas 3894–3928): `2  MU 746 R 28APR 2*EZEPVG HK1` queda `MU746` EZE–PVG `28APR`. Viaja con `requisitos-ui.mjs`.
-- Duplicado de reserva, si recibe las dos listas: ROSENDE en `AR1234` el 2026-10-15 encuentra la reserva `a`. En `AR9999` devuelve null. El vuelo en minúscula y la fecha con hora siguen matcheando. Movida sola tira `passengers is not defined`. Viaja con `reservas-modelo.mjs`.
-- `app.mjs` entero no carga en Node: el primer import es Firebase por `https://`.
+1. Agrupar `billing-form.mjs` y `billing-feedback.mjs` dentro de
+   `public/js/facturacion/`, conservando los nombres de archivo y exports. Actualizar
+   imports del browser, backend y tests en el mismo cambio. El backend ya consume
+   `billing-feedback.mjs`: esa dependencia publica debe seguir siendo pura y sin DOM.
+2. Extraer la pantalla billing de `app.mjs` a `facturacion/pantalla.mjs`. Incluye
+   listado, vista previa, descarga, confirmacion, recuperacion y reintento. Mantener
+   los IDs HTML y los estados fiscales actuales. Incluir listeners que hoy estan
+   al final de `app.mjs` y el cierre del dialogo de vista previa.
+3. Mantener el formulario de agencia en Administracion. Sus campos fiscales usan
+   las funciones de Facturacion; `admin-api.cjs` conserva las transacciones actuales
+   entre agencia y perfil fiscal. No repartir esa escritura en dos peticiones.
+4. Mover `billing*.cjs`, `invoice-pdf.cjs`, `invoice-fonts/` e `invoice-assets/` de
+   `netlify/functions/lib/` a `netlify/functions/lib/facturacion/`. Actualizar todos
+   los `require`, rutas de assets e `included_files` de `netlify.toml`. Las entradas
+   `billing-api.cjs` y `billing-pdf.cjs` quedan en su ubicacion actual.
+5. Agrupar tests y scripts propios. Actualizar rutas relativas, listas de
+   `package.json`, workflow y fixtures en el mismo commit que mueve cada archivo.
+   Incluir la ruta de `scripts/patch-facturas-quotation.mjs` si se mueve, porque
+   `postinstall` depende de ella. No mover documentacion ajena a la funcionalidad.
 
-El test de Node de cada función pura se escribe en el repo en el momento de moverla, antes del movimiento. Esos tres ensayos fueron en memoria y no quedaron como archivos de test.
+Cada paso puede ser un commit separado y debe quedar funcionando. No cambiar importes,
+redondeos, moneda, periodos, digest, idempotencia, permisos ni recuperacion fiscal.
+La comprobacion de emision usa emuladores o servicios simulados, nunca emite una
+factura real. Los secretos fiscales permanecen exclusivos del backend.
 
-## Orden, el día que se arranque
+## Orden y criterios de cierre
 
-Un archivo por cambio. En cada uno: test de lo puro, mover el bloque, `init(deps)`, `npm test`, y probar esa pantalla en el navegador.
+| Etapa | Trabajo | Verificacion para cerrarla |
+| --- | --- | --- |
+| 0 | Registrar baseline de tests y mapa de imports, handlers, estado, rutas y assets de la funcionalidad elegida | Fallos previos separados de regresiones; alcance del commit definido |
+| 1 | Facturacion, en los pasos anteriores | Unitarios billing, emulador billing, smoke UI, PDF y paquete desplegable sin servicios reales |
+| 2 | Importacion y Ciudades | Importar filas validas/invalidas, editar catalogo y guardar sin cambiar contratos |
+| 3 | Requisitos | Tests de requisitos/cache/matriz; consulta en browser con respuestas simuladas; lazy imports funcionales |
+| 4 | Reservas | Crear, editar, eliminar, leer PNR/PDF y mostrar check-in; asociaciones con pasajeros intactas |
+| 5 | Pasajeros y Documentos | Alta/edicion/busqueda, OCR simulado y salida SSR/FOID identica para fixtures existentes |
+| 6 | Alertas | Fechas, deduplicacion y marcas conservadas entre cron y cliente; ningun correo real en QA |
+| 7 | Administracion | Agencias, roles, usuarios, perfiles fiscales y uso conservan permisos y transacciones |
+| 8 | Reducir coordinador y cerrar documentacion | `app.mjs` coordina las pantallas extraidas; no conserva implementaciones duplicadas |
 
-1. `importar.mjs`
-2. `requisitos-ui.mjs`
-3. `reservas-modelo.mjs`
-4. `reservas-lista.mjs`, `reservas-form.mjs`, `reservas-pnr.mjs`
-5. `formulario-pasajero.mjs`
-6. `scanner-ui.mjs`
-7. `ciudades-ui.mjs`
-8. `admin.mjs`
+En cada etapa se ejecutan `npm test` y `npm run build:frontend`, mas los tests del
+modulo que no entren en `npm test`. Cualquier cambio de reglas exige
+`npm run test:rules:emulator`. Al modificar Facturacion ejecutar tambien
+`npm run test:billing:emulator` y `npm run test:billing:ui` con el frontend generado.
+Validar el paquete con `tests/billing-package.smoke.mjs` siguiendo la preparacion de
+CI; ejecutar `scripts/bundle-functions.mjs` solo en un entorno local sin credenciales
+de Sentry si la prueba no debe publicar source maps.
 
-Sacar solo fechas de Excel y el parser GDS baja unas 200 líneas. Eso no se hace como proyecto: no cambia el archivo.
+Antes de mover logica sin cobertura, agregar pruebas de caracterizacion del
+comportamiento actual. Para reglas nuevas o bugs, aplicar red-green-refactor.
+Actualizar tests que inspeccionan texto o rutas fisicas sin eliminar sus aserciones
+funcionales. La prueba de browser debe cubrir tambien volver a la vista, cerrar
+sesion y entrar con otra agencia, para detectar estado y listeners residuales.
+
+## Riesgos concretos y controles
+
+- Imports relativos y cargas dinamicas: revisar todos los consumidores, incluidos
+  tests y generadores. El build debe resolver el grafo completo dentro de la misma
+  version, tambien en subcarpetas y con sesiones de versiones anteriores.
+- Datos generados: `conocidos.mjs` y `lib/matriz.mjs` no se editan a mano. Si cambian
+  de ubicacion, actualizar generadores, consumidores y tests juntos.
+- Publicacion accidental: comprobar que `.netlify/site` contiene solo contenido
+  publico. Tests, fuentes privadas de PDF, secretos y documentos permanecen fuera.
+- PDF y funciones: comprobar fuentes, logo y dependencias en el paquete final;
+  que el renderer funcione desde el archivo fuente no demuestra que el zip funcione.
+- Aislamiento: conservar claims, validaciones backend, rutas Firestore y limpieza de
+  listeners. La reorganizacion no requiere migrar datos ni cambiar reglas.
+- Estilos y HTML: conservar selectores e IDs al principio. Separar CSS o plantillas
+  solo dentro de la etapa de su pantalla, con comprobacion visual y de accesibilidad.
+
+## Trabajo en Git y puesta en produccion
+
+Esta propuesta queda en una rama local con worktree independiente. No se hace push a
+main, merge, deploy manual ni cambios de configuracion remota. Los cambios pendientes
+en otros worktrees no forman parte del plan.
+
+La implementacion futura debe usar ramas de trabajo y commits por funcionalidad.
+Antes de un eventual push o preview, comprobar automatizaciones y conexiones a datos
+reales. El workflow actual despliega cuando recibe un push a main; por eso integrar
+el refactor y publicarlo requiere una decision posterior del usuario.
+
+Cada commit de extraccion debe poder revertirse sin migraciones de datos. El cierre
+de la modularizacion exige tests y build aprobados, smoke tests de las pantallas
+movidas, grafo reindexado y documentacion de ubicaciones actualizada. La cantidad de
+lineas de `app.mjs` es una referencia, no un objetivo que justifique capas innecesarias.

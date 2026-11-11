@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchesPassenger } from '../public/js/passenger-search.mjs';
+import { matchesPassenger } from '../public/js/pasajeros/passenger-search.mjs';
 
 test('busca nombre y apellido parcial en cualquier orden y sin acentos', () => {
   const p = { firstname: 'JOSE LUIS', lastname: 'BERALDI' };

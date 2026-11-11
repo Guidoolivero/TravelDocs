@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Genera lib/matriz.mjs desde docs/travel-db.json:
+// Genera lib/requisitos/matriz.mjs desde docs/travel-db.json:
 //  - MATRIZ_VISAS: destinos de las matrices multinacionalidad con regimen de visa
 //    y sanidad clasificados por nacionalidad (+ el texto crudo para la tarjeta).
 //  - URLS_PAISES: 144 paises de los regionales con URL oficial de visa y
 //    sanidad (para llenar tarjetas sin URL cuando la verificacion web no llega).
 //
 // Consumo: SOLO el backend (netlify/functions/gemini-travel.cjs via
-// lib/travel-matriz.mjs). No se importa en el browser: pesa ~300KB y la
+// lib/requisitos/travel-matriz.mjs). No se importa en el browser: pesa ~300KB y la
 // inyeccion la hace la function antes de devolver la respuesta.
 //
 // Flujo: editar los Excel -> python3 scripts/excel-to-travel-db.py ->
@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SRC = join(__dirname, '..', 'docs', 'travel-db.json');
-const OUT = join(__dirname, '..', 'lib', 'matriz.mjs');
+const OUT = join(__dirname, '..', 'lib', 'requisitos', 'matriz.mjs');
 
 const db = JSON.parse(readFileSync(SRC, 'utf-8'));
 

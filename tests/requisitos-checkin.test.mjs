@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { debeEnviarRequisitos, emailAviso, buildRequisitosEmail, marcasTrasEnvioRequisitos } from '../lib/requisitos-checkin.mjs';
+import { debeEnviarRequisitos, emailAviso, buildRequisitosEmail, marcasTrasEnvioRequisitos } from '../lib/requisitos/requisitos-checkin.mjs';
 
 const ahora = Date.parse('2026-09-29T12:00:00-03:00');
 

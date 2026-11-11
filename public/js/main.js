@@ -2,9 +2,9 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { FIREBASE_CONFIG } from './config.js';
 import { initDB, listenPassengers, addPassenger, updatePassenger, deletePassenger, isNotified, markNotified } from './db.js';
-import { docStatus, statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr } from './utils.js';
-import { renderSSROutput, buildSSRStrings } from './ssr.js';
-import { scanDocument, mapScanToForm } from './scanner.js';
+import { docStatus, statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr } from './compartido/utils.js';
+import { renderSSROutput, buildSSRStrings } from './documentos/ssr.js';
+import { scanDocument, mapScanToForm } from './documentos/scanner.js';
 
 // ==================== FIREBASE INIT ====================
 const app = initializeApp(FIREBASE_CONFIG);

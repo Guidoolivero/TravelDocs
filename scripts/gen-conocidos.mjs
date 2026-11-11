@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Genera public/js/conocidos.mjs desde docs/conocidos.json (fuente unica de
+// Genera public/js/requisitos/conocidos.mjs desde docs/conocidos.json (fuente unica de
 // PAISES_CONOCIDOS + ALERTAS_CONOCIDAS). Los regex se guardan en el JSON como
 // { __regex, __flags } y aca se compilan a RegExp.
 //
@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SRC = join(__dirname, '..', 'docs', 'conocidos.json');
-const OUT = join(__dirname, '..', 'public', 'js', 'conocidos.mjs');
+const OUT = join(__dirname, '..', 'public', 'js', 'requisitos', 'conocidos.mjs');
 
 function compilar(obj) {
   if (Array.isArray(obj)) return obj.map(compilar);
