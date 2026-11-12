@@ -102,7 +102,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       if (mocked) return modules[mocked];
       return id.startsWith('.') && !id.endsWith('.mjs') ? load(new URL(id, url)) : nativeRequire(id);
     };
-    runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer,
+    runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer, fetch: globalThis.fetch,
       process: { env: { FIREBASE_SERVICE_ACCOUNT: '{}', PLATFORM_SUPER_ADMIN_EMAILS: 'admin@test.com', ...env } } }, { filename: url.pathname });
     return module.exports;
   }
