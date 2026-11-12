@@ -14,7 +14,7 @@
 //  - SLACK_INTERNAL_SECRET
 //  - SLACK_BOT_TOKEN
 //  - ROUTE_AGENT_SECRET
-//  - SITE_URL (ej: https://tu-site.netlify.app)
+//  - SITE_URL (ej: https://traveldocs.com.ar)
 // ============================================================
 
 const crypto = require('crypto');
@@ -44,7 +44,7 @@ exports.handler = async (event) => {
   if (!msg?.channel || !msg?.text) return reply(400, { error: 'Missing event' });
 
   // Llamar al route-agent
-  const siteUrl = process.env.SITE_URL || 'https://traveldocs.netlify.app';
+  const siteUrl = process.env.SITE_URL || 'https://traveldocs.com.ar';
   const secret = process.env.ROUTE_AGENT_SECRET;
   if (!secret) return reply(500, { error: 'ROUTE_AGENT_SECRET missing' });
 
