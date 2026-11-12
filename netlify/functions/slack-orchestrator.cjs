@@ -1,19 +1,19 @@
 // ============================================================
 //  Netlify Function: slack-orchestrator
-//  Recibe eventos de Slack (message) y orquesta el routing
-//  con route-agent + agentes (Cursor / Claude / Gemini).
+//  Endpoint de Slack Events. Verifica la firma, responde el
+//  challenge de url_verification, deduplica reintentos y ackea
+//  200 a Slack lo más rápido posible (<3s). El trabajo pesado
+//  (route-agent + postToSlack) se difiere a la background
+//  function slack-orchestrator-background, que Netlify invoca
+//  de forma asíncrona (devuelve 202 al instante).
 //
-//  Flujo:
-//  1. Slack manda message event
-//  2. Llama a route-agent con ROUTE_AGENT_SECRET
-//  3. Según la respuesta, notifica o dispara el agente principal
-//  4. Los otros dos revisan; Claude tiene la última palabra
+//  Por qué: Slack exige un 2xx en menos de 3s; si no, reintenta
+//  hasta 3 veces (header x-slack-retry-num) y termina deshabilitando
+//  el endpoint, duplicando los mensajes de routing en el hilo.
 //
 //  Variables de entorno necesarias en Netlify:
 //  - SLACK_SIGNING_SECRET
-//  - SLACK_BOT_TOKEN
-//  - ROUTE_AGENT_SECRET
-//  - SITE_URL (ej: https://tu-site.netlify.app)
+//  - SLACK_INTERNAL_SECRET (protege la background function interna)
 // ============================================================
 
 const crypto = require('crypto');
@@ -23,27 +23,43 @@ exports.handler = async (event) => {
     return reply(405, { error: 'Method Not Allowed' });
   }
 
-  // Verificación de firma de Slack
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
   if (!signingSecret) return reply(500, { error: 'SLACK_SIGNING_SECRET missing' });
 
-  const timestamp = event.headers['x-slack-request-timestamp'];
-  const signature = event.headers['x-slack-signature'];
+  const headers = event.headers || {};
+
+  // Reintento de Slack: ackeamos 200 sin hacer routing para no duplicar mensajes.
+  if (getHeader(headers, 'x-slack-retry-num')) {
+    return reply(200, { ok: true, skipped: 'retry' });
+  }
+
+  // Verificación de firma de Slack
+  const timestamp = getHeader(headers, 'x-slack-request-timestamp');
+  const signature = getHeader(headers, 'x-slack-signature');
   if (!timestamp || !signature) return reply(401, { error: 'Missing Slack signature' });
 
-  const fiveMinutesAgo = Math.floor(Date.now() / 1000) - 60 * 5;
-  if (timestamp < fiveMinutesAgo) return reply(401, { error: 'Request too old' });
+  // Ventana de frescura: rechaza timestamps viejos y demasiado futuros (±5 min).
+  const now = Math.floor(Date.now() / 1000);
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts) || Math.abs(now - ts) > 300) {
+    return reply(401, { error: 'Request timestamp out of range' });
+  }
 
-  const baseString = `v0:${timestamp}:${event.body}`;
+  // El HMAC se calcula sobre el cuerpo crudo exacto que firmó Slack.
+  const rawBody = event.isBase64Encoded
+    ? Buffer.from(event.body || '', 'base64').toString('utf8')
+    : (event.body || '');
+
+  const baseString = `v0:${timestamp}:${rawBody}`;
   const hmac = crypto.createHmac('sha256', signingSecret).update(baseString).digest('hex');
   const expected = `v0=${hmac}`;
-  if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+  if (!safeEqual(expected, signature)) {
     return reply(401, { error: 'Invalid signature' });
   }
 
   let payload;
   try {
-    payload = JSON.parse(event.body || '{}');
+    payload = JSON.parse(rawBody || '{}');
   } catch {
     return reply(400, { error: 'Invalid JSON' });
   }
@@ -65,64 +81,53 @@ exports.handler = async (event) => {
     return reply(200, { ok: true });
   }
 
-  // Llamar al route-agent
-  const siteUrl = process.env.SITE_URL || 'https://traveldocs.netlify.app';
-  const secret = process.env.ROUTE_AGENT_SECRET;
-  if (!secret) return reply(500, { error: 'ROUTE_AGENT_SECRET missing' });
-
-  let routeResult;
+  // Disparamos la background function (devuelve ~202 al instante) con el evento
+  // ya validado y ackeamos 200 a Slack. El routing corre fuera del path crítico.
   try {
-    const res = await fetch(`${siteUrl}/.netlify/functions/route-agent`, {
+    const host = getHeader(headers, 'x-forwarded-host') || getHeader(headers, 'host');
+    await fetch(`https://${host}/.netlify/functions/slack-orchestrator-background`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${secret}`
+        'Content-Type': 'application/json; charset=utf-8',
+        'x-slack-internal-secret': process.env.SLACK_INTERNAL_SECRET || ''
       },
-      body: JSON.stringify({ message: msg.text })
+      body: JSON.stringify({ event: msg }),
+      signal: AbortSignal.timeout(10000)
     });
-    if (!res.ok) throw new Error(`route-agent HTTP ${res.status}`);
-    routeResult = await res.json();
   } catch (err) {
-    console.error('route-agent call failed:', err.message);
-    await postToSlack(msg.channel, msg.ts, `⚠️ Error al hacer routing: ${err.message}`);
-    return reply(200, { ok: true });
+    // Un fallo al disparar la background function no debe impedir el ack a Slack.
+    console.error('background trigger failed:', err?.message || err);
   }
 
-  const route = routeResult.route || 'claude';
-  const confidence = routeResult.confidence ?? 0;
-
-  // Mensaje inicial en el hilo
-  const primary = route === 'cursor' ? 'Cursor' : route === 'gemini' ? 'Gemini' : 'Claude';
-  await postToSlack(
-    msg.channel,
-    msg.ts,
-    `🤖 Routing: *${primary}* (confianza ${(confidence * 100).toFixed(0)}%)\nLos otros agentes van a revisar. Claude tiene la última palabra.`
-  );
-
-  // Aquí iría la lógica para notificar a cada agente via sus MCPs o webhooks.
-  // Por ahora solo registramos y avisamos en Slack.
-  // TODO: integrar llamadas a Cursor MCP, Claude, Gemini según el route.
-
-  return reply(200, { ok: true, route });
+  return reply(200, { ok: true });
 };
 
-async function postToSlack(channel, thread_ts, text) {
-  const token = process.env.SLACK_BOT_TOKEN;
-  if (!token) return;
-  await fetch('https://slack.com/api/chat.postMessage', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ channel, thread_ts, text })
-  });
+// Lectura de headers case-insensitive (Netlify/Slack no garantizan el casing).
+function getHeader(headers, name) {
+  if (!headers) return undefined;
+  const target = name.toLowerCase();
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() === target) return headers[key];
+  }
+  return undefined;
+}
+
+// Comparación en tiempo constante que no explota (RangeError) con largos distintos.
+function safeEqual(a, b) {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ba.length !== bb.length) return false;
+  try {
+    return crypto.timingSafeEqual(ba, bb);
+  } catch {
+    return false;
+  }
 }
 
 function reply(statusCode, body) {
   return {
     statusCode,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify(body)
   };
 }
