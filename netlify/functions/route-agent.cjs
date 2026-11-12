@@ -3,7 +3,9 @@
 //  Usa Gemini Decisions API (gemini-decision-1) para decidir
 //  a qué agente mandar un mensaje (Cursor / Claude / Gemini).
 //  Pensado para el flujo multi-agente en Slack.
-//  Sin verifyAuth: Slack y MCP lo llaman sin token de TravelDocs.
+//
+//  Protección: requiere header Authorization: Bearer <ROUTE_AGENT_SECRET>
+//  Setear ROUTE_AGENT_SECRET en Netlify (Environment variables).
 // ============================================================
 
 const criteria = {
@@ -16,6 +18,18 @@ const criteria = {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return reply(405, { error: 'Method Not Allowed' });
+  }
+
+  // Auth por token secreto (para Slack/MCP, no login de TravelDocs)
+  const secret = process.env.ROUTE_AGENT_SECRET;
+  if (!secret) {
+    return reply(500, { error: 'ROUTE_AGENT_SECRET no está configurada en Netlify.' });
+  }
+
+  const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
+  const expected = `Bearer ${secret}`;
+  if (authHeader !== expected) {
+    return reply(401, { error: 'Unauthorized' });
   }
 
   let body;
