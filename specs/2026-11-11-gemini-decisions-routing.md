@@ -12,8 +12,9 @@ peticiones sin autenticar y falla con un cuerpo JSON null.
 ## Comportamiento y alcance
 
 POST /.netlify/functions/route-agent recibe { message } y devuelve route,
-confidence, probabilities y type. No usa verifyAuth: Slack y MCP lo llaman
-sin token de TravelDocs. La consulta usa fetch de Node contra la API REST
+confidence, probabilities y type. No usa verifyAuth. Exige
+Authorization: Bearer <ROUTE_AGENT_SECRET>. Si el header no coincide, responde
+401 y no llama a Gemini. La consulta usa fetch de Node contra la API REST
 oficial v1beta/decisions;
 no requiere actualizar el SDK compartido con los otros flujos Gemini.
 Contrato: https://aistudio.google.com/docs/decisions-api#quickstart
@@ -22,8 +23,9 @@ con Slack y la ejecucion de agentes quedan fuera de esta correccion.
 
 ## Criterios de aceptacion
 
-- CA-1: un POST con { message } y sin header Authorization clasifica el
-  mensaje. No exige token, usuario, agencia ni MFA.
+- CA-1: sin Authorization, con un Bearer distinto o sin el prefijo Bearer,
+  responde 401 y no llama a Gemini. Con Bearer igual a ROUTE_AGENT_SECRET,
+  clasifica el mensaje. No exige usuario, agencia ni MFA.
 - CA-2: JSON null, cuerpos invalidos y mensajes vacios devuelven 400.
 - CA-3: una peticion autorizada envia el contrato REST de Gemini Decision 1 y
   devuelve la clasificacion recibida; errores del proveedor y respuestas sin
@@ -58,12 +60,12 @@ pruebas a package.json y comprobar el bundle real de produccion.
   Se reutiliza verifyAuth, la fixture solo expone fetch al contexto y las
   opciones del clasificador tienen una sola definicion. Sin dependencias nuevas.
 
-## Acceso sin login
+## Acceso con ROUTE_AGENT_SECRET
 
-El usuario pidio sacar verifyAuth para que Slack y MCP llamen el endpoint sin
-token de TravelDocs. CA-1 queda reemplazado: un POST sin header Authorization
-clasifica el mensaje. La validacion del message, la llamada a Decisions y los
-502 no cambian.
+El endpoint no usa verifyAuth ni el login de TravelDocs. Slack y MCP lo llaman
+con Authorization: Bearer <ROUTE_AGENT_SECRET>. Un header ausente o distinto
+devuelve 401. La validacion del message, la llamada a Decisions y los 502 no
+cambian.
 
 ## Pendientes
 
