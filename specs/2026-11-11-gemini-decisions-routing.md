@@ -12,9 +12,9 @@ peticiones sin autenticar y falla con un cuerpo JSON null.
 ## Comportamiento y alcance
 
 POST /.netlify/functions/route-agent recibe { message } y devuelve route,
-confidence, probabilities y type. Reutiliza verifyAuth y sus controles de
-usuario, agencia y MFA. El llamador necesita un token Firebase de TravelDocs.
-La consulta usa fetch de Node contra la API REST oficial v1beta/decisions;
+confidence, probabilities y type. No usa verifyAuth: Slack y MCP lo llaman
+sin token de TravelDocs. La consulta usa fetch de Node contra la API REST
+oficial v1beta/decisions;
 no requiere actualizar el SDK compartido con los otros flujos Gemini.
 Contrato: https://aistudio.google.com/docs/decisions-api#quickstart
 Se conserva la clasificacion cursor/claude/gemini/multiple. La integracion
@@ -22,8 +22,8 @@ con Slack y la ejecucion de agentes quedan fuera de esta correccion.
 
 ## Criterios de aceptacion
 
-- CA-1: sin token valido o con usuario/agencia inactivos, se rechaza el acceso
-  antes de consumir Gemini.
+- CA-1: un POST con { message } y sin header Authorization clasifica el
+  mensaje. No exige token, usuario, agencia ni MFA.
 - CA-2: JSON null, cuerpos invalidos y mensajes vacios devuelven 400.
 - CA-3: una peticion autorizada envia el contrato REST de Gemini Decision 1 y
   devuelve la clasificacion recibida; errores del proveedor y respuestas sin
@@ -57,6 +57,13 @@ pruebas a package.json y comprobar el bundle real de produccion.
 - Revision Ponytail y estructural del diff: sin hallazgos accionables.
   Se reutiliza verifyAuth, la fixture solo expone fetch al contexto y las
   opciones del clasificador tienen una sola definicion. Sin dependencias nuevas.
+
+## Acceso sin login
+
+El usuario pidio sacar verifyAuth para que Slack y MCP llamen el endpoint sin
+token de TravelDocs. CA-1 queda reemplazado: un POST sin header Authorization
+clasifica el mensaje. La validacion del message, la llamada a Decisions y los
+502 no cambian.
 
 ## Pendientes
 

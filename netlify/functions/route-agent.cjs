@@ -3,9 +3,8 @@
 //  Usa Gemini Decisions API (gemini-decision-1) para decidir
 //  a qué agente mandar un mensaje (Cursor / Claude / Gemini).
 //  Pensado para el flujo multi-agente en Slack.
+//  Sin verifyAuth: Slack y MCP lo llaman sin token de TravelDocs.
 // ============================================================
-
-const { verifyAuth } = require('./_auth.cjs');
 
 const criteria = {
   cursor: 'Cambios de código, implementación, bugs, features, PRs, refactor',
@@ -18,9 +17,6 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return reply(405, { error: 'Method Not Allowed' });
   }
-
-  const auth = await verifyAuth(event);
-  if (!auth.ok) return reply(auth.status, { error: auth.error });
 
   let body;
   try {

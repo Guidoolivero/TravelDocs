@@ -1,13 +1,29 @@
+import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fixture } from './firebase-fixture.mjs';
 
-test('route-agent rechaza peticiones sin token', async t => {
-  const request = t.mock.method(globalThis, 'fetch', async () => { throw new Error('No debe consultar Gemini'); });
-  const f = fixture({ env: { GEMINI_API_KEY: 'test-key' } });
-  const response = await f.invoke('route-agent', { message: 'Revisar un PR' }, '');
-  assert.equal(response.statusCode, 401);
-  assert.equal(request.mock.callCount(), 0);
+const require = createRequire(import.meta.url);
+
+test('route-agent clasifica sin header Authorization', async t => {
+  const previous = process.env.GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY = 'test-key';
+  t.after(() => {
+    if (previous === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previous;
+  });
+  const request = t.mock.method(globalThis, 'fetch', async () => Response.json({ answers: { route: {
+    type: 'choice', choice: 'claude', confidence: 0.8,
+    probabilities: { claude: 0.8, cursor: 0.1, gemini: 0.05, multiple: 0.05 },
+  } } }));
+  const { handler } = require('../netlify/functions/route-agent.cjs');
+  const response = await handler({
+    httpMethod: 'POST',
+    body: JSON.stringify({ message: 'Explicar el flujo de check-in' }),
+  });
+  assert.equal(response.statusCode, 200);
+  assert.equal(JSON.parse(response.body).route, 'claude');
+  assert.equal(request.mock.callCount(), 1);
 });
 
 test('route-agent rechaza cuerpos invalidos y mensajes vacios', async t => {
@@ -66,17 +82,6 @@ test('route-agent no inventa una ruta ante una respuesta invalida de Gemini', as
     request.mock.mockImplementation(async () => Response.json({ answers: { route: answer } }));
     assert.equal((await f.invoke('route-agent', { message: 'Revisar un PR' })).statusCode, 502);
   }
-});
-
-test('route-agent conserva los controles de usuario, agencia y MFA', async t => {
-  const request = t.mock.method(globalThis, 'fetch', async () => { throw new Error('No debe consultar Gemini'); });
-  for (const scenario of ['usuario inactivo', 'agencia suspendida', 'sin MFA']) {
-    const f = fixture({ env: { GEMINI_API_KEY: 'test-key' }, active: scenario !== 'usuario inactivo' });
-    if (scenario === 'agencia suspendida') f.docs.get('agencies/agency').status = 'suspended';
-    if (scenario === 'sin MFA') f.tokens.get('user').firebase = {};
-    assert.equal((await f.invoke('route-agent', { message: 'Revisar un PR' }, 'user')).statusCode, 403, scenario);
-  }
-  assert.equal(request.mock.callCount(), 0);
 });
 
 test('route-agent rechaza GET y avisa si falta la API key', async t => {
