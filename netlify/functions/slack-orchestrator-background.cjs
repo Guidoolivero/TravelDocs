@@ -7,14 +7,16 @@
 //  así slack-orchestrator puede ackear a Slack en <3s.
 //
 //  Protección: solo invocable internamente desde slack-orchestrator
-//  mediante el header x-slack-internal-secret (SLACK_INTERNAL_SECRET),
-//  para que no se pueda disparar desde afuera.
+//  mediante el header x-slack-internal-secret (SLACK_INTERNAL_SECRET).
 //
 //  Variables de entorno necesarias en Netlify:
 //  - SLACK_INTERNAL_SECRET
 //  - SLACK_BOT_TOKEN
 //  - ROUTE_AGENT_SECRET
-//  - SITE_URL (ej: https://traveldocs.com.ar)
+//  - SITE_URL
+//  - MCP_CURSOR_URL / MCP_CURSOR_TOKEN   (opcional)
+//  - MCP_CLAUDE_URL / MCP_CLAUDE_TOKEN   (opcional)
+//  - MCP_GEMINI_URL / MCP_GEMINI_TOKEN   (opcional)
 // ============================================================
 
 const crypto = require('crypto');
@@ -24,7 +26,6 @@ exports.handler = async (event) => {
     return reply(405, { error: 'Method Not Allowed' });
   }
 
-  // Solo invocable internamente desde slack-orchestrator.
   const internalSecret = process.env.SLACK_INTERNAL_SECRET;
   if (!internalSecret) return reply(500, { error: 'SLACK_INTERNAL_SECRET missing' });
   const provided = getHeader(event.headers, 'x-slack-internal-secret');
@@ -43,7 +44,6 @@ exports.handler = async (event) => {
   }
   if (!msg?.channel || !msg?.text) return reply(400, { error: 'Missing event' });
 
-  // Llamar al route-agent
   const siteUrl = process.env.SITE_URL || 'https://traveldocs.com.ar';
   const secret = process.env.ROUTE_AGENT_SECRET;
   if (!secret) return reply(500, { error: 'ROUTE_AGENT_SECRET missing' });
@@ -72,18 +72,68 @@ exports.handler = async (event) => {
   const confidence = routeResult.confidence ?? 0;
   const pct = (confidence * 100).toFixed(0);
 
-  // route-agent expresa el caso multi-agente como route === 'multiple'.
   const text = route === 'multiple'
-    ? `🤖 Routing: *multi-agente* (confianza ${pct}%)\nEste pedido necesita varios agentes en secuencia (Cursor, Gemini, Claude). Claude tiene la última palabra.`
+    ? `🤖 Routing: *multi-agente* (confianza ${pct}%)\nEste pedido necesita varios agentes en secuencia. Claude tiene la última palabra.`
     : `🤖 Routing: *${agentName(route)}* (confianza ${pct}%)\nLos otros agentes van a revisar. Claude tiene la última palabra.`;
 
   await postToSlack(msg.channel, msg.ts, text);
 
-  // Aquí iría la lógica para notificar a cada agente via sus MCPs o webhooks.
-  // TODO: integrar llamadas a Cursor MCP, Claude, Gemini según el route.
+  // Disparar al agente principal via MCP (si está configurado)
+  await callAgentMCP(route, msg.text, msg.channel, msg.ts);
 
   return reply(200, { ok: true, route });
 };
+
+async function callAgentMCP(route, message, channel, threadTs) {
+  const configs = {
+    cursor: {
+      url: process.env.MCP_CURSOR_URL,
+      token: process.env.MCP_CURSOR_TOKEN
+    },
+    claude: {
+      url: process.env.MCP_CLAUDE_URL,
+      token: process.env.MCP_CLAUDE_TOKEN
+    },
+    gemini: {
+      url: process.env.MCP_GEMINI_URL,
+      token: process.env.MCP_GEMINI_TOKEN
+    }
+  };
+
+  const cfg = configs[route];
+  if (!cfg?.url) {
+    console.log(`MCP no configurado para ${route}, se omite la llamada`);
+    return;
+  }
+
+  try {
+    const res = await fetch(cfg.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {})
+      },
+      body: JSON.stringify({
+        message,
+        channel,
+        thread_ts: threadTs,
+        source: 'slack-orchestrator'
+      }),
+      signal: AbortSignal.timeout(15000)
+    });
+
+    if (!res.ok) {
+      console.error(`MCP ${route} HTTP ${res.status}`);
+      await postToSlack(channel, threadTs, `⚠️ No pude llamar al MCP de ${agentName(route)} (HTTP ${res.status})`);
+      return;
+    }
+
+    console.log(`MCP ${route} llamado correctamente`);
+  } catch (err) {
+    console.error(`MCP ${route} failed:`, err?.message || err);
+    await postToSlack(channel, threadTs, `⚠️ Error al llamar al MCP de ${agentName(route)}`);
+  }
+}
 
 function agentName(route) {
   return route === 'cursor' ? 'Cursor' : route === 'gemini' ? 'Gemini' : 'Claude';
@@ -109,7 +159,6 @@ async function postToSlack(channel, thread_ts, text) {
       console.error(`postToSlack HTTP ${res.status}`);
       return;
     }
-    // Slack responde 200 con { ok: false, error } ante fallos lógicos.
     const data = await res.json().catch(() => ({}));
     if (!data.ok) {
       console.error(`postToSlack Slack error: ${data.error || 'desconocido'}`);
@@ -119,7 +168,6 @@ async function postToSlack(channel, thread_ts, text) {
   }
 }
 
-// Lectura de headers case-insensitive (Netlify no garantiza el casing).
 function getHeader(headers, name) {
   if (!headers) return undefined;
   const target = name.toLowerCase();
@@ -129,7 +177,6 @@ function getHeader(headers, name) {
   return undefined;
 }
 
-// Comparación en tiempo constante que no explota (RangeError) con largos distintos.
 function safeEqual(a, b) {
   const ba = Buffer.from(a);
   const bb = Buffer.from(b);
