@@ -24,7 +24,7 @@ function renderSSRItems(p, gds) {
   if (!items.length) return '<div style="font-size:13px;color:var(--text3);">Sin documentos cargados.</div>';
   return items.map(s => `<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <div>
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">${esc(s.label)}</div>
+        <div class="ssr-item-label">${esc(s.label)}</div>
         <code style="font-size:11.5px;font-family:var(--mono);color:var(--text);word-break:break-all;">${esc(s.value)}</code>
         ${s.label.includes('Email') && p.email && /[_-]/.test(p.email) ? '<div style="font-size:10px;color:var(--text3);margin-top:3px;">Email codificado para GDS (_ → .. y - → ./, estándar IATA).</div>' : ''}
       </div>

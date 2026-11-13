@@ -811,3 +811,5 @@ textarea { resize: vertical; min-height: 72px; }
   .topbar:has(.platform-updates-link:not([hidden])) { height: auto; min-height: 56px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; row-gap: 6px; }
   .platform-updates-link { order: 4; flex-basis: 100%; }
 }
+
+.ssr-item-label { margin-bottom: 6px; color: var(--accent); font-size: 14px; font-weight: 600; line-height: 1.35; }
