@@ -6,7 +6,7 @@ para GDS (Amadeus, Sabre, Galileo), lee documentos con IA y analiza requisitos
 de viaje por ruta y nacionalidad.
 
 Marca en produccion: **TravelDocs** (`traveldocs.com.ar`).
-Repo privado: `Guidoolivero/TravelDocs`. Raiz git: este directorio (`DocTravel/`).
+Repo publico: `Guidoolivero/TravelDocs`. Raiz git: este directorio (`DocTravel/`).
 
 ## Que resuelve
 
