@@ -12,16 +12,16 @@ function claims(loginHaceMs) {
 }
 
 describe('venceSesion', () => {
-  it('la sesion dura 3 horas', () => {
-    assert.equal(SESION_MAX_MS, 3 * H);
+  it('la sesion dura 5 horas', () => {
+    assert.equal(SESION_MAX_MS, 5 * H);
   });
 
-  it('recien logueado: vence en 3 horas', () => {
-    assert.equal(venceSesion(claims(0), AHORA), AHORA + 3 * H);
+  it('recien logueado: vence en 5 horas', () => {
+    assert.equal(venceSesion(claims(0), AHORA), AHORA + 5 * H);
   });
 
-  it('logueado hace 2 horas: le queda 1 hora', () => {
-    assert.equal(venceSesion(claims(2 * H), AHORA), AHORA + 1 * H);
+  it('logueado hace 4 horas: le queda 1 hora', () => {
+    assert.equal(venceSesion(claims(4 * H), AHORA), AHORA + 1 * H);
   });
 
   it('logueado hace 3 dias: ya vencio', () => {
@@ -31,7 +31,7 @@ describe('venceSesion', () => {
   it('no depende del reloj de la PC: mide con iat del server', () => {
     const c = claims(1 * H);
     const relojAdelantado = AHORA + 5 * H;
-    assert.equal(venceSesion(c, relojAdelantado), relojAdelantado + 2 * H);
+    assert.equal(venceSesion(c, relojAdelantado), relojAdelantado + 4 * H);
   });
 
   it('sin claims de tiempo: vence ya (falla cerrado)', () => {
