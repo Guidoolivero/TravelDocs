@@ -93,7 +93,7 @@ try{
  await page.locator('.nav-item[data-view="dashboard"]').click();
  assert.equal(await page.locator('#platform-updates').evaluate(el=>el.open),false,'Volver al Dashboard deja las novedades plegadas');
  await page.locator('#platform-updates > summary').click();
- assert.match(await page.locator('.platform-update h3').first().innerText(),/Busca pasajeros sin vincular en Check ins/,'La tarjeta mas reciente explica la busqueda en check-ins');
+ assert.match(await page.locator('.platform-update h3').first().innerText(),/Mas tiempo para trabajar/,'La tarjeta mas reciente anuncia la sesion de 5 horas');
  const visibleNews=()=>page.locator('.platform-updates-grid').evaluate(track=>{
   const box=track.getBoundingClientRect();
   return [...track.children].filter(card=>{const r=card.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;}).map(card=>card.dataset.updateId);
