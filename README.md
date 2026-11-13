@@ -123,6 +123,45 @@ Hay cache en coleccion raiz `travelCache` (solo Admin SDK, TTL configurable).
 Rutas frecuentes se pueden promover a `docs/conocidos.json` y regenerar
 `public/js/requisitos/conocidos.mjs`.
 
+### Facturacion (ARCA)
+
+Emite la factura mensual de la suscripcion de cada agencia: Factura C de
+servicios (emisor monotributista), autorizada por ARCA via WSAA + WSFEv1, con
+PDF propio (CAE + QR). Emision manual desde la pestana Facturacion del panel
+super-admin; solo administradores de plataforma con MFA.
+
+| Pieza | Archivo | Rol |
+| --- | --- | --- |
+| API | `netlify/functions/billing-api.cjs` | Acciones `preview`, `issue`, `recover`, `retry`, `get`, `list` |
+| PDF | `netlify/functions/billing-pdf.cjs` | Borrador sin valor fiscal o factura autorizada, en base64 |
+| Reglas | `netlify/functions/lib/facturacion/billing.cjs` | Prueba de 30 dias, elegibilidad, precios por mes, validacion de CUIT |
+| Servicio | `netlify/functions/lib/facturacion/billing-service.cjs` | Vista previa, emision, recuperacion y cotizacion USD |
+| Store | `netlify/functions/lib/facturacion/billing-store.cjs` | `ArcaStore` sobre Firestore: locks con lease, tickets y reservas del SDK |
+| Ambiente | `netlify/functions/lib/facturacion/billing-config.cjs` | Decide `test` o `production`; si no cumple, el facturador queda deshabilitado |
+| UI | `public/js/facturacion/` | Pestana, visor PDF, mensajes de error |
+
+SDK: `facturas` 0.25.2 fijado. El `postinstall` aplica
+`scripts/facturacion/patch-facturas-quotation.mjs` para enviar `FchCotiz`; una
+version nueva del SDK obliga a revisar ese parche.
+
+Colecciones (solo Admin SDK; las rules niegan todo acceso del browser):
+`billingProfiles` (ficha fiscal y precios por mes), `billingInvoices` (una por
+agencia y mes, con snapshot), `billingAttempts` (rechazos archivados),
+`billingLocks`, `billingStore` (tickets WSAA y numeracion), `billingSecrets`
+(certificado y clave de produccion) y `auditLogs`.
+
+Estados de `billingInvoices.status`: `draft` -> `issuing` -> `authorized`, mas
+`rejected`, `indeterminate` y `conflict`. La solicitud se guarda antes de llamar
+a ARCA con una `idempotencyKey`; ante un corte se usa `recover` y solo se
+reenvia si ARCA informa `not_found`. Nunca borrar intentos ni reservas para
+destrabar.
+
+Activacion por env vars (`BILLING_ENABLED`, `ARCA_ENVIRONMENT`,
+`BILLING_FIREBASE_PROJECT_ID`, `ARCA_TAX_ID`, `ARCA_SALES_POINT`,
+`BILLING_ISSUER_JSON`; en produccion ademas `BILLING_PRODUCTION_CONFIRMATION`).
+Homologacion exige un Firebase aislado o el emulador. Un deploy preview no
+puede emitir en produccion. Detalle en `docs/facturacion/`.
+
 ## Estructura del repo (raiz de GitHub)
 
 ```text
@@ -156,7 +195,8 @@ los clientes solo tienen symlinks.
 npm ci
 npm test                      # unitarios listados en package.json
 npm run test:rules:emulator   # aislamiento Firestore
-npm run test:billing:emulator
+npm run test:billing:emulator # facturacion contra Firestore emulado
+npm run test:billing:ui       # panel de facturacion con servicios simulados
 npm run build:frontend        # copia versionada a .netlify/site
 netlify dev                   # Functions + front local
 netlify deploy --prod         # solo a proposito; CI ya lo hace en main
@@ -197,4 +237,6 @@ produccion: `netlify deploy` (draft) o un alias
 | `docs/SETUP.md` | Firebase + Gemini + Netlify desde cero |
 | `docs/ONBOARDING-AGENCIA.md` | Alta manual de una agencia |
 | `docs/DESARROLLO-IA.md` | SDD + revision estructural compartida |
+| `docs/facturacion/FACTURADOR-HOMOLOGACION.md` | Reglas, uso del panel y configuracion de prueba del facturador |
+| `docs/facturacion/FACTURADOR-PRODUCCION.md` | Certificado, punto de venta y activacion en produccion |
 | `AGENTS.md` | Guia operativa completa para agentes |
