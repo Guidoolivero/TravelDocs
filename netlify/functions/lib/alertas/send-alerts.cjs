@@ -80,6 +80,7 @@ function piernasDe(r) {
   if (Array.isArray(r.piernas) && r.piernas.length) {
     return r.piernas.map(p => ({
       fecha: p.fecha || '',
+      ...(p.fechaLocal !== undefined ? {fechaLocal:p.fechaLocal,zonaHoraria:p.zonaHoraria || ''} : {}),
       vuelo: p.vuelo || '',
       origen: p.origen || '',
       destino: p.destino || '',
@@ -203,7 +204,7 @@ async function processAgency(agencyDoc, { now, started }) {
       if (p.checkin || p.notified) return;
       if (!checkinAlertDue(p.fecha, horas, now)) return;
       if (!grupos.has(to)) grupos.set(to, []);
-      grupos.get(to).push({ resId: r.id, piernas, idx, vuelo: p.vuelo, ruta: (p.origen && p.destino) ? `${p.origen}-${p.destino}` : '', fecha: p.fecha, ref: p.reservaVuelo, paxIds: r.pasajeros || [], pending: r.pendingPassengers || [] });
+      grupos.get(to).push({ resId: r.id, piernas, idx, vuelo: p.vuelo, ruta: (p.origen && p.destino) ? `${p.origen}-${p.destino}` : '', fecha: p.fecha, fechaLocal:p.fechaLocal, origen:p.origen, horasAntes:horas, ref: p.reservaVuelo, paxIds: r.pasajeros || [], pending: r.pendingPassengers || [] });
     });
   }
 
@@ -221,6 +222,7 @@ async function processAgency(agencyDoc, { now, started }) {
     vuelo: x.vuelo,
     ruta: x.ruta,
     fecha: x.fecha,
+    fechaLocal:x.fechaLocal, origen:x.origen, horasAntes:x.horasAntes,
     ref: x.ref,
   });
 

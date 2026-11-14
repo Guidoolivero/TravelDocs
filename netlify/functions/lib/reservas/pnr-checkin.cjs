@@ -1,3 +1,4 @@
+const { normalizarHorarios } = require('./pnr-horarios.cjs');
 // ============================================================
 //  Netlify Function: pnr-checkin
 //  Interpreta un PNR de Amadeus pegado por el agente O uno o varios e-tickets
@@ -46,7 +47,7 @@ const ESQUEMA_JSON = `Devolvé ÚNICAMENTE este JSON (sin markdown, sin texto ex
 {
   "pnrAmadeus": "ABC123 o null (record locator de 6 chars de Amadeus, si aparece en el texto)",
   "segmentos": [
-    { "fecha_salida": "YYYY-MM-DDTHH:mm (hora Argentina, UTC-3)", "fecha_llegada": "YYYY-MM-DDTHH:mm (hora Argentina, UTC-3)", "vuelo": "AA908", "origen": "EZE", "destino": "MIA", "compania": "AA (codigo IATA de 2-3 letras de la aerolinea operadora de ESTE segmento, ej. AA, IB, AR, G3)", "reservaVuelo": "KRBJJ o null (codigo de reserva de la aerolinea de ESTE segmento; ver regla 4)" }
+    { "fecha_salida": "YYYY-MM-DDTHH:mm (hora local del aeropuerto)", "fecha_llegada": "YYYY-MM-DDTHH:mm (hora local del aeropuerto)", "vuelo": "AA908", "origen": "EZE", "destino": "MIA", "compania": "AA (codigo IATA de 2-3 letras de la aerolinea operadora de ESTE segmento, ej. AA, IB, AR, G3)", "reservaVuelo": "KRBJJ o null (codigo de reserva de la aerolinea de ESTE segmento; ver regla 4)" }
   ],
   "pasajeros": [ { "apellido": "POMBO", "nombre": "DANIEL MARIA", "tipo": "ADT|CHD|INF" } ],
   "notas": "aclaracion corta si algo del PNR no cierra"
@@ -63,7 +64,7 @@ Fecha de hoy (referencia para inferir el año, Argentina): ${hoy}
 Reglas de interpretación:
 1. PASAJEROS: una linea por pasajero, formato "APELLIDO/NOMBRE [(CHD|INF)]". El primero suele no tener numero de linea. tipo = "ADT" por defecto, "CHD" si tiene (CHD), "INF" si tiene (INF). Separá apellido (antes de la barra) y nombre (después de la barra, sin el sufijo entre parentesis). La D de "2.D IMPERIO" o "D'ANGELO" es parte del apellido, no un titulo ni el numero de linea.
 2. SEGMENTOS: cada linea de vuelo del PNR (que NO tenga status FLWN) es un segmento. Extraé para cada uno, en orden: "vuelo" (aerolinea+numero, ej. "AA908"), "origen" (IATA), "destino" (IATA), "fecha_salida" y "fecha_llegada". NO agrupes, NO decidas escalas ni ida/vuelta: devolvé un item por cada linea de vuelo, en el orden del PNR. Si una linea tiene status FLWN (ya volado), ignorala por completo.
-3. FECHAS: "fecha_salida" y "fecha_llegada" en horario Argentina (America/Argentina/Buenos_Aires, UTC-3). El PNR trae la hora local del aeropuerto; vos sabes la zona horaria por el codigo IATA, asi que convertí esa hora local a hora Argentina. Formato "YYYY-MM-DDTHH:mm" (ej. 0845 local -> 08:45 Argentina, o 2020 HKG -> 09:20 Argentina). Si el PNR no trae hora de llegada, repetí la fecha_salida como fecha_llegada. Inferí el año con la fecha de hoy: usá la próxima ocurrencia de ese ddMMM hacia adelante (si ya pasó este año, usá el año que viene).
+3. FECHAS: conserva EXACTAMENTE la fecha y hora local de salida del aeropuerto de origen y la fecha y hora local de llegada al destino. NO conviertas a hora Argentina ni a UTC. Formato "YYYY-MM-DDTHH:mm". La salida 07MAR 2359 sigue siendo el 7 de marzo a las 23:59, aunque llegue el 08MAR. Si falta llegada, repeti fecha_salida. Inferi el año con la proxima ocurrencia desde hoy. Nunca uses la fecha de llegada como fecha de salida.
 4. Por cada segmento: compania = codigo IATA de 2-3 letras de la aerolinea operadora de ese segmento (el prefijo del numero de vuelo, ej. IB, AR, AA, G3). reservaVuelo = lo que va despues de la barra en el sufijo "AEROLINEA/REF" al final de ESA linea de segmento (ej. "IB/KRBJJ" -> "KRBJJ"). Si la linea no trae sufijo /REF, va null. NO propagues el reservaVuelo entre segmentos: cada segmento tiene el suyo o null (la misma aerolinea puede tener distintos codigos de reserva en distintos grupos de vuelos). pnrAmadeus = record locator de 6 caracteres de Amadeus si aparece en el texto (suele estar en el encabezado). Si no aparece, null.
 
 ${ESQUEMA_JSON}`;
@@ -82,7 +83,7 @@ Fecha de hoy (referencia para inferir el año, Argentina): ${hoy}
 Reglas de extracción (el PDF puede tener cualquier formato, pero los datos son siempre los mismos):
 1. PASAJEROS: uno por pasajero. Separá apellido y nombre (si vienen tipo "LABAYEN/CRISTINA EDITH", apellido = antes de la barra, nombre = después). tipo "ADT" por defecto, "CHD"/"INF" si lo indica el documento.
 2. SEGMENTOS: uno por cada vuelo del itinerario, en orden. Extraé "vuelo" (aerolínea + número, ej. "UX042"), "origen" y "destino" (IATA 3 letras; si solo figura la ciudad, inferí el IATA), "fecha_salida" y "fecha_llegada". NO agrupes ni decidas escalas: un item por cada vuelo, en el orden del itinerario.
-3. FECHAS: en horario Argentina (America/Argentina/Buenos_Aires, UTC-3). Los PDFs suelen mostrar la hora local de cada aeropuerto; vos sabes la zona horaria por el código IATA, asi que convertí esa hora local a hora Argentina. Formato "YYYY-MM-DDTHH:mm". Si solo hay fecha sin hora, para "fecha_salida" usá 00:01 y para "fecha_llegada" usá 23:59 (evita un gap exacto de 24h entre tramos conectados que los partiría en dos check-ins). Inferí el año con la fecha de hoy.
+3. FECHAS: conserva EXACTAMENTE las horas locales impresas: salida en el origen y llegada en el destino. NO conviertas a hora Argentina ni a UTC. Formato "YYYY-MM-DDTHH:mm". Sin hora de salida usa 00:01; sin hora de llegada usa 23:59. Inferi el año con la fecha de hoy.
 4. Por cada segmento: compania = código IATA de 2-3 letras de la aerolínea operadora de ese segmento. reservaVuelo = el localizador / código de reserva de la aerolínea para ESE segmento. Se identifica por etiquetas como "LOCALIZADOR", "Localizador de reserva", "Booking Reference", "Record Locator", "Confirmation", "Reserva", "PNR", "Ref" o "Locator" (alfanumérico de 5-6 chars, ej. AGRZEP, A3MTSF, KRBJJ). Si el documento tiene un ÚNICO localizador compartido por todos los segmentos (lo más común), usalo como reservaVuelo en CADA segmento; si cada segmento trae el suyo, usá el de ese segmento. NUNCA devuelvas null en reservaVuelo si existe algún código de reserva en el documento: si solo hay uno global, replicalo en todos los segmentos. pnrAmadeus = el código principal de reserva / record locator del documento (6 chars si es Amadeus); null si no aparece.
 
 ${ESQUEMA_JSON}`;
@@ -272,7 +273,7 @@ function parsePnrJson(raw) {
 // vuelo necesita su propio check-in) y esa ciudad cuenta como destino.
 // tipoDePiernas clasifica sobre las piernas: una escala no es multi destino.
 // Los gaps son invariantes en la
-// zona horaria porque ambas fechas estan en hora Argentina naive.
+// zona horaria porque el modulo pnr-horarios normaliza ambas fechas a ART.
 // Excepcion: un segmento de OTRA aerolinea (o con otro codigo de
 // reserva de aerolinea) nunca se funde como escala, aunque conecte en
 // menos de 24hs: es otro check-in (ej. MAD-LIM en IB/PHTQD + LIM-EZE
@@ -280,13 +281,11 @@ function parsePnrJson(raw) {
 const DIA_MS = 24 * 60 * 60 * 1000;
 
 function ts(fecha) {
-  const t = new Date(fecha).getTime();
+  if (!fecha) return null;
+  const t = new Date(fecha + ':00-03:00').getTime();
   return isNaN(t) ? null : t;
 }
 
-function horaSentinel(fecha) {
-  return /T00:01$/.test(fecha || '') || /T23:59$/.test(fecha || '');
-}
 
 function mismaReserva(a, b) {
   const x = String(a || '').toUpperCase();
@@ -299,9 +298,12 @@ function mismaReserva(a, b) {
 
 function groupSegmentos(segmentos) {
   const segs = (Array.isArray(segmentos) ? segmentos : [])
-    .filter(s => s && s.fecha_salida)
+    .filter(s => s && (s.fecha_salida || s.fechaLocal))
     .map(s => ({
       salida: s.fecha_salida,
+      fechaLocal: s.fechaLocal,
+      zonaHoraria: s.zonaHoraria,
+      sinHora: s.sinHora,
       llegada: s.fecha_llegada || s.fecha_salida,
       vuelo: s.vuelo || '',
       origen: s.origen || '',
@@ -325,12 +327,12 @@ function groupSegmentos(segmentos) {
       && tSalida >= tLlegadaPrev && (tSalida - tLlegadaPrev) < DIA_MS;
     // Gemini, sin hora, pone 00:01/23:59. El mismo dia se solapa y no entra
     // en conexionHoraria; si el aeropuerto encadena, igual es escala.
-    const conexionSinHora = encadena && horaSentinel(prev && prev._tLlegada) && horaSentinel(s.salida)
+    const conexionSinHora = encadena && prev._sinHora && s.sinHora
       && tSalida !== null && tLlegadaPrev !== null && Math.abs(tSalida - tLlegadaPrev) < DIA_MS;
     if (prev && !distintaCompania && !distintaReserva && (conexionHoraria || conexionSinHora)) {
       // escala: misma pierna (< 24h en tierra, misma aerolinea y reserva)
       if (s.origen) prev.escalas.push(s.origen);
-      const sinHora = !conexionHoraria || horaSentinel(prev._tLlegada) || horaSentinel(s.salida);
+      const sinHora = !conexionHoraria || prev._sinHora || s.sinHora;
       if (!prev.transitos) prev.transitos = [];
       prev.transitos.push({
         iata: s.origen || '',
@@ -339,15 +341,16 @@ function groupSegmentos(segmentos) {
       });
       prev.destino = s.destino || prev.destino;
       prev._tLlegada = s.llegada;
+      prev._sinHora = s.sinHora;
       // completa datos de aerolinea que falten en la pierna
       if (!prev.compania && s.compania) prev.compania = s.compania;
       if (!prev.reservaVuelo && s.reservaVuelo) prev.reservaVuelo = s.reservaVuelo;
     } else {
       // nueva pierna (gap >= 24h o primera)
-      piernas.push({ fecha: s.salida, vuelo: s.vuelo, origen: s.origen, destino: s.destino, escalas: [], compania: s.compania, reservaVuelo: s.reservaVuelo, _tLlegada: s.llegada });
+      piernas.push({ fecha: s.salida || '', fechaLocal: s.fechaLocal, zonaHoraria: s.zonaHoraria, vuelo: s.vuelo, origen: s.origen, destino: s.destino, escalas: [], compania: s.compania, reservaVuelo: s.reservaVuelo, _tLlegada: s.llegada, _sinHora: s.sinHora });
     }
   }
-  return piernas.map(({ _tLlegada, ...p }) => p);
+  return piernas.map(({ _tLlegada, _sinHora, ...p }) => p);
 }
 
 // EZE/AEP/EPA son Buenos Aires: ida por Ezeiza y vuelta a Aeroparque sigue
@@ -554,7 +557,7 @@ exports.handler = async function handler(event) {
     // Agrupacion deterministica de segmentos en piernas (un check-in por pierna).
     // Umbral: gap >= 24h entre llegada y la siguiente salida => pierna separada.
     // Tambien separa cuando cambia la aerolinea o el codigo de reserva.
-    const piernas = groupSegmentos(data.segmentos);
+    const piernas = groupSegmentos(normalizarHorarios(data.segmentos, isEticket ? '' : pnrText, hoy));
     // Fallback de reservaVuelo SOLO para e-tickets: en muchos el localizador es
     // unico y compartido (= pnrAmadeus), asi que si NINGUNA pierna tiene codigo
     // la lleno con pnrAmadeus. En el path PNR pegado NO se aplica: ahi

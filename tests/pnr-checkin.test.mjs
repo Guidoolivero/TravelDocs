@@ -31,8 +31,9 @@ test('PDFs de vuelta e ida producen dos check-ins cronologicos en cualquier orde
     assert.equal(response.statusCode, 200);
     const { data } = JSON.parse(response.body);
     assert.equal(data.piernas.length, 2);
+    assert.equal(data.piernas[1].fechaLocal, '2026-12-15T10:00');
     assert.deepEqual(data.piernas.map(p => [p.fecha, p.origen, p.destino]), [
-      ['2026-12-01T10:00', 'EZE', 'MAD'], ['2026-12-15T10:00', 'MAD', 'EZE'],
+      ['2026-12-01T10:00', 'EZE', 'MAD'], ['2026-12-15T06:00', 'MAD', 'EZE'],
     ]);
   }
 });
@@ -103,4 +104,17 @@ test('menos de 24h en Lima es escala; 24h o mas es multi destino', async () => {
     ['LIM', 'AUA'],
     ['AUA', 'AEP'],
   ]);
+});
+
+test('PNR conserva salida DEN 23:59 local y MIA 20:15, independiente de la conversion del modelo', async () => {
+  const f = pnrFixture({undefined:[
+    {fecha_salida:'2027-03-08T03:59',fecha_llegada:'2027-03-08T07:51',origen:'DEN',destino:'MIA',vuelo:'AA2139',compania:'AA'},
+    {fecha_salida:'2027-03-17T21:15',fecha_llegada:'2027-03-18T06:25',origen:'MIA',destino:'EZE',vuelo:'AA931',compania:'AA'},
+  ]});
+  const r = await f.invoke('pnr-checkin', {hoy:'2026-11-14',pnr:'5 AA2139 O 07MAR 7 DENMIA HK2 2359 0551 08MAR E\n6 AA 931 O 17MAR 3 MIAEZE HK2 2015 0625 18MAR E'});
+  assert.equal(r.statusCode,200);
+  const p = JSON.parse(r.body).data.piernas;
+  assert.equal(p[0].fechaLocal,'2027-03-07T23:59');
+  assert.equal(p[0].fecha,'2027-03-08T03:59');
+  assert.equal(p[1].fechaLocal,'2027-03-17T20:15');
 });

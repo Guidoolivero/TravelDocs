@@ -39,6 +39,12 @@ requisitos. `compartido/pdf.mjs` comparte el visor PDF entre itinerarios y factu
 Firebase se inicializa una sola vez en `compartido/firebase.mjs`. `db.js` sigue
 siendo el propietario del contexto tenant y de las suscripciones a Firestore.
 
+`reservas/horarios.mjs` resuelve la zona IANA del aeropuerto y convierte horarios
+con `Intl`. Lo comparten la pantalla, los correos y el normalizador PNR del
+backend. `fecha` conserva el instante en ART; `fechaLocal` y `zonaHoraria`
+conservan la salida del aeropuerto. El catalogo `aeropuertos-zonas.mjs` incluye
+su fuente, fecha de descarga, checksum y licencia MIT.
+
 ## Funciones y archivos privados
 
 Las entradas `netlify/functions/*.cjs` conservan sus nombres y delegan en la

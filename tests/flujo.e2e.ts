@@ -88,7 +88,7 @@ test('alta, check-in, requisitos y baja', { session: 'e2e', timeout: 240_000 }, 
     await browser.locator('#res-piernas [data-field="vuelo"]').fill('AR1234');
     await browser.locator('#res-piernas [data-field="origen"]').fill('AEP');
     await browser.locator('#res-piernas [data-field="destino"]').fill('COR');
-    await browser.locator('#res-piernas [data-field="fecha"]').fill('2027-06-15T10:00');
+    await browser.locator('#res-piernas [data-field="fechaLocal"]').fill('2027-06-15T10:00');
     await browser.locator('#res-pax-list').getByText(ficha, { exact: false }).tap();
     await screen.getByRole('button', 'Guardar check-in').tap();
     await expect(browser.locator('#reservations-list')).toContainText(apellido, { timeout: 15_000 });
