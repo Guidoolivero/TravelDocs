@@ -101,6 +101,20 @@ Definido en `compartido/utils.js` y testeado en `alerts.test.mjs`: 🔴 Vencido 
 - **Deploy automático:** el push a `main` corre `.github/workflows/tests.yml` y, si pasan los tests, publica en producción (`traveldocs.com.ar`) con `netlify deploy --prod`. Todo push a `main` sale en vivo para las agencias; si fallan los tests, no se publica. Deploy manual sigue andando igual (`netlify deploy --prod` desde `DocTravel/`).
 - Los strings SSR/FOID y los formatos de fecha GDS no se tocan salvo bug confirmado.
 
+## Reparto de modelos (Claude Code)
+
+La sesion principal corre en Opus: planifica, hace la logica critica y revisa. Delega con los subagentes de `.claude/agents/`:
+
+| Subagente | Modelo | Para que |
+| --- | --- | --- |
+| `ci-deploy` | Haiku | Estado de CI y deploys, logs, busquedas. Solo lectura. |
+| `implementador` | Sonnet | Un paso ya definido: UI, tests, copy, logica simple. No commitea. |
+| `revisor` | Opus | Revision del diff con contexto limpio antes de mergear. Solo lee. |
+
+- Fechas y zonas horarias, `firestore.rules` / multi-tenant y SSR/FOID los hace la sesion principal de punta a punta, sin delegar.
+- No delegar tareas chicas: un subagente arranca sin contexto y relee todo; solo conviene en trabajo mecanico, piezas independientes o una segunda opinion.
+- Commit, push y merge los hace siempre la sesion principal despues de revisar.
+
 ## Documentación relevante (en `docs/`)
 
 - `SETUP.md` — configuración Firebase + Gemini + deploy Netlify desde cero.

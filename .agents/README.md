@@ -22,6 +22,12 @@ cortos que las herramientas descubren solas:
 | Cursor | `.cursor/skills/*` → `.agents/skills/*` |
 | Grok | `.grok/skills/*` → `.agents/skills/*` |
 
+## Subagentes (Claude Code)
+
+`.claude/agents/` define `ci-deploy` (Haiku), `implementador` (Sonnet) y
+`revisor` (Opus). El reparto esta en `guides/PROJECT.md`, seccion
+"Reparto de modelos".
+
 ## Otros
 
 - `skills-lock.json` — revision instalada de Hallmark
