@@ -1,15 +1,25 @@
 import { ZONAS_IATA } from './aeropuertos-zonas.mjs';
 
 const ART = 'America/Argentina/Buenos_Aires';
+// Un formatter por zona: crearlos es caro y se usan por cada pierna.
+const formatters = new Map();
+function formatter(zona) {
+  if (!formatters.has(zona)) {
+    let f = null;
+    try { f = new Intl.DateTimeFormat('en-CA', { timeZone: zona, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }); }
+    catch { /* zona no soportada por el runtime */ }
+    formatters.set(zona, f);
+  }
+  return formatters.get(zona);
+}
+
 export function zonaAeropuerto(iata) {
   const zona = ZONAS_IATA[String(iata || '').trim().toUpperCase()];
-  if (!zona) return null;
-  try { new Intl.DateTimeFormat('en', { timeZone: zona }); return zona; }
-  catch { return null; }
+  return zona && formatter(zona) ? zona : null;
 }
 
 function fechaEnZona(ms, zona) {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: zona, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).formatToParts(new Date(ms));
+  const parts = formatter(zona).formatToParts(new Date(ms));
   const get = t => parts.find(p => p.type === t).value;
   return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
 }

@@ -118,3 +118,24 @@ test('PNR conserva salida DEN 23:59 local y MIA 20:15, independiente de la conve
   assert.equal(p[0].fecha,'2027-03-08T03:59');
   assert.equal(p[1].fechaLocal,'2027-03-17T20:15');
 });
+
+test('conexion por aeropuerto sin zona conocida sigue siendo escala', async () => {
+  const f = pnrFixture({ ticket: [
+    { fecha_salida:'2026-12-01T10:00', fecha_llegada:'2026-12-01T14:00', origen:'EZE', destino:'QQQ', vuelo:'XX1', compania:'XX', reservaVuelo:'R1' },
+    { fecha_salida:'2026-12-01T16:00', fecha_llegada:'2026-12-01T20:00', origen:'QQQ', destino:'MAD', vuelo:'XX2', compania:'XX', reservaVuelo:'R1' },
+  ] });
+  const r = await f.invoke('pnr-checkin', { pdfs: ['ticket'] });
+  const { data } = JSON.parse(r.body);
+  assert.equal(data.piernas.length, 1);
+  assert.deepEqual(data.piernas[0].escalas, ['QQQ']);
+});
+
+test('salida 00:01 real con llegada real no habilita fusion sin hora de un tramo solapado', async () => {
+  const f = pnrFixture({ ticket: [
+    { fecha_salida:'2026-12-01T00:01', fecha_llegada:'2026-12-01T08:00', origen:'EZE', destino:'COR', vuelo:'AR1', compania:'AR', reservaVuelo:'R1' },
+    { fecha_salida:'2026-12-01T07:00', fecha_llegada:'2026-12-01T23:59', origen:'COR', destino:'MDZ', vuelo:'AR2', compania:'AR', reservaVuelo:'R1' },
+  ] });
+  const r = await f.invoke('pnr-checkin', { pdfs: ['ticket'] });
+  const { data } = JSON.parse(r.body);
+  assert.equal(data.piernas.length, 2);
+});
