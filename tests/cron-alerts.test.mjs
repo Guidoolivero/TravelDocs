@@ -12,6 +12,7 @@ function fixture(edit) {
     ['agencies/test', { status: 'active', alerts: { email: 'test@example.invalid', emailjsPublicKey: 'dummy', emailjsServiceId: 'dummy', emailjsTemplateId: 'dummy' } }],
     ['agencies/test/reservations/res', { fecha: leg.fecha, compania: 'AR', piernas: [leg], reqs30Notified: true }],
   ]);
+  const mails = [];
   const snapshot = (path, ref) => ({ id: path.split('/').at(-1), ref, exists: docs.has(path), data: () => structuredClone(docs.get(path)) });
   function ref(path) {
     const r = { collection: name => ref(`${path}/${name}`), doc: id => ref(`${path}/${id}`), where: () => r,
@@ -35,12 +36,12 @@ function fixture(edit) {
   runInNewContext(readFileSync(url, 'utf8'), {
     module, exports: module.exports, console, Date: Clock, AbortSignal,
     process: { env: { EMAILJS_PRIVATE_KEY: 'dummy' } }, setTimeout: fn => { fn(); },
-    fetch: async () => { edit(docs.get('agencies/test/reservations/res')); return { ok: true }; },
+    fetch: async (_, options) => { mails.push(JSON.parse(options.body)); edit(docs.get('agencies/test/reservations/res')); return { ok: true }; },
     require: id => id === 'firebase-admin' ? { apps: [{}], firestore: () => db }
       : id === 'firebase-admin/firestore' ? { FieldValue: { serverTimestamp: () => 1 }, FieldPath: { documentId: () => '__name__' } }
       : id.endsWith('/_sentry.cjs') ? { wrapHandler: fn => fn } : nativeRequire(id),
   });
-  return { docs, run: () => module.exports.handler({}) };
+  return { docs, mails, run: () => module.exports.handler({}) };
 }
 
 test('el cron conserva un check-in guardado mientras se envia el email', async () => {
@@ -62,4 +63,20 @@ test('el cron conserva una fecha editada y los tramos agregados sin marcar el vu
   assert.equal(r.piernas[0].fecha, r.fecha);
   assert.equal(r.piernas[0].notified, false);
   assert.equal(r.piernas.length, 2);
+});
+
+
+test('cron envia salida local y check-in ART conservando los metadatos', async () => {
+  const f = fixture(() => {});
+  const r = f.docs.get('agencies/test/reservations/res');
+  r.fecha = r.piernas[0].fecha = '2026-11-02T03:59';
+  Object.assign(r.piernas[0], { origen:'DEN', destino:'MIA', fechaLocal:'2026-11-01T23:59', zonaHoraria:'America/Denver' });
+  await f.run();
+  assert.equal(f.mails.length,1);
+  const html = f.mails[0].template_params.message;
+  assert.match(html,/01 nov.*23:59/);
+  assert.match(html,/01 nov.*03:59/);
+  assert.match(html,/Horario argentino para hacer el check-in/);
+  assert.equal(r.piernas[0].fechaLocal,'2026-11-01T23:59');
+  assert.equal(f.docs.get('agencies/test/reservations/res').piernas[0].zonaHoraria,'America/Denver');
 });

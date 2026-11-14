@@ -83,7 +83,7 @@ function renderDashboard() {
         <div class="alert-dot red"></div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:500;">${esc(resPaxSurnames(x.r))} <span style="color:var(--text3);font-weight:400;font-size:12px;">· ${esc(resCompanias(x.r).join(' · ') || '—')}</span></div>
-          <div style="font-size:11px;color:var(--text3);">${esc(x.route)} ${fmtResDate(x.fecha)} · ${(x.r.pasajeros||[]).length} pasajero(s)</div>
+          <div style="font-size:11px;color:var(--text3);">${esc(x.route)} ${fmtResDate(x)} · ${(x.r.pasajeros||[]).length} pasajero(s)</div>
         </div>
         <span class="badge badge-red">Check-in</span>
       </div>`).join('');

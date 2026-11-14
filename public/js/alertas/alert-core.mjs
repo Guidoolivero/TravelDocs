@@ -1,7 +1,8 @@
+import { horarioLocal } from '../reservas/horarios.mjs';
 // ============================================================
 //  alert-core.mjs — Lógica de alertas compartida cliente + server
 //
-//  Módulo "leaf": CERO imports y cero side effects (no toca window,
+//  Modulo puro: cero side effects (no toca window,
 //  DOM ni Firebase). La require netlify/functions/send-alerts.cjs
 //  (esbuild la bundlea desde CommonJS, mismo patrón que conocidos.mjs
 //  en gemini-travel.cjs) y la importan app.mjs y alerts.test.mjs.
@@ -420,6 +421,11 @@ ${filasV.join('\n')}
     const n = checkins.length;
     const filasC = checkins.map(c => {
       const t = parseFechaART(c.fecha);
+      const local = horarioLocal(c);
+      const localTs = parseFechaART(local);
+      const salida = localTs != null ? fmtDiaHora(localTs) + ' (hora local)' : (t == null ? escHtml(c.fechaLocal || c.fecha) : fmtDiaHora(t) + ' (hora argentina; hora local sin confirmar)');
+      const horas = [24,48,72].includes(Number(c.horasAntes)) ? Number(c.horasAntes) : 24;
+      const aviso = t == null ? 'Horario argentino pendiente de confirmar.' : 'Horario argentino para hacer el check-in: desde ' + fmtDiaHora(t - horas * 3600000) + ` (${horas} h antes de la salida).`;
       const ruta = c.ruta ? escHtml(String(c.ruta)).replace(/-/g, '&rarr;') : '';
       const pax = escHtml(c.pax) + (c.paxCount > 1 ? ` <span class="td-plus" style="color:${GRIS_TEXTO};">+${c.paxCount - 1}</span>` : '');
       return filaDatos(
@@ -427,7 +433,7 @@ ${filasV.join('\n')}
         + `<td width="26%" class="td-cell" style="padding:14px 0;${SANS}">
 <span class="td-flight" style="font-size:16px;font-weight:bold;color:${TINTA};font-family:Georgia,serif;">${escHtml(c.vuelo)}</span><span class="td-sub" style="font-size:12px;color:${GRIS_TEXTO};${SANS}">&middot; ${ruta}</span>
 </td>`
-        + tdDatos(20, t == null ? escHtml(c.fecha) : fmtDiaHora(t))
+        + tdDatos(20, salida + '<br><span class="td-sub">' + aviso + '</span>')
         + tdDatos(20, mlabel('Ref') + escHtml(c.ref || ''), `${MONO}font-weight:bold;letter-spacing:0.06em;`)
       );
     });

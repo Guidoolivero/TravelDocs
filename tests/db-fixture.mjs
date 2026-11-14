@@ -6,7 +6,7 @@ export function dbFixture(sdk) {
   const source = readFileSync(new URL('../public/js/db.js', import.meta.url), 'utf8')
     .replace(/^import[\s\S]*?from\s+['"][^'"]+['"];\n/gm, '').replace(/\bexport /g, '');
   const context = { ...sdk, markNotifiedLegs, storeAgencyId() {}, serverTimestamp: () => 1, console };
-  runInNewContext(source + '\nthis.api = { initDB, setTenantContext, addPassengersBatch, markReservationLegsNotified };', context);
+  runInNewContext(source + '\nthis.api = { initDB, setTenantContext, addPassengersBatch, markReservationLegsNotified, addReservation };', context);
   context.api.initDB({});
   context.api.setTenantContext('test');
   return context.api;

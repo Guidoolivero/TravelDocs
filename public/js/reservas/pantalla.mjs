@@ -1,3 +1,4 @@
+import { horarioLocal, guardarHorario } from './horarios.mjs';
 import { estado } from '../compartido/estado.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from '../pasajeros/pending-passengers.mjs';
 import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers.mjs';
@@ -70,6 +71,7 @@ function storedPiernas(r) {
   if (Array.isArray(r.piernas) && r.piernas.length) {
     return r.piernas.map(p => ({
       fecha: p.fecha || '',
+      ...(p.fechaLocal !== undefined ? { fechaLocal:p.fechaLocal, zonaHoraria:p.zonaHoraria || '' } : {}),
       vuelo: p.vuelo || '',
       origen: p.origen || '',
       destino: p.destino || '',
@@ -92,6 +94,8 @@ function resPiernas(r) {
   return storedPiernas(r).map((p, i) => ({
     idx: i,
     fecha: p.fecha,
+    fechaLocal: p.fechaLocal,
+    zonaHoraria: p.zonaHoraria,
     vuelo: p.vuelo,
     origen: p.origen,
     destino: p.destino,
@@ -140,7 +144,7 @@ function upcomingCheckins() {
   for (const r of estado.reservations) {
     for (const p of resPiernas(r)) {
       if (p.done) continue;
-      if (legIsDue(p.fecha)) out.push({ id: r.id, r, idx: p.idx, route: p.route, fecha: p.fecha });
+      if (legIsDue(p.fecha)) out.push({ id: r.id, r, idx: p.idx, route: p.route, fecha: p.fecha, fechaLocal:p.fechaLocal, origen:p.origen });
     }
   }
   return out;
@@ -181,9 +185,11 @@ function parseResTs(fecha) {
   return isNaN(d.getTime()) ? null : d.getTime();
 }
 
-// Formatea la fecha del vuelo para mostrar (siempre en horario Argentina)
+// Las piernas se muestran en hora local; los strings legacy conservan ART.
 function fmtResDate(fecha) {
-  const t = parseResTs(fecha);
+  const pierna = typeof fecha === 'object' ? fecha : null;
+  const local = pierna && horarioLocal(pierna);
+  const t = parseResTs(local || (pierna ? pierna.fecha : fecha));
   if (t == null) return '—';
   const partes = new Intl.DateTimeFormat('es-AR', {
     timeZone: 'America/Argentina/Buenos_Aires',
@@ -191,7 +197,7 @@ function fmtResDate(fecha) {
   }).formatToParts(new Date(t));
   const get = (p) => (partes.find(x => x.type === p) || {}).value || '';
   const mm = get('month').replace('.', '').toLowerCase();
-  return `${get('day')} ${mm} ${get('hour')}:${get('minute')}hs`;
+  return `${get('day')} ${mm} ${get('hour')}:${get('minute')}hs${pierna ? (local ? ' (hora local)' : ' (hora argentina; local sin confirmar)') : ''}`;
 }
 
 // Apellidos de los pasajeros de una reserva (para identificar a simple vista)
@@ -418,7 +424,7 @@ export function initReservas() {
   document.getElementById('res-add-pierna')?.addEventListener('click', () => {
     const c = (document.getElementById('res-compania')?.value || '').trim().toUpperCase();
     const rv = (document.getElementById('res-reserva-vuelo')?.value || '').trim().toUpperCase();
-    _resPiernasDraft.push({ fecha: '', vuelo: '', origen: '', destino: '', escalas: [], compania: c, reservaVuelo: rv, checkin: false });
+    _resPiernasDraft.push({ fecha: '', fechaLocal: '', vuelo: '', origen: '', destino: '', escalas: [], compania: c, reservaVuelo: rv, checkin: false });
     window.renderResPiernasDraft();
   });
 
@@ -462,7 +468,7 @@ export function initReservas() {
         const txt = p.done ? `${p.route} ✓` : soon ? `${p.route} pronto` : past ? `${p.route} pasado` : p.route;
         return `<span class="badge badge-${cls}">${esc(txt)}</span>`;
       }).join(' ');
-      const tramosLine = piernas.map(p => `${esc(p.route)} ${fmtResDate(p.fecha)}`).join(' · ') || 'Sin tramos';
+      const tramosLine = piernas.map(p => `${esc(p.route)} ${fmtResDate(p)}`).join(' · ') || 'Sin tramos';
       const proxima = proximaFechaVuelo(piernas.map(p => p.fecha), now);
       const dias = diasHastaVuelo(proxima, now);
       const colorDias = colorDiasViaje(dias);
@@ -547,7 +553,7 @@ export function initReservas() {
       ? piernas.map(p => `
           <div class="info-row">
             <span class="info-label">${layout.showAirlineOnLegs && p.compania ? `${esc(p.compania)} · ` : ''}${esc(p.route)}${p.vuelo ? ` · ${esc(p.vuelo)}` : ''}</span>
-            <span class="info-value">${layout.showLocatorOnLegs && p.reservaVuelo ? `${esc(p.reservaVuelo)} · ` : ''}${fmtResDate(p.fecha)}${p.done ? ' · check-in hecho' : ''}</span>
+            <span class="info-value">${layout.showLocatorOnLegs && p.reservaVuelo ? `${esc(p.reservaVuelo)} · ` : ''}${fmtResDate(p)}${p.done ? ' · check-in hecho' : ''}</span>
           </div>`).join('')
       : '<div class="info-row"><span class="info-label">Tramos</span><span class="info-value">Sin tramos</span></div>';
     const paxHtml = pax.length
@@ -591,7 +597,7 @@ export function initReservas() {
     document.getElementById('res-pnr-raw').value = '';
     document.getElementById('res-alert-email').value = r.alertEmail || '';
     document.getElementById('res-alert-horas').value = String([24, 48, 72].includes(Number(r.alertHorasAntes)) ? Number(r.alertHorasAntes) : 24);
-    _resPiernasDraft = storedPiernas(r);
+    _resPiernasDraft = storedPiernas(r).map(p => { const local = horarioLocal(p); return local ? {...p, fechaLocal:local} : p; });
     window.renderResPiernasDraft();
     document.getElementById('res-pax-search').value = hintPendingSearch();
     const rawPreview = document.getElementById('res-pnr-preview');
@@ -722,8 +728,9 @@ export function initReservas() {
             <input type="text" data-field="escalas" value="${escStr((p.escalas || []).join(','))}" style="font-family:var(--mono);">
           </div>
           <div class="form-group" style="margin:0;flex:1.4;min-width:150px;">
-            <label style="font-size:10px;">Salida *</label>
-            <input type="datetime-local" data-field="fecha" value="${escStr(p.fecha)}">
+            <label style="font-size:10px;">Salida (${p.fechaLocal !== undefined ? 'hora local' : 'hora argentina'}) *</label>
+            <input type="datetime-local" data-field="${p.fechaLocal !== undefined ? 'fechaLocal' : 'fecha'}" value="${escStr(p.fechaLocal ?? p.fecha)}">
+            ${p.fechaLocal && !guardarHorario(p, p.fechaLocal).fecha ? '<span style="color:var(--red);font-size:12px;">Confirmar zona u horario: no se puede calcular el aviso en Argentina.</span>' : ''}
           </div>
           <div class="form-group" style="margin:0;width:70px;">
             <label style="font-size:10px;">Check-in</label>
@@ -828,9 +835,11 @@ export function initReservas() {
     const clavesOriginales = new Set((original ? storedPiernas(original) : []).map(p => `${p.fecha}|${(p.vuelo || '').toUpperCase()}`));
     const clavePierna = p => `${p.fecha}|${(p.vuelo || '').toUpperCase()}`;
     const piernas = _resPiernasDraft
-      .filter(p => p.fecha) // descarta tramos sin fecha
+      .map(p => p.fechaLocal !== undefined ? guardarHorario(p,p.fechaLocal) : p)
+      .filter(p => p.fecha || p.fechaLocal) // descarta tramos sin fecha
       .map(p => ({
         fecha: p.fecha,
+        ...(p.fechaLocal !== undefined ? {fechaLocal:p.fechaLocal,zonaHoraria:p.zonaHoraria} : {}),
         vuelo: (p.vuelo || '').toUpperCase(),
         origen: (p.origen || '').toUpperCase(),
         destino: (p.destino || '').toUpperCase(),
@@ -890,6 +899,7 @@ export function initReservas() {
         showToast('Check-in creado.');
         avisarRequisitosCheckin(ref.id);
       }
+      if (piernas.some(p => !p.fecha)) showToast('Guardado. Hay horarios sin confirmar: esos tramos no tendran aviso automatico de check-in.', true);
       closeModal('modal-reservation');
     } catch (err) {
       console.error('Error guardando check-in:', err);
@@ -915,6 +925,7 @@ export function initReservas() {
         const previa = previas.get(`${fecha}|${(p.vuelo || '').toUpperCase()}`);
         return {
           fecha,
+          ...(p.fechaLocal !== undefined ? {fechaLocal:p.fechaLocal,zonaHoraria:p.zonaHoraria} : {}),
           vuelo: p.vuelo || '',
           origen: p.origen || '',
           destino: p.destino || '',

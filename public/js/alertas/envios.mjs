@@ -61,7 +61,7 @@ async function checkAndSendUnifiedAlerts() {
       if (p.done || p.notified) continue;
       if (!checkinAlertDue(p.fecha, horas, now)) continue;
       if (!grupos.has(to)) grupos.set(to, []);
-      grupos.get(to).push({ r, idx: p.idx, vuelo: p.vuelo, route: p.route, fecha: p.fecha, reservaVuelo: p.reservaVuelo });
+      grupos.get(to).push({ r, idx: p.idx, vuelo: p.vuelo, route: p.route, fecha: p.fecha, fechaLocal:p.fechaLocal, origen:p.origen, horasAntes:horas, reservaVuelo: p.reservaVuelo });
     }
   }
 
@@ -93,7 +93,7 @@ async function checkAndSendUnifiedAlerts() {
     }));
   };
 
-  const itemCheckin = x => ({ pax: resPaxSurnames(x.r), paxCount: (x.r.pasajeros || []).length, vuelo: x.vuelo, ruta: x.route, fecha: x.fecha, ref: x.reservaVuelo });
+  const itemCheckin = x => ({ pax: resPaxSurnames(x.r), paxCount: (x.r.pasajeros || []).length, vuelo: x.vuelo, ruta: x.route, fecha: x.fecha, fechaLocal:x.fechaLocal, origen:x.origen, horasAntes:x.horasAntes, ref: x.reservaVuelo });
 
   try {
     const ejs = await import('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/+esm');

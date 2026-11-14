@@ -220,6 +220,7 @@ export async function addReservation(data) {
   const piernas = Array.isArray(data.piernas)
     ? data.piernas.map(p => ({
         fecha: canonFechaPierna(p.fecha),
+        ...(p.fechaLocal !== undefined ? { fechaLocal: p.fechaLocal, zonaHoraria: p.zonaHoraria || '' } : {}),
         vuelo: p.vuelo || '',
         origen: p.origen || '',
         destino: p.destino || '',

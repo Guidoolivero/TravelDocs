@@ -34,3 +34,12 @@ test('una importacion parcial informa solo los IDs de los bloques confirmados', 
     return true;
   });
 });
+
+test('crear reserva conserva la salida local y su zona junto al instante ART', async () => {
+  let saved;
+  const api = dbFixture({ getFirestore: () => ({}), collection: () => 'reservations', addDoc: async (_, data) => { saved = data; } });
+  await api.addReservation({ piernas:[{fecha:'2027-03-08T03:59',fechaLocal:'2027-03-07T23:59',zonaHoraria:'America/Denver',origen:'DEN'}] });
+  assert.equal(saved.piernas[0].fechaLocal, '2027-03-07T23:59');
+  assert.equal(saved.piernas[0].zonaHoraria, 'America/Denver');
+  assert.equal(saved.fecha, '2027-03-08T03:59');
+});
