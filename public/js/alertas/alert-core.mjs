@@ -142,13 +142,13 @@ export function checkinAlertDue(fechaStr, horasAntes = 24, now = Date.now()) {
 
 // ¿Se limpia solo este check-in? Todas las piernas volaron antes de hoy
 // (día de calendario ART): al día siguiente del último vuelo ya no sirve.
-// Con una pierna sin fecha no se puede saber -> false (no se borra).
+// Sin fecha ART usa la hora local (el dia alcanza). Sin ninguna -> false.
 export function reservationStale(piernas, now = Date.now()) {
   const list = Array.isArray(piernas) ? piernas : [];
   if (!list.length) return false;
   const hoy = hoyART(now);
   return list.every(p => {
-    const t = parseFechaART(p?.fecha);
+    const t = parseFechaART(p?.fecha || p?.fechaLocal);
     return t != null && diaART(t) < hoy;
   });
 }

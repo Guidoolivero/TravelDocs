@@ -274,6 +274,8 @@ function parsePnrJson(raw) {
 // tipoDePiernas clasifica sobre las piernas: una escala no es multi destino.
 // Los gaps son invariantes en la
 // zona horaria porque el modulo pnr-horarios normaliza ambas fechas a ART.
+// Si un aeropuerto no tiene zona conocida se usa la hora local: en una
+// conexion, llegada y salida son del mismo aeropuerto y el gap sigue valiendo.
 // Excepcion: un segmento de OTRA aerolinea (o con otro codigo de
 // reserva de aerolinea) nunca se funde como escala, aunque conecte en
 // menos de 24hs: es otro check-in (ej. MAD-LIM en IB/PHTQD + LIM-EZE
@@ -303,20 +305,22 @@ function groupSegmentos(segmentos) {
       salida: s.fecha_salida,
       fechaLocal: s.fechaLocal,
       zonaHoraria: s.zonaHoraria,
-      sinHora: s.sinHora,
-      llegada: s.fecha_llegada || s.fecha_salida,
+      t: s.fecha_salida || s.fechaLocal,
+      sinHoraSalida: s.sinHoraSalida,
+      sinHoraLlegada: s.sinHoraLlegada,
+      llegada: s.fecha_llegada || s.llegadaLocal || s.fecha_salida || s.fechaLocal,
       vuelo: s.vuelo || '',
       origen: s.origen || '',
       destino: s.destino || '',
       compania: s.compania || '',
       reservaVuelo: s.reservaVuelo || null
-    })).sort((a, b) => (ts(a.salida) ?? Infinity) - (ts(b.salida) ?? Infinity));
+    })).sort((a, b) => (ts(a.t) ?? Infinity) - (ts(b.t) ?? Infinity));
   if (!segs.length) return [];
 
   const piernas = [];
   for (const s of segs) {
     const prev = piernas[piernas.length - 1];
-    const tSalida = ts(s.salida);
+    const tSalida = ts(s.t);
     const tLlegadaPrev = prev ? ts(prev._tLlegada) : null;
     // Otro check-in si cambia la aerolinea o el codigo de reserva (se compara
     // solo cuando AMBOS lados tienen el dato; vacio/null = desconocido, no corta).
@@ -327,12 +331,12 @@ function groupSegmentos(segmentos) {
       && tSalida >= tLlegadaPrev && (tSalida - tLlegadaPrev) < DIA_MS;
     // Gemini, sin hora, pone 00:01/23:59. El mismo dia se solapa y no entra
     // en conexionHoraria; si el aeropuerto encadena, igual es escala.
-    const conexionSinHora = encadena && prev._sinHora && s.sinHora
+    const conexionSinHora = encadena && prev._sinHoraLlegada && s.sinHoraSalida
       && tSalida !== null && tLlegadaPrev !== null && Math.abs(tSalida - tLlegadaPrev) < DIA_MS;
     if (prev && !distintaCompania && !distintaReserva && (conexionHoraria || conexionSinHora)) {
       // escala: misma pierna (< 24h en tierra, misma aerolinea y reserva)
       if (s.origen) prev.escalas.push(s.origen);
-      const sinHora = !conexionHoraria || prev._sinHora || s.sinHora;
+      const sinHora = !conexionHoraria || prev._sinHoraLlegada || s.sinHoraSalida;
       if (!prev.transitos) prev.transitos = [];
       prev.transitos.push({
         iata: s.origen || '',
@@ -341,16 +345,16 @@ function groupSegmentos(segmentos) {
       });
       prev.destino = s.destino || prev.destino;
       prev._tLlegada = s.llegada;
-      prev._sinHora = s.sinHora;
+      prev._sinHoraLlegada = s.sinHoraLlegada;
       // completa datos de aerolinea que falten en la pierna
       if (!prev.compania && s.compania) prev.compania = s.compania;
       if (!prev.reservaVuelo && s.reservaVuelo) prev.reservaVuelo = s.reservaVuelo;
     } else {
       // nueva pierna (gap >= 24h o primera)
-      piernas.push({ fecha: s.salida || '', fechaLocal: s.fechaLocal, zonaHoraria: s.zonaHoraria, vuelo: s.vuelo, origen: s.origen, destino: s.destino, escalas: [], compania: s.compania, reservaVuelo: s.reservaVuelo, _tLlegada: s.llegada, _sinHora: s.sinHora });
+      piernas.push({ fecha: s.salida || '', fechaLocal: s.fechaLocal, zonaHoraria: s.zonaHoraria, vuelo: s.vuelo, origen: s.origen, destino: s.destino, escalas: [], compania: s.compania, reservaVuelo: s.reservaVuelo, _tLlegada: s.llegada, _sinHoraLlegada: s.sinHoraLlegada });
     }
   }
-  return piernas.map(({ _tLlegada, _sinHora, ...p }) => p);
+  return piernas.map(({ _tLlegada, _sinHoraLlegada, ...p }) => p);
 }
 
 // EZE/AEP/EPA son Buenos Aires: ida por Ezeiza y vuelta a Aeroparque sigue

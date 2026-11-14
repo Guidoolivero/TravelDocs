@@ -37,3 +37,25 @@ test('editar legacy durante hora repetida DST conserva el instante conocido', ()
   assert.equal(horarioLocal(p), '2027-11-07T01:30');
   assert.equal(guardarHorario(p, horarioLocal(p)).fecha, p.fecha);
 });
+
+import { createRequire } from 'node:module';
+import { reservationStale } from '../public/js/alertas/alert-core.mjs';
+const { normalizarHorarios } = createRequire(import.meta.url)('../netlify/functions/lib/reservas/pnr-horarios.cjs');
+
+test('llegada con fecha anterior a la salida (cruce de linea de fecha) queda en el mismo anio', () => {
+  const pnr = '  2  NH 106 Y 10MAR 2 HNDLAX HK1  0005 1700  09MAR  E  NH/ABCDE';
+  const [s] = normalizarHorarios([{ vuelo:'NH106', origen:'HND', destino:'LAX', fecha_salida:'2027-03-10T00:05' }], pnr, '2026-11-14');
+  assert.equal(s.fecha_llegada, '2027-03-09T22:00');
+});
+
+test('fecha del modelo con segundos se normaliza y no pierde el aviso', () => {
+  const [s] = normalizarHorarios([{ vuelo:'AA2139', origen:'DEN', destino:'MIA', fecha_salida:'2027-03-07T23:59:00' }], '', '2026-11-14');
+  assert.equal(s.fechaLocal, '2027-03-07T23:59');
+  assert.equal(s.fecha_salida, '2027-03-08T03:59');
+});
+
+test('pierna con hora local sin zona confirmada se limpia despues de volar', () => {
+  const now = Date.parse('2026-11-14T12:00:00-03:00');
+  assert.equal(reservationStale([{ fecha:'', fechaLocal:'2026-11-01T10:00' }], now), true);
+  assert.equal(reservationStale([{ fecha:'', fechaLocal:'2026-12-01T10:00' }], now), false);
+});

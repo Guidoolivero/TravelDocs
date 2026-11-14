@@ -19,6 +19,9 @@ import { normDupName } from '../pasajeros/duplicados.mjs';
 let _resPendingPax = [];
 let _resSelectedPax = new Set();      // ids de pasajeros seleccionados en el modal
 let _resEditingId = null;
+// Identidad de un tramo para conservar checkin/notified: fecha ART, o la
+// hora local si la zona no esta confirmada.
+const clavePierna = p => `${p.fecha || 'L' + (p.fechaLocal || '')}|${(p.vuelo || '').toUpperCase()}`;
 let _resPiernasDraft = [];            // tramos en edicion: {fecha, vuelo, origen, destino, escalas, checkin, compania, reservaVuelo}
 
 // ¿Las piernas del draft tienen aerolínea o ref distintos? -> modo multi-aerolínea.
@@ -832,8 +835,7 @@ export function initReservas() {
     // poder salir para la fecha nueva -> se resetea notified. Los tramos que
     // conservan vuelo+fecha mantienen su marca (no se reenvía).
     const original = _resEditingId ? estado.reservations.find(x => x.id === _resEditingId) : null;
-    const clavesOriginales = new Set((original ? storedPiernas(original) : []).map(p => `${p.fecha}|${(p.vuelo || '').toUpperCase()}`));
-    const clavePierna = p => `${p.fecha}|${(p.vuelo || '').toUpperCase()}`;
+    const clavesOriginales = new Set((original ? storedPiernas(original) : []).map(clavePierna));
     const piernas = _resPiernasDraft
       .map(p => p.fechaLocal !== undefined ? guardarHorario(p,p.fechaLocal) : p)
       .filter(p => p.fecha || p.fechaLocal) // descarta tramos sin fecha
@@ -919,10 +921,10 @@ export function initReservas() {
     // vuelo+fecha mantienen su check-in hecho y su marca de alerta enviada
     // (sino, re-decodificar provocaría reenvío del email de check-in).
     if (Array.isArray(d.piernas) && d.piernas.length) {
-      const previas = new Map(_resPiernasDraft.map(p => [`${p.fecha}|${(p.vuelo || '').toUpperCase()}`, p]));
+      const previas = new Map(_resPiernasDraft.map(p => [clavePierna(p), p]));
       _resPiernasDraft = d.piernas.map(p => {
         const fecha = (p.fecha || '').slice(0, 16);
-        const previa = previas.get(`${fecha}|${(p.vuelo || '').toUpperCase()}`);
+        const previa = previas.get(clavePierna({ ...p, fecha }));
         return {
           fecha,
           ...(p.fechaLocal !== undefined ? {fechaLocal:p.fechaLocal,zonaHoraria:p.zonaHoraria} : {}),

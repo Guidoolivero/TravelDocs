@@ -17,23 +17,31 @@ function horariosDelPnr(texto, hoy) {
     };
     const salida = fecha(m[3],m[4],m[7],hoy);
     if (!salida) continue;
-    const llegada = m[9] ? fecha(m[9],m[10],m[8],salida) : null;
+    // La llegada puede tener fecha anterior a la salida (cruce de linea de fecha).
+    const diaAntes = new Date(Date.parse(salida.slice(0,10) + 'T00:00Z') - 864e5).toISOString();
+    const llegada = m[9] ? fecha(m[9],m[10],m[8],diaAntes) : null;
     out.push({ vuelo:m[1]+m[2], origen:m[5], destino:m[6], salida, llegada });
   }
   return out;
 }
+
+const canon = f => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(f || '') ? f.slice(0,16) : f;
+// El modelo pone 00:01/23:59 cuando el documento no trae hora.
+const sentinela = f => /T(00:01|23:59)$/.test(f || '');
 
 function normalizarHorarios(segmentos, texto, hoy) {
   const horarios = horariosDelPnr(texto,hoy);
   return (Array.isArray(segmentos) ? segmentos : []).filter(s => s && s.fecha_salida).map(s => {
     const i = horarios.findIndex(h => h.vuelo === String(s.vuelo).replace(/\s/g,'') && h.origen === s.origen && h.destino === s.destino);
     const h = i >= 0 ? horarios.splice(i,1)[0] : null;
-    const local = h?.salida || s.fecha_salida;
-    const llegada = h?.llegada || s.fecha_llegada || local;
+    const local = h?.salida || canon(s.fecha_salida);
+    const llegada = h?.llegada || canon(s.fecha_llegada) || local;
     return { ...s, fechaLocal:local, zonaHoraria:zonaAeropuerto(s.origen) || '',
       fecha_salida:localAArgentina(local,s.origen),
       fecha_llegada:localAArgentina(llegada,s.destino),
-      sinHora:!h && (/T00:01$/.test(local || '') || /T23:59$/.test(llegada || '')),
+      llegadaLocal:llegada,
+      sinHoraSalida:!h && sentinela(local),
+      sinHoraLlegada:!h && sentinela(llegada),
     };
   });
 }
