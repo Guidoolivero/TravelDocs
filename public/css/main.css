@@ -446,6 +446,8 @@ textarea { resize: vertical; min-height: 72px; }
 }
 @keyframes pass-fill { to { width: 90%; } }
 .pass-pct { font-family: var(--mono); font-size: 13px; color: var(--accent); min-width: 38px; text-align: right; }
+.loader-error { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 14px; color: var(--text2); }
+.loader-error[hidden] { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .scan-stage { animation: none; }

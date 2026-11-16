@@ -77,4 +77,18 @@
   }
 
   fillStage();
+
+  // Si la app no termina de cargar (red caida, error de Firestore), ofrecer
+  // reintentar en vez de dejar el 90% congelado. app.mjs llama a
+  // window.tdLoaderFail() apenas detecta un error.
+  var errBox = document.getElementById('app-loading-error');
+  document.getElementById('app-loading-retry').onclick = function () { location.reload(); };
+  window.tdLoaderFail = function (msg) {
+    if (msg) document.getElementById('app-loading-msg').textContent = msg;
+    errBox.hidden = false;
+  };
+  setTimeout(function () {
+    var loader = document.getElementById('app-loading');
+    if (loader && !loader.classList.contains('is-hidden')) window.tdLoaderFail();
+  }, 20000);
 })();

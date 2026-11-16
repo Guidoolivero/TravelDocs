@@ -107,7 +107,7 @@ export async function saveGdsCities(items) {
 }
 
 // Escucha en tiempo real. Llama a callback(passengers[]) cada vez que hay cambios.
-export function listenPassengers(callback) {
+export function listenPassengers(callback, onError) {
   if (unsubscribe) unsubscribe();
   const q = query(passengersCollection(), orderBy('createdAt', 'desc'));
   let lastFp = null;
@@ -119,6 +119,7 @@ export function listenPassengers(callback) {
     callback(passengers);
   }, err => {
     console.error('Error escuchando pasajeros:', err);
+    onError?.(err);
   });
 }
 

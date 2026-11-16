@@ -164,7 +164,15 @@ async function initPlatformUpdates(uid) {
 }
 
 // Autorización multi-tenant: users/{uid} + validación en netlify/functions/_auth.cjs
-onAuthStateChanged(auth, async user => {
+// Cualquier error de arranque muestra "Reintentar" en el loader (sin esto
+// quedaba congelado en 90%).
+const errorDeCarga = err => {
+  console.error('[arranque] Error cargando la app:', err);
+  window.tdLoaderFail?.('No se pudo cargar la app. Revisá la conexión.');
+};
+onAuthStateChanged(auth, user => { iniciarSesion(user).catch(errorDeCarga); });
+
+async function iniciarSesion(user) {
   if (!user) {
     window.location.href = './login.html';
     return;
@@ -255,7 +263,7 @@ onAuthStateChanged(auth, async user => {
     // Chequeo de alertas cuando llegaron AMBOS snapshots (pasajeros y reservas)
     estado._paxLoaded = true;
     checkAndSendUnifiedAlerts();
-  });
+  }, errorDeCarga);
   listenReservations(data => {
     estado.reservations = data;
     // Limpieza automática: los check-ins cuyo último tramo voló ayer o antes
@@ -270,7 +278,7 @@ onAuthStateChanged(auth, async user => {
     estado._resLoaded = true;
     checkAndSendUnifiedAlerts();
   });
-});
+}
 
 window.handleLogout = async function() {
   clearStoredAgencyId();
