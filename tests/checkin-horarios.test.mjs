@@ -59,3 +59,9 @@ test('pierna con hora local sin zona confirmada se limpia despues de volar', () 
   assert.equal(reservationStale([{ fecha:'', fechaLocal:'2026-11-01T10:00' }], now), true);
   assert.equal(reservationStale([{ fecha:'', fechaLocal:'2026-12-01T10:00' }], now), false);
 });
+
+test('aviso de check-in va con * debajo del pasajero, no en la fecha', () => {
+  const {html} = buildAlertEmail({ checkins:[{pax:'PRUEBA', paxCount:2, vuelo:'AA2139', ruta:'DEN-MIA', origen:'DEN', fecha:'2027-03-08T03:59'}] });
+  assert.match(html, /PRUEBA <span[^>]*>\+1<\/span><br><span[^>]*>\* Horario argentino para hacer el check-in/);
+  assert.doesNotMatch(html, /hora local\)<br>/);
+});

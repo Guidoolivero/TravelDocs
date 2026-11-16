@@ -427,13 +427,14 @@ ${filasV.join('\n')}
       const horas = [24,48,72].includes(Number(c.horasAntes)) ? Number(c.horasAntes) : 24;
       const aviso = t == null ? 'Horario argentino pendiente de confirmar.' : 'Horario argentino para hacer el check-in: desde ' + fmtDiaHora(t - horas * 3600000) + ` (${horas} h antes de la salida).`;
       const ruta = c.ruta ? escHtml(String(c.ruta)).replace(/-/g, '&rarr;') : '';
-      const pax = escHtml(c.pax) + (c.paxCount > 1 ? ` <span class="td-plus" style="color:${GRIS_TEXTO};">+${c.paxCount - 1}</span>` : '');
+      const pax = escHtml(c.pax) + (c.paxCount > 1 ? ` <span class="td-plus" style="color:${GRIS_TEXTO};">+${c.paxCount - 1}</span>` : '')
+        + `<br><span class="td-sub" style="font-size:12px;color:${GRIS_TEXTO};">* ${aviso}</span>`;
       return filaDatos(
         tdDatos(34, pax, 'word-break:break-word;line-height:1.5;')
         + `<td width="26%" class="td-cell" style="padding:14px 0;${SANS}">
 <span class="td-flight" style="font-size:16px;font-weight:bold;color:${TINTA};font-family:Georgia,serif;">${escHtml(c.vuelo)}</span><span class="td-sub" style="font-size:12px;color:${GRIS_TEXTO};${SANS}">&middot; ${ruta}</span>
 </td>`
-        + tdDatos(20, salida + '<br><span class="td-sub">' + aviso + '</span>')
+        + tdDatos(20, salida)
         + tdDatos(20, mlabel('Ref') + escHtml(c.ref || ''), `${MONO}font-weight:bold;letter-spacing:0.06em;`)
       );
     });
