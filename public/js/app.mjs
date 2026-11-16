@@ -168,6 +168,7 @@ async function initPlatformUpdates(uid) {
 // quedaba congelado en 90%).
 const errorDeCarga = err => {
   console.error('[arranque] Error cargando la app:', err);
+  window.Sentry?.captureException(err, { tags: { fase: 'arranque' } });
   window.tdLoaderFail?.('No se pudo cargar la app. Revisá la conexión.');
 };
 onAuthStateChanged(auth, user => { iniciarSesion(user).catch(errorDeCarga); });

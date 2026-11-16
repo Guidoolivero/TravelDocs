@@ -89,6 +89,10 @@
   };
   setTimeout(function () {
     var loader = document.getElementById('app-loading');
-    if (loader && !loader.classList.contains('is-hidden')) window.tdLoaderFail();
+    if (loader && !loader.classList.contains('is-hidden')) {
+      window.tdLoaderFail();
+      // Sin error visible: algo quedo esperando. Se reporta para ver cuantas veces pasa.
+      if (window.Sentry) window.Sentry.captureMessage('Carga trabada mas de 20s', 'warning');
+    }
   }, 20000);
 })();
