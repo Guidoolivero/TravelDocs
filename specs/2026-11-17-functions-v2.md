@@ -22,7 +22,7 @@ Las 13 Netlify Functions exportan `exports.handler` (modo Lambda). Netlify deja 
 - CA-3: los tests que invocan handlers (`npm test`, `npm run test:billing:emulator`) pasan llamando la entrada v2 con un `Request`.
 - CA-4: el bundle de produccion deja cada funcion detectada como v2.
 - CA-5: `netlify dev` + e2e local (`flujo.e2e.ts`, sin tag ia) pasa.
-- CA-6: un deploy de preview responde en las funciones (401 sin token, 200 con token de test).
+- CA-6: un deploy de preview responde en las funciones (401 sin token). El 200 de facturacion se verifica en local, porque en previews la facturacion esta deshabilitada (sustitucion aceptada por el usuario).
 
 ## Plan minimo
 
@@ -36,6 +36,7 @@ Las 13 Netlify Functions exportan `exports.handler` (modo Lambda). Netlify deja 
 - CA-4: `billing-package.smoke.mjs` ahora verifica que las 13 functions del bundle son v2 y que cada una resuelve a una funcion como lo hace el runtime de Netlify (`default` del modulo y `default` del export). Encontro un error real: el proxy de Sentry dejaba `module.exports.default = { default: fn }`; lo corrige el footer de `scripts/bundle-functions.mjs`. En v2 Netlify vuelve a empaquetar `billing-pdf` (nft, CJS a ESM): el debug id de Sentry se conserva y el PDF responde 401 sin credenciales.
 - CA-5: e2e local `flujo.e2e.ts` sin tag ia: 2/2 contra `netlify dev --dir .netlify/site --functions netlify/functions`. Desde un worktree de git, `netlify dev` sin esos flags toma otra carpeta base (sube hasta un `.git` que sea directorio) y no carga functions; en el checkout normal no pasa.
 - CA-6: deploy de preview (draft en tradingdocs-staging): las 13 responden igual que antes (401 sin token, incluidas subrutas de `admin-api`, `billing-api` y `billing-pdf`; `slack-orchestrator-background` 202; `send-alerts` 403 porque es programada; OPTIONS `mfa-admin` 204).
+  El 200 con token no se puede probar en el preview: en deploy-preview no hay `BILLING_ENABLED`, `ARCA_*` ni `BILLING_FIREBASE_PROJECT_ID`, y el service account apunta a `tradingdocs-mt`, que `assertBillingEnvironment` rechaza fuera de produccion; `billing-pdf` responde 503 antes de cargar `facturas`. El usuario acepto cerrarlo con evidencia local: `tests/facturacion/billing-pdf.test.mjs` 11/11 (llama a `billing-pdf` con auth simulada sobre una factura autorizada, que pasa por `import('facturas')`, y sobre un borrador; exige 200, decodifica el PDF y comprueba una pagina) y `npm run test:billing:emulator` 23/23. El preview aporta el 401 con la funcion desplegada.
 - `billing-api` y `billing-pdf` daban 502 en previews y `netlify dev`: en v2 Netlify usa nft y deja los paquetes npm afuera del bundle, y Lambda desactiva `require()` de ESM; `facturas` es solo ESM. Decision del usuario: cargar `facturas` con `await import()` en `billing-api`, `billing-pdf` y `billing-store`. `tests/functions-v2.test.mjs` empaqueta las entradas como Netlify (paquetes externos) y las carga con `--no-experimental-require-module`: fallo con `facturas` antes del cambio y pasa despues. `tests/firebase-fixture.mjs` reemplaza `import(` para que los mocks sigan aplicando.
 - Revision estructural: el adaptador es la unica pieza nueva; no duplica logica y deja intactos `verifyAuth(event)`, `reply()` y los handlers de `lib/`.
 
