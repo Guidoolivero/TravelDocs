@@ -4,20 +4,22 @@
 
 // Helpers de alertas compartidos con el server (leaf, sin imports):
 // netlify/functions/send-alerts.cjs los requiere desde alert-core.mjs.
-import { getPassengerVisas, visaAlertLabel, collectEmailAlertCandidates, ASISTENCIA_ALERT_DAYS } from '../alertas/alert-core.mjs';
+import { getPassengerVisas, visaAlertLabel, collectEmailAlertCandidates, ASISTENCIA_ALERT_DAYS, diasHastaART } from '../alertas/alert-core.mjs';
 export { getPassengerVisas, visaAlertLabel, collectEmailAlertCandidates, ASISTENCIA_ALERT_DAYS };
 
-export function today() { return new Date(); }
 
 export function parseDate(s) {
   if (!s) return null;
   return new Date(s + 'T00:00:00');
 }
 
+// Dias de calendario en ART hasta la fecha. Una fecha que no es YYYY-MM-DD real
+// (import con formato raro) da null = "Sin datos", nunca "Vigente".
 export function daysUntil(s) {
-  const d = parseDate(s);
-  if (!d) return null;
-  return Math.floor((d - today()) / 86400000);
+  const d = typeof s === 'string' ? s.slice(0, 10) : '';
+  const t = /^\d{4}-\d{2}-\d{2}$/.test(d) ? Date.parse(d + 'T00:00:00Z') : NaN;
+  if (isNaN(t) || new Date(t).toISOString().slice(0, 10) !== d) return null;
+  return diasHastaART(d);
 }
 
 // 17ENE1971
