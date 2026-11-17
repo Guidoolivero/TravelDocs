@@ -27,16 +27,18 @@ test('route-agent exige Bearer ROUTE_AGENT_SECRET y no usa login de TravelDocs',
     type: 'choice', choice: 'claude', confidence: 0.8,
     probabilities: { claude: 0.8, cursor: 0.1, gemini: 0.05, multiple: 0.05 },
   } } }));
-  const { handler } = require('../netlify/functions/route-agent.cjs');
-  const message = { httpMethod: 'POST', body: JSON.stringify({ message: 'Explicar el flujo de check-in' }) };
+  const route = require('../netlify/functions/route-agent.cjs').default;
+  const message = headers => new Request('https://test.local/.netlify/functions/route-agent', {
+    method: 'POST', headers, body: JSON.stringify({ message: 'Explicar el flujo de check-in' }),
+  });
   for (const headers of [{}, { authorization: 'Bearer otro-secreto' }, { Authorization: SECRET }]) {
-    const denied = await handler({ ...message, headers });
-    assert.equal(denied.statusCode, 401);
-    assert.deepEqual(JSON.parse(denied.body), { error: 'Unauthorized' });
+    const denied = await route(message(headers));
+    assert.equal(denied.status, 401);
+    assert.deepEqual(await denied.json(), { error: 'Unauthorized' });
   }
-  const response = await handler({ ...message, headers: { authorization: `Bearer ${SECRET}` } });
-  assert.equal(response.statusCode, 200);
-  assert.equal(JSON.parse(response.body).route, 'claude');
+  const response = await route(message({ authorization: `Bearer ${SECRET}` }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).route, 'claude');
   assert.equal(request.mock.callCount(), 1);
 });
 

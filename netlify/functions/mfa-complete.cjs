@@ -51,7 +51,7 @@ function reply(statusCode, body) {
   };
 }
 
-exports.handler = async function handler(event) {
+async function handler(event) {
   if (event.httpMethod !== 'POST') return reply(405, { error: 'Method Not Allowed' });
 
   // requireMfa:false: el usuario viene de enrolar, todavía sin claim.
@@ -94,4 +94,5 @@ exports.handler = async function handler(event) {
   }
 };
 
-exports.handler = require('./_sentry.cjs').wrapHandler(exports.handler);
+const v2 = require('./_v2.cjs');
+exports.default = v2(require('./_sentry.cjs').wrapHandler(handler));

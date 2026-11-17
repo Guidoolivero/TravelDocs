@@ -1,6 +1,5 @@
 const { createHash, randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
-const { ArcaLockTimeoutError } = require('facturas/errors');
 
 // Reservas y tickets sin TTL. Solo los locks vencen; una reserva pendiente
 // sigue bloqueando la secuencia del SDK aunque la function haya terminado.
@@ -19,6 +18,8 @@ function createBillingStore(db, { leaseMs = 120000, onLockLost = () => {} } = {}
     },
     async delete(key) { await ref('billingStore', key).delete(); },
     async withLock(key, fn, { signal = AbortSignal.timeout(25000) } = {}) {
+      // facturas es solo ESM y Lambda no permite require() de ESM.
+      const { ArcaLockTimeoutError } = await import('facturas/errors');
       const doc = ref('billingLocks', key), owner = randomUUID();
       const abortError = () => new ArcaLockTimeoutError('Espera del bloqueo cancelada.', { reason: 'aborted' });
       let acquired = false;

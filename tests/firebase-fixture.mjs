@@ -103,19 +103,31 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       if (mocked) return modules[mocked];
       return id.startsWith('.') && !id.endsWith('.mjs') ? load(new URL(id, url)) : nativeRequire(id);
     };
-    runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer, fetch: globalThis.fetch,
+    // vm no permite import() sin un flag experimental: se reemplaza por uno que respeta los mocks.
+    const source = readFileSync(url, 'utf8').replace(/\bimport\(/g, '__import(');
+    const __import = async id => Object.hasOwn(modules, id) ? modules[id] : import(id);
+    runInNewContext(source, { require, __import, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer, URL, Response, fetch: globalThis.fetch,
       process: { env: { FIREBASE_SERVICE_ACCOUNT: '{}', PLATFORM_SUPER_ADMIN_EMAILS: 'admin@test.com', ...env } } }, { filename: url.pathname });
     return module.exports;
+  }
+  // Llama la entrada v2 con un Request y devuelve la respuesta con la forma que leen los tests.
+  async function call(name, path, body, actor, method, query = {}) {
+    const url = new URL(`https://test.local/.netlify/functions/${name}${path}`);
+    for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value);
+    const res = await load(new URL(`../netlify/functions/${name}.cjs`, import.meta.url)).default(new Request(url, {
+      method, headers: { authorization: `Bearer ${actor}` }, body: method === 'GET' ? undefined : JSON.stringify(body),
+    }));
+    return { statusCode: res.status, headers: Object.fromEntries(res.headers), body: await res.text() };
   }
   return {
     docs, calls, added, sdkAuth, tokens, accounts, clock,
     recordUsage: body => load(new URL('../netlify/functions/_usage.cjs', import.meta.url)).recordUsage(body),
-    request: (path, body, method = 'GET', query = {}) => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: method, path: `/.netlify/functions/admin-api${path}`, headers: { authorization: 'Bearer admin' }, body: JSON.stringify(body), queryStringParameters: query }),
-    invoke: (name, body = {}, actor = 'admin', httpMethod = 'POST') => load(new URL(`../netlify/functions/${name}.cjs`, import.meta.url)).handler({ httpMethod, path: `/.netlify/functions/${name}`, headers: { authorization: `Bearer ${actor}` }, body: JSON.stringify(body) }),
-    agency: (agencyId, body, actor = 'admin') => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: `/.netlify/functions/admin-api/agencies/${agencyId}`, headers: { authorization: `Bearer ${actor}` }, body: JSON.stringify(body) }),
+    request: (path, body, method = 'GET', query = {}) => call('admin-api', path, body, 'admin', method, query),
+    invoke: (name, body = {}, actor = 'admin', httpMethod = 'POST') => call(name, '', body, actor, httpMethod),
+    agency: (agencyId, body, actor = 'admin') => call('admin-api', `/agencies/${agencyId}`, body, actor, 'PATCH'),
     verify: () => load(new URL('../netlify/functions/_auth.cjs', import.meta.url)).verifyAuth({ headers: { authorization: 'Bearer user' } }),
-    editUser: body => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: '/.netlify/functions/admin-api/users/user', headers: { authorization: 'Bearer admin' }, body: JSON.stringify(body) }),
-    patch: active => load(new URL('../netlify/functions/admin-api.cjs', import.meta.url)).handler({ httpMethod: 'PATCH', path: '/.netlify/functions/admin-api/users/user', headers: { authorization: 'Bearer admin' }, body: JSON.stringify({ active }) }),
+    editUser: body => call('admin-api', '/users/user', body, 'admin', 'PATCH'),
+    patch: active => call('admin-api', '/users/user', { active }, 'admin', 'PATCH'),
   };
 }
 
