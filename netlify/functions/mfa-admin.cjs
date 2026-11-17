@@ -43,8 +43,11 @@ function codeMatches(code, recoveryCodes) {
 // Lista los miembros de la agencia del caller con su estado mfaEnrolled.
 async function listMembers(authResult) {
   const membersSnap = await db().collection('agencies').doc(authResult.agencyId).collection('members').get();
-  // Una sola llamada a Auth para todos (hasta 100); los que no existen en Auth quedan sin 2FA.
-  const { users } = membersSnap.docs.length ? await auth().getUsers(membersSnap.docs.map(m => ({ uid: m.id }))) : { users: [] };
+  // getUsers acepta hasta 100 por llamada: una por lote. Los que no existen en Auth quedan sin 2FA.
+  const ids = membersSnap.docs.map(m => ({ uid: m.id }));
+  const lotes = [];
+  for (let i = 0; i < ids.length; i += 100) lotes.push(ids.slice(i, i + 100));
+  const users = (await Promise.all(lotes.map(lote => auth().getUsers(lote)))).flatMap(r => r.users);
   const conTotp = new Set(users.filter(u => (u.multiFactor?.enrolledFactors || []).some(f => f.factorId === 'totp')).map(u => u.uid));
   const out = membersSnap.docs.map(m => {
     const data = m.data() || {};

@@ -28,7 +28,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       return structuredClone(tokens.get(token));
     },
     async getUser(uid) { return structuredClone(accounts.get(uid)); },
-    async getUsers(ids) { return { users: ids.filter(({ uid }) => accounts.has(uid)).map(({ uid }) => ({ uid, ...structuredClone(accounts.get(uid)) })), notFound: [] }; },
+    async getUsers(ids) { if (ids.length > 100) throw new Error('auth/maximum-user-count-exceeded'); return { users: ids.filter(({ uid }) => accounts.has(uid)).map(({ uid }) => ({ uid, ...structuredClone(accounts.get(uid)) })), notFound: [] }; },
     async getUserByEmail(email) {
       const entry = [...accounts].find(([, account]) => account.email === email);
       if (!entry) throw Object.assign(new Error('not found'), { code: 'auth/user-not-found' });
