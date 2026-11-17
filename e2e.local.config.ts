@@ -1,11 +1,11 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { grok } from 'e2e/oauth/grok';
-import { totp } from '../tests/e2e-totp.mjs';
+import { totp } from './tests/e2e-totp.mjs';
 
 process.loadEnvFile('.env');
 
-// Misma agencia e2e que e2e/e2e.config.ts, pero sirve este working tree.
+// Misma agencia e2e que e2e.config.ts, pero sirve este working tree.
 // traveldocs.com.ar no tiene la pestaña hasta un deploy.
 const context = [
   'TravelDocs es la app de una agencia de viajes. En pantalla la marca puede decir TradingDocs.',
@@ -40,11 +40,15 @@ export default {
     engine: web({ locale: 'es-AR', timezoneId: 'America/Argentina/Buenos_Aires', viewport: { width: 1280, height: 900 } }),
     app: {
       // localhost (no 127.0.0.1): Firebase Auth lo tiene como dominio autorizado.
-      url: 'http://localhost:4173',
+      // netlify dev sirve .netlify/site (correr antes npm run build:frontend) y
+      // las Functions en el mismo puerto. python http.server cortaba conexiones
+      // cuando el navegador pedia muchos modulos a la vez.
+      url: 'http://localhost:8888',
       command: {
-        executable: 'python3',
-        args: ['-m', 'http.server', '4173', '--bind', '127.0.0.1', '--directory', 'public'],
+        executable: 'netlify',
+        args: ['dev', '--port', '8888', '--no-open'],
         log: '.e2e/logs/app.log',
+        startupTimeout: 120000,
       },
     },
   }],

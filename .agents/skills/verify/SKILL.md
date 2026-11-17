@@ -50,31 +50,29 @@ Requisitos:
 - `.env` con `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` y `E2E_TOTP_SECRET`. Si faltan,
   frenar y pedirselos al usuario: los crea `scripts/create-e2e-agency.mjs` con la
   service account. No inventar ni resetear credenciales.
-- El login local llama a `http://localhost:8888/.netlify/functions/mfa-complete`
-  y check-ins y requisitos tambien usan Functions en 8888. Levantar `netlify dev`
-  antes (sitio linkeado; toma las env vars del sitio):
+- El runner levanta solo `netlify dev` en el puerto 8888 (sirve `.netlify/site`
+  y las Functions, con las env vars del sitio linkeado). El puerto tiene que
+  estar libre.
 
 ```bash
 npm run build:frontend
-netlify dev --port 8888 --no-open
+npx e2e run --config e2e.local.config.ts tests/flujo.e2e.ts --exclude-tag ia
 ```
 
-Antes de seguir, comprobar que responde:
-`curl -m 15 -o /dev/null -w "%{http_code}" http://127.0.0.1:8888/login.html` tiene
-que dar 200. Problema conocido (2026-11-17): con Node 25 y netlify-cli 27.12.1
-dice "ready" pero no contesta ni los archivos estaticos. El CI usa Node 22;
-si no hay Node 22 instalado, frenar y avisar al usuario en vez de seguir.
+`flujo.e2e.ts` entra con 2FA, da de alta un pasajero y un check-in y borra lo
+que creo. Los tests con tag `ia` llaman a Gemini: en local no hay
+`GEMINI_API_KEY` (solo esta en el contexto production de Netlify), asi que se
+corren contra produccion despues del deploy (`npm run test:e2e`).
+Si el cambio toca otro flujo, agregar un test chico en `tests/<flujo>.e2e.ts`
+con el mismo `test.setup` de login y correr ese archivo.
+Resultado y capturas: `.e2e/report.json` y `.e2e/artifacts/` (el `trace.zip`
+tiene la consola del navegador).
 
-Despues, en otra terminal:
-
-```bash
-npx e2e run --config e2e/e2e.local.config.ts tests/flujo.e2e.ts
-```
-
-`flujo.e2e.ts` da de alta un pasajero y un check-in, consulta requisitos y
-borra lo que creo. Si el cambio toca otro flujo, agregar un test chico en
-`tests/<flujo>.e2e.ts` con el mismo `test.setup` de login y correr ese archivo.
-Resultado y capturas: `.e2e/report.json` y `.e2e/artifacts/`.
+Si `netlify dev` dice "ready" pero no responde, es iCloud: `Documents` se
+sincroniza y hay archivos de `node_modules` que se traban al leerlos. Por eso
+`node_modules` es un enlace a `node_modules.nosync` (iCloud no sincroniza
+`.nosync`). Si despues de un `npm ci` queda una carpeta real en lugar del enlace,
+rehacerlo: `rm -rf node_modules.nosync && mv node_modules node_modules.nosync && ln -s node_modules.nosync node_modules`.
 
 El agente no tipea credenciales en el navegador: el login lo hace el runner
 e2e desde `.env`. Para mirar la app a mano, que el usuario entre.

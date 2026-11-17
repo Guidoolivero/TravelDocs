@@ -169,7 +169,6 @@ public/                 # Unico codigo servido al browser
 netlify/                # Functions + lib por modulo
 firebase/               # firestore.rules + indexes
 lib/                    # Logica backend compartida (no publica)
-e2e/                    # Configs del runner e2e
 scripts/ tests/ docs/ specs/
 .agents/                # Guia PROJECT.md, skills, locks, mcp
 .github/                # CI + deploy
@@ -185,6 +184,7 @@ En la raiz quedan solo archivos que las herramientas exigen ahi:
 | `README.md` / `.gitignore` | GitHub / git |
 | `AGENTS.md` `CLAUDE.md` `GROK.md` | Stubs de descubrimiento de agentes |
 | `.mcp.json` | Symlink a `.agents/mcp.json` |
+| `e2e.config.ts` / `e2e.local.config.ts` | El runner e2e toma la carpeta del config como raiz y busca `tests/` ahi |
 
 Detalle de agentes: `.agents/README.md`. Skills canonicos en `.agents/skills/`;
 los clientes solo tienen symlinks.

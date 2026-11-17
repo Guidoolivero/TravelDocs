@@ -26,7 +26,7 @@ test.setup('entra a la agencia e2e', { sessions: ['e2e'] }, async ({ app, screen
   await session.save('e2e');
 });
 
-test('alta, check-in, requisitos y baja', { session: 'e2e', timeout: 240_000 }, async ({ app, screen, browser }) => {
+test('alta, check-in y baja', { session: 'e2e', timeout: 240_000 }, async ({ app, screen, browser }) => {
   const apellido = `E2E${Date.now().toString().slice(-6)}`;
   const nombre = 'QA';
   const ficha = `${apellido}, ${nombre}`;
@@ -93,14 +93,6 @@ test('alta, check-in, requisitos y baja', { session: 'e2e', timeout: 240_000 }, 
     await screen.getByRole('button', 'Guardar check-in').tap();
     await expect(browser.locator('#reservations-list')).toContainText(apellido, { timeout: 15_000 });
     await expect(browser.locator('#reservations-list')).toContainText(/AEP.+COR/);
-
-    await ir('Requisitos de Vuelo');
-    await screen.getByLabel('Número de vuelo *').fill('AR1300');
-    await screen.getByLabel('Origen (IATA) *').fill('EZE');
-    await screen.getByLabel('Destino (IATA) *').fill('MAD');
-    await screen.getByLabel('Fecha de viaje').fill('2026-12-01');
-    await screen.getByRole('button', 'Consultar requisitos').tap();
-    await expect(browser.locator('#tv-results')).toContainText(/MAD/, { timeout: 90_000 });
   } catch (e) {
     error = e;
   } finally {
@@ -112,4 +104,17 @@ test('alta, check-in, requisitos y baja', { session: 'e2e', timeout: 240_000 }, 
     }
   }
   if (error) throw error;
+});
+
+// Llama a Gemini: en local no hay GEMINI_API_KEY (solo esta en el contexto
+// production de Netlify). Correr contra produccion o excluir con --exclude-tag ia.
+test('requisitos de un vuelo', { session: 'e2e', tags: ['ia'], timeout: 120_000 }, async ({ app, screen, browser }) => {
+  await app.open('/index.html');
+  await screen.getByRole('button', 'Requisitos de Vuelo').tap();
+  await screen.getByLabel('Número de vuelo *').fill('AR1300');
+  await screen.getByLabel('Origen (IATA) *').fill('EZE');
+  await screen.getByLabel('Destino (IATA) *').fill('MAD');
+  await screen.getByLabel('Fecha de viaje').fill('2026-12-01');
+  await screen.getByRole('button', 'Consultar requisitos').tap();
+  await expect(browser.locator('#tv-results')).toContainText(/MAD/, { timeout: 90_000 });
 });
