@@ -14,14 +14,8 @@
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 const { verifyAuth } = require('./_auth.cjs');
-const { requirePlatformAdmin } = require('./_platform-admin.cjs');
+const { requirePlatformAdmin, initAdmin } = require('./_platform-admin.cjs');
 
-function initAdmin() {
-  if (admin.apps.length) return;
-  const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!inline) throw new Error('FIREBASE_SERVICE_ACCOUNT no configurada en Netlify.');
-  admin.initializeApp({ credential: admin.credential.cert(JSON.parse(inline)) });
-}
 
 function db() { initAdmin(); return admin.firestore(); }
 function auth() { initAdmin(); return admin.auth(); }
@@ -49,16 +43,16 @@ function codeMatches(code, recoveryCodes) {
 // Lista los miembros de la agencia del caller con su estado mfaEnrolled.
 async function listMembers(authResult) {
   const membersSnap = await db().collection('agencies').doc(authResult.agencyId).collection('members').get();
-  const out = [];
-  for (const m of membersSnap.docs) {
+  // getUsers acepta hasta 100 por llamada: una por lote. Los que no existen en Auth quedan sin 2FA.
+  const ids = membersSnap.docs.map(m => ({ uid: m.id }));
+  const lotes = [];
+  for (let i = 0; i < ids.length; i += 100) lotes.push(ids.slice(i, i + 100));
+  const users = (await Promise.all(lotes.map(lote => auth().getUsers(lote)))).flatMap(r => r.users);
+  const conTotp = new Set(users.filter(u => (u.multiFactor?.enrolledFactors || []).some(f => f.factorId === 'totp')).map(u => u.uid));
+  const out = membersSnap.docs.map(m => {
     const data = m.data() || {};
-    let mfaEnrolled = false;
-    try {
-      const ur = await auth().getUser(m.id);
-      mfaEnrolled = (ur.multiFactor?.enrolledFactors || []).some(f => f.factorId === 'totp');
-    } catch (_) { /* usuario podría no existir en Auth */ }
-    out.push({ uid: m.id, email: data.email || '', displayName: data.displayName || '', role: data.role || '', mfaEnrolled });
-  }
+    return { uid: m.id, email: data.email || '', displayName: data.displayName || '', role: data.role || '', mfaEnrolled: conTotp.has(m.id) };
+  });
   return reply(200, { members: out });
 }
 

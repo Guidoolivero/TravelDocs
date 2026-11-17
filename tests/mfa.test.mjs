@@ -169,3 +169,28 @@ test('enrolamiento iniciado antes del reset no vuelve a generar codigos despues'
   assert.equal(f.docs.get('users/user').recoveryCodes.length, 0);
   assert.equal(f.accounts.get('user').customClaims.mfaEnrolled, false);
 });
+
+test('la lista de miembros pide los usuarios a Auth en una sola llamada', async () => {
+  const f = fixture();
+  f.docs.set('agencies/agency/members/admin', { role: 'owner', email: 'admin@test.com' });
+  f.docs.set('agencies/agency/members/user', { role: 'agent', email: 'user@test.com' });
+  let individuales = 0;
+  f.sdkAuth.getUser = async () => { individuales++; throw new Error('no deberia llamarse por miembro'); };
+  const res = await f.invoke('mfa-admin', { action: 'members' });
+  assert.equal(res.statusCode, 200);
+  const members = JSON.parse(res.body).members;
+  assert.equal(members.length, 2);
+  assert.ok(members.every(m => m.mfaEnrolled));
+  assert.equal(individuales, 0);
+});
+
+test('la lista de miembros funciona con mas de 100 (getUsers acepta hasta 100 por llamada)', async () => {
+  const f = fixture();
+  for (let i = 0; i < 101; i++) f.docs.set(`agencies/agency/members/m${i}`, { role: 'agent' });
+  f.docs.set('agencies/agency/members/user', { role: 'agent' });
+  const res = await f.invoke('mfa-admin', { action: 'members' });
+  assert.equal(res.statusCode, 200);
+  const members = JSON.parse(res.body).members;
+  assert.equal(members.length, 102);
+  assert.equal(members.find(m => m.uid === 'user').mfaEnrolled, true);
+});

@@ -623,3 +623,15 @@ describe('reservationStale — limpieza al día siguiente del último vuelo', ()
     assert.equal(reservationStale([{ fecha: '2026-10-10' }], now), true);
   });
 });
+describe('daysUntil: dias de calendario ART y fechas invalidas', () => {
+  it('un documento que vence hoy da 0 y no figura vencido', () => {
+    assert.equal(daysUntil(hoyART()), 0);
+    assert.equal(docStatus(hoyART()), 'critical');
+  });
+  it('fechas que el import no reconocio quedan sin datos, no vigentes', () => {
+    for (const raro of ['15-12-2026', '15.12.2026', '2026/12/15', '2026-25-12', '2026-02-30', 'pendiente']) {
+      assert.equal(daysUntil(raro), null, raro);
+      assert.equal(docStatus(raro), 'nodata', raro);
+    }
+  });
+});

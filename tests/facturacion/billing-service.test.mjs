@@ -296,3 +296,18 @@ test('preview de factura ya enviada devuelve su estado sin volver a pedir cotiza
   }
   assert.equal(quotes, before);
 });
+
+test('falla antes de reservar en ARCA: consultar vuelve a borrador y se puede emitir', async () => {
+  let sends = 0;
+  const sinReserva = Object.assign(new Error('No reservation exists for this idempotency key'), { code: 'ARCA_INPUT_RESERVATION_NOT_FOUND' });
+  const { service, draft } = await setup({
+    issue: async () => { if (++sends === 1) throw Object.assign(new Error('Certificado vencido'), { code: 'ARCA_AUTHENTICATION_ERROR' }); return { kind: 'authorized', voucher: { cae: 'TEST' } }; },
+    recover: async () => { throw sinReserva; },
+  });
+  await assert.rejects(service.issue(draft.id, draft.digest), /Certificado vencido/);
+  const consultada = await service.issue(draft.id, draft.digest, { recoverOnly: true });
+  assert.equal(consultada.status, 'draft');
+  assert.equal(consultada.lastError, null);
+  assert.equal((await service.issue(draft.id, draft.digest)).status, 'authorized');
+  assert.equal(sends, 2);
+});

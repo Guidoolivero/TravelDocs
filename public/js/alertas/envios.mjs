@@ -1,5 +1,5 @@
 import { estado } from '../compartido/estado.mjs';
-import { updatePassenger, isNotified, markNotified, markReservationLegsNotified } from '../db.js';
+import { updatePassenger, isNotified, markNotified, markReservationLegsNotified, reservarEnvioAlertas, liberarEnvioAlertas } from '../db.js';
 import { collectEmailAlertCandidates } from '../compartido/utils.js';
 import { checkinAlertDue, isBirthdayToday, anioART, buildAlertEmail as buildAlertEmailHtml } from './alert-core.mjs';
 import { storedPiernas, resPiernas, resPaxSurnames } from '../reservas/pantalla.mjs';
@@ -28,6 +28,14 @@ async function checkAndSendUnifiedAlerts() {
   }
   if (estado._alertsCheckedThisSession) return;
   estado._alertsCheckedThisSession = true;
+  // Otro navegador de la agencia ya esta enviando: sus marcas evitan el duplicado.
+  // Sin reserva se vuelve a probar en el proximo snapshot (si el otro termino, ya
+  // no queda nada por enviar; si se colgo, su reserva vence a los 2 minutos).
+  let reservado = false;
+  try { reservado = await reservarEnvioAlertas(); } catch (err) {
+    console.warn('[Alertas] No se pudo reservar el envio:', err?.message || err);
+  }
+  if (!reservado) { estado._alertsCheckedThisSession = false; return; }
 
   const now = Date.now();
 
@@ -139,6 +147,7 @@ async function checkAndSendUnifiedAlerts() {
     }
   } catch (err) {
     estado._alertsCheckedThisSession = false; // reintenta en el próximo snapshot
+    liberarEnvioAlertas().catch(() => {});
     console.warn('[Alertas] No se pudo enviar el email unificado:', err?.message || err);
   }
 }

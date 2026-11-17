@@ -1,9 +1,6 @@
-// Escapa HTML para prevenir XSS al renderizar datos de pasajeros
-function esc(str) {
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML;
-}
+import { escStr } from './utils.js';
+// Escapa HTML (incluidas comillas, para atributos) al renderizar datos de pasajeros
+const esc = str => escStr(String(str || ''));
 
 // ==================== CONFIRM / DELETE ====================
 function showConfirmDialog({ title, message, subtext = '', confirmLabel = 'Confirmar', onConfirm }) {

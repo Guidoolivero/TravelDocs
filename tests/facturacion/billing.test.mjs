@@ -32,7 +32,8 @@ test('elegibilidad: activas en prueba no se cobran y ficha incompleta bloquea', 
 });
 
 test('ficha opcional valida importes exactos y rechaza datos invalidos o campos extra', async () => {
-  const { validateBillingProfile, parsePrice } = await import('../../netlify/functions/lib/facturacion/billing.cjs');
+  const { validateBillingProfile } = await import('../../netlify/functions/lib/facturacion/billing.cjs');
+  const { parsePrice } = await import('../../public/js/facturacion/billing-form.mjs');
   assert.deepEqual(validateBillingProfile({}), {});
   assert.deepEqual(validateBillingProfile({ legalName: '  Prueba  ', currency: '' }), { legalName: 'Prueba', currency: '' });
   assert.equal(parsePrice('60000'), 6000000);

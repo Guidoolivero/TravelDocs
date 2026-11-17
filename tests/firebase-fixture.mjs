@@ -28,6 +28,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       return structuredClone(tokens.get(token));
     },
     async getUser(uid) { return structuredClone(accounts.get(uid)); },
+    async getUsers(ids) { if (ids.length > 100) throw new Error('auth/maximum-user-count-exceeded'); return { users: ids.filter(({ uid }) => accounts.has(uid)).map(({ uid }) => ({ uid, ...structuredClone(accounts.get(uid)) })), notFound: [] }; },
     async getUserByEmail(email) {
       const entry = [...accounts].find(([, account]) => account.email === email);
       if (!entry) throw Object.assign(new Error('not found'), { code: 'auth/user-not-found' });
@@ -96,7 +97,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
     const require = id => {
       if (id === 'firebase-admin') return admin;
       if (id === 'firebase-admin/firestore') return { FieldValue: firestore.FieldValue };
-      if (id.endsWith('/_sentry.cjs')) return { wrapHandler: fn => fn };
+      if (id.endsWith('/_sentry.cjs')) return modules._sentry || { wrapHandler: fn => fn, reportError: async () => {} };
       if (Object.hasOwn(modules, id)) return modules[id];
       const mocked = Object.keys(modules).find(key => key.startsWith('.') && new URL(key, new URL('../netlify/functions/', import.meta.url)).href === new URL(id, url).href);
       if (mocked) return modules[mocked];

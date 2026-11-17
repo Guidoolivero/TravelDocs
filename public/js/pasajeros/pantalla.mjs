@@ -3,9 +3,11 @@ import { getFFNEntries } from './viajeros-frecuentes.mjs';
 import { emergencyContactsOf } from './contactos.mjs';
 import { estado } from '../compartido/estado.mjs';
 import { matchesPassenger } from './passenger-search.mjs';
-import { addPassenger, updatePassenger, deletePassenger } from '../db.js';
-import { statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr, asistenciaBadge } from '../compartido/utils.js';
-import { buildSSRStrings } from '../documentos/ssr.js';
+import { addPassenger, updatePassengerSiNoCambio, deletePassenger } from '../db.js';
+import { statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr, asistenciaBadge, versionDe } from '../compartido/utils.js';
+
+let _versionAlAbrir = null; // updatedAt del pasajero cuando se abrio el formulario de edicion
+import { buildSSRStrings, ageYears } from '../documentos/ssr.js';
 import { programaFfn } from '../compartido/ffn-programs.mjs';
 import { nombreAerolinea } from '../compartido/airlines.mjs';
 import { passengerDetailFlags } from '../reservas/reservation-view.mjs';
@@ -329,7 +331,7 @@ export function initPasajeros() {
     }
     if (delBtn) delBtn.style.display = flags.includeActions ? '' : 'none';
 
-    const age = Math.floor((new Date() - new Date(p.dob + 'T00:00:00')) / (365.25 * 86400000));
+    const age = ageYears(p.dob);
 
     const docCard = (title, num, issue, exp, country) => {
       if (!num) return '';
@@ -432,6 +434,7 @@ export function initPasajeros() {
     const p = estado.passengers.find(x => x.id === id);
     if (!p) return;
     estado.currentEditId = id;
+    _versionAlAbrir = versionDe(p);
     document.getElementById('modal-passenger-title').textContent = 'Editar pasajero';
     fillForm(p);
     clearScanUI();
@@ -740,7 +743,8 @@ export function initPasajeros() {
 
     try {
       if (estado.currentEditId) {
-        await updatePassenger(estado.currentEditId, data);
+        // Si otro agente lo guardo mientras tanto (una visa nueva, por ejemplo), no se pisa.
+        await updatePassengerSiNoCambio(estado.currentEditId, data, _versionAlAbrir);
         showToast('✓ Pasajero actualizado');
       } else {
         await addPassenger(data);
@@ -749,7 +753,7 @@ export function initPasajeros() {
       closeModal('modal-passenger');
     } catch(err) {
       console.error(err);
-      showToast('✗ Error al guardar: ' + err.message, true);
+      showToast(err.code === 'conflicto' ? err.message : '✗ Error al guardar: ' + err.message, true);
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 11l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Guardar pasajero';

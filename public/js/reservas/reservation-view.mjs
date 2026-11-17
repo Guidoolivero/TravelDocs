@@ -47,3 +47,14 @@ export function reservationViewLayout(piernas) {
   const many = locators.length > 1;
   return { locators, showLocatorOnLegs: many, showAirlineOnLegs: many };
 }
+
+// Marcas de un tramo al guardar el modal. `actual` es el tramo en el snapshot de ahora:
+// el cron (notified) u otro agente (checkin) pudieron cambiarlo con el modal abierto.
+// El check-in del modal gana solo si el agente lo toco (difiere de checkinAlAbrir).
+export function marcasAlGuardar(p, actual) {
+  const tocadoEnModal = p.checkinAlAbrir === undefined || !!p.checkin !== p.checkinAlAbrir;
+  return {
+    checkin: tocadoEnModal || !actual ? !!p.checkin : !!actual.checkin,
+    notified: !!actual?.notified,
+  };
+}

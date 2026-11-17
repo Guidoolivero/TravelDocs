@@ -6,6 +6,7 @@ const { createBillingService } = require('./billing-service.cjs');
 const { createArcaClient } = require('facturas');
 const { billingErrorText } = require('../../../../public/js/facturacion/billing-feedback.mjs');
 const { auditBilling } = require('./billing-audit.cjs');
+const { reportError } = require('../../_sentry.cjs');
 
 const reply = (statusCode, body) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 exports.handler = async event => {
@@ -22,7 +23,8 @@ exports.handler = async event => {
     initAdmin();
     const db = admin.firestore();
     if (body.action === 'list') {
-      const snap = await db.collection('billingInvoices').orderBy('period', 'desc').limit(100).get();
+      // shortcut: trae todo el historial (~120 facturas/anio con 10 agencias); paginar si pasa de ~1000.
+      const snap = await db.collection('billingInvoices').orderBy('period', 'desc').get();
       return reply(200, { environment, invoices: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(invoice => (invoice.environment || 'test') === environment) });
     }
     const salesPoint = Number(process.env.ARCA_SALES_POINT);
@@ -53,7 +55,10 @@ exports.handler = async event => {
     if (fiscalAction) await auditBilling(db, auth, `billing-${body.action}`, result);
     return reply(200, result);
   } catch (err) {
-    if (!err?.status) console.error('billing-api', { code: err?.code || 'BILLING_ERROR', name: err?.name });
+    if (!err?.status) {
+      console.error('billing-api', { code: err?.code || 'BILLING_ERROR', name: err?.name });
+      await reportError(err);
+    }
     const status = [400, 404, 409, 503].includes(err?.status) ? err.status : 503;
     return reply(status, { error: billingErrorText(err) });
   }

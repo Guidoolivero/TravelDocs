@@ -183,3 +183,10 @@ describe('nombresDesdeMrz', () => {
     }
   });
 });
+
+describe('scanDocument: limite de PDF', () => {
+  it('un PDF de mas de 4 MB se rechaza con un mensaje claro antes de subirlo (Netlify corta en 6 MB)', async () => {
+    const { scanDocument } = await import('../public/js/documentos/scanner.js');
+    await assert.rejects(scanDocument({ type: 'application/pdf', size: 5 * 1024 * 1024 }), /PDF.*4 ?MB/);
+  });
+});

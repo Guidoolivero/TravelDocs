@@ -710,3 +710,19 @@ test('destino que no esta en la matriz no queda en silencio: avisa que no hay da
   assert.match(html, /Destino Groenlandia \(GOH\)/);
   assert.match(html, /No tenemos datos de este destino en la base\. Verific[aá] los requisitos antes de emitir\./);
 });
+
+test('dos pedidos simultaneos del mail de requisitos mandan un solo mail', async () => {
+  const { fixture } = await import('./firebase-fixture.mjs');
+  const f = fixture({ env: { EMAILJS_PRIVATE_KEY: 'dummy' } });
+  const fecha = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 16);
+  f.docs.set('agencies/agency', { status: 'active', alerts: { email: 'agencia@example.invalid', emailjsPublicKey: 'k', emailjsServiceId: 's', emailjsTemplateId: 't' } });
+  f.docs.set('agencies/agency/reservations/r1', reserva(fecha));
+  let mails = 0;
+  const fetchOriginal = globalThis.fetch;
+  globalThis.fetch = async () => { mails++; await new Promise(r => setTimeout(r, 20)); return { ok: true, text: async () => '' }; };
+  try {
+    await Promise.all([f.invoke('checkin-reqs', { reservationId: 'r1' }, 'user'), f.invoke('checkin-reqs', { reservationId: 'r1' }, 'user')]);
+  } finally { globalThis.fetch = fetchOriginal; }
+  assert.equal(mails, 1);
+  assert.equal(f.docs.get('agencies/agency/reservations/r1').reqsNotified, true);
+});

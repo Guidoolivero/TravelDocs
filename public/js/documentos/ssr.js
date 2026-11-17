@@ -219,16 +219,18 @@ export function generateInfantNM(adult, infant) {
 
 // ── NM (nombre PNR del pasajero — igual en los 3 GDS) ───────
 //  NM1APELLIDO/NOMBRE  ·  si es child (2-11 años cumplidos hoy): NM1APELLIDO/NOMBRE(CHD)
-function ageYears(dob, refDate) {
+// Edad en anios cumplidos por calendario (el dia del cumpleanos ya cuenta).
+export function ageYears(dob, refDate) {
   if (!dob) return null;
   const d = new Date(dob + 'T00:00:00');
   if (isNaN(d.getTime())) return null;
-  let refMs = Date.now();
+  let r = new Date();
   if (refDate) {
-    const r = new Date(String(refDate).length <= 10 ? refDate + 'T00:00:00' : refDate);
-    if (!isNaN(r.getTime())) refMs = r.getTime();
+    const parsed = new Date(String(refDate).length <= 10 ? refDate + 'T00:00:00' : refDate);
+    if (!isNaN(parsed.getTime())) r = parsed;
   }
-  return Math.floor((refMs - d.getTime()) / (365.25 * 86400000));
+  const antesDelCumple = r.getMonth() < d.getMonth() || (r.getMonth() === d.getMonth() && r.getDate() < d.getDate());
+  return r.getFullYear() - d.getFullYear() - (antesDelCumple ? 1 : 0);
 }
 function isChild(dob, refDate) {
   const y = ageYears(dob, refDate);

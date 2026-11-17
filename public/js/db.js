@@ -41,10 +41,6 @@ export function getTenantContext() {
   return agencyId;
 }
 
-export function clearTenantContext() {
-  agencyId = null;
-}
-
 function requireAgency() {
   if (!agencyId) {
     throw new Error('Tenant no configurado. Llamá setTenantContext() antes de operar con Firestore.');
@@ -123,10 +119,6 @@ export function listenPassengers(callback, onError) {
   });
 }
 
-export function stopListening() {
-  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-}
-
 export async function addPassenger(data) {
   return await addDoc(passengersCollection(), {
     ...sanitize(data),
@@ -172,6 +164,21 @@ export async function updatePassenger(id, data) {
   });
 }
 
+// Edicion desde el formulario: manda el pasajero entero. Compara la version en el
+// servidor dentro de la transaccion; si otro agente lo guardo despues de abrir el
+// formulario (aunque su cambio todavia no haya llegado a este navegador), no escribe.
+export async function updatePassengerSiNoCambio(id, data, versionAlAbrir) {
+  const ref = passengerDoc(id);
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    const t = snap.exists() ? snap.data().updatedAt : null;
+    if ((t?.toMillis ? t.toMillis() : (t ?? null)) !== versionAlAbrir) {
+      throw Object.assign(new Error('Otro agente modificó este pasajero mientras lo editabas. Cerrá y volvé a abrirlo para no pisar sus cambios.'), { code: 'conflicto' });
+    }
+    tx.update(ref, { ...sanitize(data), updatedAt: serverTimestamp() });
+  });
+}
+
 export async function deletePassenger(id) {
   return await deleteDoc(passengerDoc(id));
 }
@@ -190,10 +197,6 @@ export function listenReservations(callback) {
     lastFp = fp;
     callback(list);
   }, err => { console.error('Error escuchando reservas:', err); });
-}
-
-export function stopListeningReservations() {
-  if (unsubReservations) { unsubReservations(); unsubReservations = null; }
 }
 
 // Canon de fecha de pierna: 'YYYY-MM-DDTHH:mm' (16 chars). El orderBy de la
@@ -247,7 +250,7 @@ export async function addReservation(data) {
   });
 }
 
-export async function updateReservation(id, data) {
+function patchReserva(data) {
   const patch = { ...sanitize(data) };
   // Invariante: si el update trae piernas, la fecha denormalizada se
   // recalcula como la mínima canónica. Sin piernas en el payload, no se toca.
@@ -256,9 +259,17 @@ export async function updateReservation(id, data) {
     const min = minFechaPiernas(patch.piernas);
     if (min) patch.fecha = min;
   }
-  return await updateDoc(reservationDoc(id), {
-    ...patch,
-    updatedAt: serverTimestamp()
+  return { ...patch, updatedAt: serverTimestamp() };
+}
+
+// build(actual) arma el payload con la reserva leida
+// del servidor dentro de la transaccion: lo que el cron u otro agente marcaron
+// mientras el modal estaba abierto no se pisa aunque no haya llegado a este navegador.
+export async function updateReservationWith(id, build) {
+  const ref = reservationDoc(id);
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    tx.update(ref, patchReserva(build(snap.exists() ? snap.data() : {})));
   });
 }
 
@@ -301,19 +312,22 @@ export async function markNotified(key) {
   await setDoc(notificationDoc(key), { sentAt: new Date() });
 }
 
-export async function getAllowedEmails() {
-  const ref = doc(db, 'config', 'allowedEmails');
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return [];
+// Dos agentes que abren la app a la vez mandaban las mismas alertas: el que
+// reserva primero envia; el otro no. La reserva vence a los 2 minutos por si
+// el navegador que la tomo se cierra a mitad del envio.
+export async function reservarEnvioAlertas(now = Date.now()) {
+  const ref = notificationDoc('_envio-cliente');
+  return runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    if (snap.exists() && now - (snap.data().desde || 0) < 120000) return false;
+    tx.set(ref, { desde: now });
+    return true;
+  });
+}
 
-  const data = snap.data() || {};
-  const raw = Array.isArray(data.emails)
-    ? data.emails
-    : (Array.isArray(data.allowedEmails) ? data.allowedEmails : []);
-
-  return raw
-    .map(v => (v || '').toString().trim().toLowerCase())
-    .filter(Boolean);
+// Si el envio fallo, se suelta la reserva para reintentar sin esperar los 2 minutos.
+export async function liberarEnvioAlertas() {
+  await deleteDoc(notificationDoc('_envio-cliente'));
 }
 
 function sanitize(obj) {

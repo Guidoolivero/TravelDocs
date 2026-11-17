@@ -38,7 +38,7 @@ function fixture(edit) {
     process: { env: { EMAILJS_PRIVATE_KEY: 'dummy' } }, setTimeout: fn => { fn(); },
     fetch: async (_, options) => { mails.push(JSON.parse(options.body)); edit(docs.get('agencies/test/reservations/res')); return { ok: true }; },
     require: id => id === 'firebase-admin' ? { apps: [{}], firestore: () => db }
-      : id === 'firebase-admin/firestore' ? { FieldValue: { serverTimestamp: () => 1 }, FieldPath: { documentId: () => '__name__' } }
+      : id === 'firebase-admin/firestore' ? { FieldValue: { serverTimestamp: () => 1, delete: () => undefined }, FieldPath: { documentId: () => '__name__' } }
       : id.endsWith('/_sentry.cjs') ? { wrapHandler: fn => fn } : nativeRequire(id),
   });
   return { docs, mails, run: () => module.exports.handler({}) };
@@ -79,4 +79,27 @@ test('cron envia salida local y check-in ART conservando los metadatos', async (
   assert.match(html,/Horario argentino para hacer el check-in/);
   assert.equal(r.piernas[0].fechaLocal,'2026-11-01T23:59');
   assert.equal(f.docs.get('agencies/test/reservations/res').piernas[0].zonaHoraria,'America/Denver');
+});
+
+test('el cron arranca cada hora por una agencia distinta: ninguna queda siempre al final', async () => {
+  const { rotarAgencias } = createRequire(import.meta.url)('../netlify/functions/lib/alertas/send-alerts.cjs');
+  const docs = ['a', 'b', 'c'];
+  const hora = 3600000;
+  assert.deepEqual(rotarAgencias(docs, 0), ['a', 'b', 'c']);
+  assert.deepEqual(rotarAgencias(docs, hora), ['b', 'c', 'a']);
+  assert.deepEqual(rotarAgencias(docs, 2 * hora), ['c', 'a', 'b']);
+  assert.deepEqual(rotarAgencias([], hora), []);
+});
+
+test('el cron no manda el mail de requisitos si checkin-reqs lo esta enviando', async () => {
+  const requisitos = mails => mails.filter(m => /requisitos/i.test(m.template_params.subject)).length;
+  const conReserva = fixture(() => {});
+  Object.assign(conReserva.docs.get('agencies/test/reservations/res'), { reqs30Notified: false, reqsEnviando: Date.parse('2026-11-01T12:00:00Z') });
+  await conReserva.run();
+  assert.equal(requisitos(conReserva.mails), 0);
+  const libre = fixture(() => {});
+  Object.assign(libre.docs.get('agencies/test/reservations/res'), { reqs30Notified: false });
+  await libre.run();
+  assert.equal(requisitos(libre.mails), 1);
+  assert.equal(libre.docs.get('agencies/test/reservations/res').reqs30Notified, true);
 });

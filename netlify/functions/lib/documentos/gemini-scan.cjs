@@ -66,9 +66,9 @@ exports.handler = async function handler(event) {
     return reply(400, { error: 'Tipo de archivo no permitido. Solo JPG, PNG, WebP, GIF o PDF.' });
   }
 
-  // Validar tamaño del payload (base64 agrega ~33% de overhead, limitar a ~30MB para archivos de hasta 20MB)
-  if (event.body.length > 30 * 1024 * 1024) {
-    return reply(413, { error: 'Archivo demasiado grande. Máximo 20MB.' });
+  // Netlify corta los bodies de mas de 6 MB antes de llegar aca; este chequeo es el mismo limite.
+  if (event.body.length > 6 * 1024 * 1024) {
+    return reply(413, { error: 'Archivo demasiado grande. Máximo 4 MB.' });
   }
 
   // ── Intento 1: cadena Gemini (principal + secundario) ──────

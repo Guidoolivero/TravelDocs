@@ -104,3 +104,20 @@ describe('reservationMatchesSearch', () => {
     assert.equal(reservationMatchesSearch(r, pax, 'gomez'), false);
   });
 });
+
+describe('marcasAlGuardar: el modal no pisa marcas que cambiaron mientras estaba abierto', async () => {
+  const { marcasAlGuardar } = await import('../public/js/reservas/reservation-view.mjs');
+  it('el cron marco notified con el modal abierto: se conserva', () => {
+    assert.deepEqual(marcasAlGuardar({ checkin: false, checkinAlAbrir: false, notified: false }, { checkin: false, notified: true }), { checkin: false, notified: true });
+  });
+  it('otro agente hizo el check-in con el modal abierto: no se desmarca', () => {
+    assert.equal(marcasAlGuardar({ checkin: false, checkinAlAbrir: false }, { checkin: true }).checkin, true);
+  });
+  it('el agente cambio el check-in en el modal: gana su cambio', () => {
+    assert.equal(marcasAlGuardar({ checkin: false, checkinAlAbrir: true }, { checkin: true }).checkin, false);
+    assert.equal(marcasAlGuardar({ checkin: true, checkinAlAbrir: false }, { checkin: false }).checkin, true);
+  });
+  it('tramo nuevo o con fecha cambiada: sin marca de aviso', () => {
+    assert.deepEqual(marcasAlGuardar({ checkin: true }, undefined), { checkin: true, notified: false });
+  });
+});

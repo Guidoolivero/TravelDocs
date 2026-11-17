@@ -15,14 +15,7 @@
 const admin = require('firebase-admin');
 const { FieldValue } = require('firebase-admin/firestore');
 
-function initAdmin() {
-  if (admin.apps.length) return;
-  const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!inline) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT no configurada en Netlify.');
-  }
-  admin.initializeApp({ credential: admin.credential.cert(JSON.parse(inline)) });
-}
+const { initAdmin } = require('./_platform-admin.cjs');
 
 function db() {
   initAdmin();

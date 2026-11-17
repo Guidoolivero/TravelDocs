@@ -38,4 +38,10 @@ function wrapHandler(handler) {
   };
 }
 
-module.exports = { wrapHandler };
+// Para handlers que atrapan el error y responden igual: sin esto Sentry no lo ve.
+async function reportError(err) {
+  Sentry.captureException(err);
+  await Sentry.flush(2000);
+}
+
+module.exports = { wrapHandler, reportError };

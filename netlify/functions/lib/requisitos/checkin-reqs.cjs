@@ -6,6 +6,7 @@
 const admin = require('firebase-admin');
 const { FieldValue } = require('firebase-admin/firestore');
 const { verifyAuth } = require('../../_auth.cjs');
+const { reservarEnvioRequisitos } = require('./reserva-envio.cjs');
 const { debeEnviarRequisitos, emailAviso, buildRequisitosEmail, marcasTrasEnvioRequisitos } = require('../../../../lib/requisitos/requisitos-checkin.mjs');
 
 const EMAILJS_SEND_URL = 'https://api.emailjs.com/api/v1.0/email/send';
@@ -76,6 +77,10 @@ exports.handler = async event => {
     alCrear: true,
   });
 
+  // Con dos pedidos a la vez (doble guardado, dos pestanas) o el cron enviando, solo uno manda.
+  const reservado = await reservarEnvioRequisitos(db, ref, actual => !actual.reqsNotified);
+  if (!reservado) return reply(200, { sent: false, reason: 'ya-avisado' });
+
   try {
     await sendEmail({
       publicKey: alerts.emailjsPublicKey,
@@ -86,11 +91,13 @@ exports.handler = async event => {
     });
   } catch (err) {
     console.error('checkin-reqs:', err?.message || err);
+    await ref.update({ reqsEnviando: FieldValue.delete() }).catch(() => {});
     return reply(502, { error: 'No se pudo enviar el mail.' });
   }
 
   await ref.update({
     ...marcasTrasEnvioRequisitos(reserva, { alCrear: true }),
+    reqsEnviando: FieldValue.delete(),
     updatedAt: FieldValue.serverTimestamp(),
   });
   return reply(200, { sent: true });

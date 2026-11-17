@@ -76,9 +76,17 @@ function createBillingService({ db, client, store, issuer, salesPoint, today, ab
         if (invoice.issuer.taxId !== issuer.taxId || invoice.input.salesPoint !== salesPoint) throw Object.assign(new Error('Cambio el emisor o punto de venta; revisar configuracion.'), { status: 409 });
         if (['authorized', 'rejected', 'conflict'].includes(invoice.status)) return invoice;
         if (invoice.status !== 'draft') {
-          const outcome = await arcaOperation(id, () => client.recover(invoice.idempotencyKey, { abortSignal }));
-          await invoices.doc(id).update(clean({ status: outcome.kind, outcome, lastError: null }));
-          if (!retry || outcome.kind !== 'indeterminate' || outcome.lookup.kind !== 'not_found') return get(id);
+          const outcome = await arcaOperation(id, () => client.recover(invoice.idempotencyKey, { abortSignal })).catch(err => {
+            // El SDK reserva antes de enviar: sin reserva no salio nada a ARCA (fallo de login, red o
+            // lock previo). Vuelve a borrador con la misma clave en vez de quedar trabada en issuing.
+            if (err?.code !== 'ARCA_INPUT_RESERVATION_NOT_FOUND') throw err;
+            return null;
+          });
+          if (!outcome) await invoices.doc(id).update({ status: 'draft', lastError: null });
+          else {
+            await invoices.doc(id).update(clean({ status: outcome.kind, outcome, lastError: null }));
+            if (!retry || outcome.kind !== 'indeterminate' || outcome.lookup.kind !== 'not_found') return get(id);
+          }
         }
         // shortcut: un intento incierto de otro dia requiere revision manual, no se cambia su solicitud fiscal.
         if (recoverOnly) return get(id);
