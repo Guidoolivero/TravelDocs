@@ -76,6 +76,16 @@ exports.handler = async event => {
     alCrear: true,
   });
 
+  // Reserva antes de enviar: con dos pedidos a la vez (doble guardado, dos pestanas)
+  // solo uno manda. La reserva vence a los 2 min por si la funcion muere a mitad.
+  const reservado = await db.runTransaction(async tx => {
+    const actual = (await tx.get(ref)).data() || {};
+    if (actual.reqsNotified || Date.now() - (actual.reqsEnviando || 0) < 120000) return false;
+    tx.update(ref, { reqsEnviando: Date.now() });
+    return true;
+  });
+  if (!reservado) return reply(200, { sent: false, reason: 'ya-avisado' });
+
   try {
     await sendEmail({
       publicKey: alerts.emailjsPublicKey,
@@ -86,11 +96,13 @@ exports.handler = async event => {
     });
   } catch (err) {
     console.error('checkin-reqs:', err?.message || err);
+    await ref.update({ reqsEnviando: FieldValue.delete() }).catch(() => {});
     return reply(502, { error: 'No se pudo enviar el mail.' });
   }
 
   await ref.update({
     ...marcasTrasEnvioRequisitos(reserva, { alCrear: true }),
+    reqsEnviando: FieldValue.delete(),
     updatedAt: FieldValue.serverTimestamp(),
   });
   return reply(200, { sent: true });

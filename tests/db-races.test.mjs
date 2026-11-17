@@ -43,3 +43,13 @@ test('crear reserva conserva la salida local y su zona junto al instante ART', a
   assert.equal(saved.piernas[0].zonaHoraria, 'America/Denver');
   assert.equal(saved.fecha, '2027-03-08T03:59');
 });
+
+test('solo un navegador por vez manda las alertas del cliente', async () => {
+  let lock = null;
+  const api = dbFixture({ getFirestore: () => ({}), doc: () => 'lock',
+    runTransaction: async (_, fn) => fn({ get: async () => ({ exists: () => !!lock, data: () => lock }), set: (_, data) => { lock = data; } }),
+  });
+  assert.equal(await api.reservarEnvioAlertas(1000), true);
+  assert.equal(await api.reservarEnvioAlertas(1500), false); // otro agente abre la app al mismo tiempo
+  assert.equal(await api.reservarEnvioAlertas(1000 + 3 * 60000), true); // reserva vencida: se puede volver a intentar
+});

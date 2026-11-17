@@ -1,5 +1,5 @@
 import { estado } from '../compartido/estado.mjs';
-import { updatePassenger, isNotified, markNotified, markReservationLegsNotified } from '../db.js';
+import { updatePassenger, isNotified, markNotified, markReservationLegsNotified, reservarEnvioAlertas } from '../db.js';
 import { collectEmailAlertCandidates } from '../compartido/utils.js';
 import { checkinAlertDue, isBirthdayToday, anioART, buildAlertEmail as buildAlertEmailHtml } from './alert-core.mjs';
 import { storedPiernas, resPiernas, resPaxSurnames } from '../reservas/pantalla.mjs';
@@ -28,6 +28,11 @@ async function checkAndSendUnifiedAlerts() {
   }
   if (estado._alertsCheckedThisSession) return;
   estado._alertsCheckedThisSession = true;
+  // Otro navegador de la agencia ya esta enviando: sus marcas evitan el duplicado.
+  try { if (!(await reservarEnvioAlertas())) return; } catch (err) {
+    console.warn('[Alertas] No se pudo reservar el envio:', err?.message || err);
+    return;
+  }
 
   const now = Date.now();
 

@@ -301,6 +301,19 @@ export async function markNotified(key) {
   await setDoc(notificationDoc(key), { sentAt: new Date() });
 }
 
+// Dos agentes que abren la app a la vez mandaban las mismas alertas: el que
+// reserva primero envia; el otro no. La reserva vence a los 2 minutos por si
+// el navegador que la tomo se cierra a mitad del envio.
+export async function reservarEnvioAlertas(now = Date.now()) {
+  const ref = notificationDoc('_envio-cliente');
+  return runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    if (snap.exists() && now - (snap.data().desde || 0) < 120000) return false;
+    tx.set(ref, { desde: now });
+    return true;
+  });
+}
+
 export async function getAllowedEmails() {
   const ref = doc(db, 'config', 'allowedEmails');
   const snap = await getDoc(ref);
