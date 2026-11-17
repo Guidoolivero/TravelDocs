@@ -3,7 +3,7 @@ import { getFFNEntries } from './viajeros-frecuentes.mjs';
 import { emergencyContactsOf } from './contactos.mjs';
 import { estado } from '../compartido/estado.mjs';
 import { matchesPassenger } from './passenger-search.mjs';
-import { addPassenger, updatePassenger, deletePassenger } from '../db.js';
+import { addPassenger, updatePassengerSiNoCambio, deletePassenger } from '../db.js';
 import { statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr, asistenciaBadge, versionDe } from '../compartido/utils.js';
 
 let _versionAlAbrir = null; // updatedAt del pasajero cuando se abrio el formulario de edicion
@@ -743,13 +743,8 @@ export function initPasajeros() {
 
     try {
       if (estado.currentEditId) {
-        // El formulario manda el pasajero entero: si otro agente lo guardo mientras tanto
-        // (una visa nueva, por ejemplo), guardar ahora la borraria sin aviso.
-        if (versionDe(estado.passengers.find(x => x.id === estado.currentEditId)) !== _versionAlAbrir) {
-          showToast('Otro agente modificó este pasajero mientras lo editabas. Cerrá y volvé a abrirlo para no pisar sus cambios.', true);
-          return;
-        }
-        await updatePassenger(estado.currentEditId, data);
+        // Si otro agente lo guardo mientras tanto (una visa nueva, por ejemplo), no se pisa.
+        await updatePassengerSiNoCambio(estado.currentEditId, data, _versionAlAbrir);
         showToast('✓ Pasajero actualizado');
       } else {
         await addPassenger(data);
@@ -758,7 +753,7 @@ export function initPasajeros() {
       closeModal('modal-passenger');
     } catch(err) {
       console.error(err);
-      showToast('✗ Error al guardar: ' + err.message, true);
+      showToast(err.code === 'conflicto' ? err.message : '✗ Error al guardar: ' + err.message, true);
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 4L6 11l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Guardar pasajero';

@@ -3,7 +3,7 @@ import { estado } from '../compartido/estado.mjs';
 import { matchItineraryPassengers, mergePendingPassengers } from '../pasajeros/pending-passengers.mjs';
 import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers.mjs';
 import { matchesPassenger } from '../pasajeros/passenger-search.mjs';
-import { addReservation, updateReservation, deleteReservation } from '../db.js';
+import { addReservation, updateReservationWith, deleteReservation } from '../db.js';
 import { fmtDate, escStr } from '../compartido/utils.js';
 import { requisitosAlertDue, checkinAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje } from '../alertas/alert-core.mjs';
 import { reservationViewPassengers, reservationViewLayout, reservationMatchesSearch, marcasAlGuardar } from './reservation-view.mjs';
@@ -797,12 +797,15 @@ export function initReservas() {
   window.toggleCheckin = async function(id, idx) {
     const r = estado.reservations.find(x => x.id === id);
     if (!r) return;
-    const piernas = storedPiernas(r);
-    if (!piernas[idx]) return;
-    piernas[idx].checkin = !piernas[idx].checkin;
-    piernas[idx].notified = false;
+    const local = storedPiernas(r)[idx];
+    if (!local) return;
     try {
-      await updateReservation(id, { piernas });
+      // Solo cambia este tramo, sobre la reserva del servidor: no pisa los demas.
+      await updateReservationWith(id, actual => {
+        const piernas = storedPiernas(actual);
+        if (piernas[idx]) { piernas[idx].checkin = !local.checkin; piernas[idx].notified = false; }
+        return { piernas };
+      });
     } catch (err) { console.error('Error toggling check-in:', err); showToast('No se pudo actualizar.', true); }
   };
 
@@ -825,9 +828,10 @@ export function initReservas() {
     const original = _resEditingId ? estado.reservations.find(x => x.id === _resEditingId) : null;
     // Tramos tal como estan ahora (no al abrir el modal): ver marcasAlGuardar.
     const actuales = new Map((original ? storedPiernas(original) : []).map(p => [clavePierna(p), p]));
-    const piernas = _resPiernasDraft
+    const drafts = _resPiernasDraft
       .map(p => p.fechaLocal !== undefined ? guardarHorario(p,p.fechaLocal) : p)
-      .filter(p => p.fecha || p.fechaLocal) // descarta tramos sin fecha
+      .filter(p => p.fecha || p.fechaLocal); // descarta tramos sin fecha
+    const piernas = drafts
       .map(p => ({
         fecha: p.fecha,
         ...(p.fechaLocal !== undefined ? {fechaLocal:p.fechaLocal,zonaHoraria:p.zonaHoraria} : {}),
@@ -882,7 +886,11 @@ export function initReservas() {
 
     try {
       if (_resEditingId) {
-        await updateReservation(_resEditingId, data);
+        // Las marcas se rearman con la reserva del servidor dentro de la transaccion.
+        await updateReservationWith(_resEditingId, actual => {
+          const enServidor = new Map(storedPiernas(actual).map(p => [clavePierna(p), p]));
+          return { ...data, piernas: piernas.map((p, i) => ({ ...p, ...marcasAlGuardar(drafts[i], enServidor.get(clavePierna(p))) })) };
+        });
         showToast('Check-in actualizado.');
       } else {
         const ref = await addReservation(data);

@@ -164,6 +164,21 @@ export async function updatePassenger(id, data) {
   });
 }
 
+// Edicion desde el formulario: manda el pasajero entero. Compara la version en el
+// servidor dentro de la transaccion; si otro agente lo guardo despues de abrir el
+// formulario (aunque su cambio todavia no haya llegado a este navegador), no escribe.
+export async function updatePassengerSiNoCambio(id, data, versionAlAbrir) {
+  const ref = passengerDoc(id);
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    const t = snap.exists() ? snap.data().updatedAt : null;
+    if ((t?.toMillis ? t.toMillis() : (t ?? null)) !== versionAlAbrir) {
+      throw Object.assign(new Error('Otro agente modificó este pasajero mientras lo editabas. Cerrá y volvé a abrirlo para no pisar sus cambios.'), { code: 'conflicto' });
+    }
+    tx.update(ref, { ...sanitize(data), updatedAt: serverTimestamp() });
+  });
+}
+
 export async function deletePassenger(id) {
   return await deleteDoc(passengerDoc(id));
 }
@@ -235,7 +250,7 @@ export async function addReservation(data) {
   });
 }
 
-export async function updateReservation(id, data) {
+function patchReserva(data) {
   const patch = { ...sanitize(data) };
   // Invariante: si el update trae piernas, la fecha denormalizada se
   // recalcula como la mínima canónica. Sin piernas en el payload, no se toca.
@@ -244,9 +259,17 @@ export async function updateReservation(id, data) {
     const min = minFechaPiernas(patch.piernas);
     if (min) patch.fecha = min;
   }
-  return await updateDoc(reservationDoc(id), {
-    ...patch,
-    updatedAt: serverTimestamp()
+  return { ...patch, updatedAt: serverTimestamp() };
+}
+
+// build(actual) arma el payload con la reserva leida
+// del servidor dentro de la transaccion: lo que el cron u otro agente marcaron
+// mientras el modal estaba abierto no se pisa aunque no haya llegado a este navegador.
+export async function updateReservationWith(id, build) {
+  const ref = reservationDoc(id);
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref);
+    tx.update(ref, patchReserva(build(snap.exists() ? snap.data() : {})));
   });
 }
 
@@ -300,6 +323,11 @@ export async function reservarEnvioAlertas(now = Date.now()) {
     tx.set(ref, { desde: now });
     return true;
   });
+}
+
+// Si el envio fallo, se suelta la reserva para reintentar sin esperar los 2 minutos.
+export async function liberarEnvioAlertas() {
+  await deleteDoc(notificationDoc('_envio-cliente'));
 }
 
 function sanitize(obj) {
