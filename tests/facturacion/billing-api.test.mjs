@@ -85,3 +85,18 @@ test('emision, recuperacion y reintento registran actor y resultado sin datos fi
   assert.equal((await f.invoke('billing-api', { action: 'issue', invoiceId: id })).statusCode, 200);
   assert.equal(sends, 4, 'El fallo de auditoria no interrumpe ni repite la operacion fiscal');
 });
+
+test('errores inesperados de facturacion llegan a Sentry; los esperados no', async () => {
+  const reportados = [];
+  const env = { BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing', FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185',
+    ARCA_TAX_ID: '20123456786', ARCA_SALES_POINT: '1', ARCA_CERTIFICATE_PEM: 'ficticio', ARCA_PRIVATE_KEY_PEM: 'ficticia', BILLING_ISSUER_JSON: JSON.stringify({ legalName: 'Prueba', address: 'Calle 1', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' }) };
+  const conError = err => fixture({ env, modules: {
+    _sentry: { wrapHandler: fn => fn, reportError: async e => { reportados.push(e); } },
+    facturas: { createArcaClient: () => ({}) },
+    './lib/facturacion/billing-service.cjs': { createBillingService: () => ({ preview: async () => { throw err; } }) },
+  } });
+  for (const f of [conError(new Error('Firestore caido')), conError(Object.assign(new Error('Vista previa vieja'), { status: 409 }))]) {
+    await f.invoke('billing-api', { action: 'preview', agencyId: 'agency' });
+  }
+  assert.deepEqual(reportados.map(e => e.message), ['Firestore caido']);
+});
