@@ -353,15 +353,18 @@ function parseJsonArray(raw) {
   let t = (raw || '').trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) t = fence[1].trim();
-  const start = t.indexOf('[');
   const end = t.lastIndexOf(']');
-  if (start === -1 || end <= start) return null;
-  const candidate = t.slice(start, end + 1);
-  for (const text of [candidate, repairJsonText(candidate)]) {
-    try {
-      const data = JSON.parse(text);
-      if (Array.isArray(data)) return data;
-    } catch (_) { /* siguiente intento */ }
+  // Con busqueda web puede venir prosa con marcas de cita [1] antes del array:
+  // si el primer [ no sirve, se prueba desde el primer [{ o [].
+  for (const start of new Set([t.indexOf('['), t.search(/\[\s*[{\]]/)])) {
+    if (start === -1 || end <= start) continue;
+    const candidate = t.slice(start, end + 1);
+    for (const text of [candidate, repairJsonText(candidate)]) {
+      try {
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) return data;
+      } catch (_) { /* siguiente intento */ }
+    }
   }
   return null;
 }
@@ -413,7 +416,10 @@ async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fn
   if (!response) return false;
 
   const arr = parseJsonArray(response);
-  if (!Array.isArray(arr) || !arr.length) return false;
+  if (!Array.isArray(arr) || !arr.length) {
+    console.warn('verifyAndFillRequirements: respuesta sin array utilizable:', String(response).slice(0, 300));
+    return false;
+  }
 
   for (const stop of paradas) {
     const stopKeys = [stop.pais_codigo, stop.pais, stop.aeropuerto_iata, stop.ciudad]
@@ -527,7 +533,9 @@ function injectKnownForms(resultData, nacionalidad = 'ARG') {
           if (!iata || !req.iatas.map(x => String(x).toUpperCase()).includes(iata)) continue;
         }
         stop.requisitos = stop.requisitos.filter(r => !sameAsReq(req, r));
-        stop.requisitos.push({ ...req, verificado_web: true, nota_fuentes: req.nota_fuentes || 'Formulario oficial conocido (unificado).' });
+        // sameAs es RegExp: Firestore no lo guarda y rompia el cache.
+        const { sameAs, ...copia } = req;
+        stop.requisitos.push({ ...copia, verificado_web: true, nota_fuentes: req.nota_fuentes || 'Formulario oficial conocido (unificado).' });
         agregados++;
       }
     }

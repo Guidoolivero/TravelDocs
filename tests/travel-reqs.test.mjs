@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { planTravelStopView, splitTravelReqs, injectKnownForms, injectKnownAlerts, dedupeTravelReqs, sameVisa, isSchengenVisa, flagUnverifiedRoute, paradasVisibles } from '../public/js/requisitos/travel-reqs.mjs';
+import { planTravelStopView, splitTravelReqs, injectKnownForms, injectKnownAlerts, dedupeTravelReqs, sameVisa, isSchengenVisa, flagUnverifiedRoute, paradasVisibles, avisoDestino } from '../public/js/requisitos/travel-reqs.mjs';
 import { injectMatrizVisas, injectMatrizSanidad } from '../lib/requisitos/travel-matriz.mjs';
 
 describe('splitTravelReqs', () => {
@@ -1146,5 +1146,19 @@ describe('flagUnverifiedRoute', () => {
     flagUnverifiedRoute(data);
     assert.ok(Array.isArray(data.alertas_criticas));
     assert.equal(data.alertas_criticas.length, 1);
+  });
+});
+
+// AR1300 cargado como EZE-MAD: Gemini devolvio EZE-JFK y solo bajo la certeza.
+describe('avisoDestino', () => {
+  it('avisa si el destino devuelto no es el cargado', () => {
+    const aviso = avisoDestino({ vuelo: { numero: 'AR1300', destino_iata: 'JFK' } }, 'mad');
+    assert.match(aviso, /MAD/);
+    assert.match(aviso, /JFK/);
+  });
+  it('no avisa si coinciden o falta alguno (modo GDS no carga destino)', () => {
+    assert.equal(avisoDestino({ vuelo: { destino_iata: 'MAD' } }, 'MAD'), '');
+    assert.equal(avisoDestino({ vuelo: { destino_iata: 'MAD' } }, ''), '');
+    assert.equal(avisoDestino({ vuelo: {} }, 'MAD'), '');
   });
 });

@@ -86,3 +86,26 @@ test('modo GDS: fecha y horas con formato invalido no llegan al prompt (la clave
   assert.ok(prompts.every(p => !p.includes('PARADAS: VERIFICADAS directo') && !p.includes('ignorar todo')));
   assert.ok(prompts.some(p => p.includes('20NOV')));
 });
+
+// Firestore rechaza RegExp: los requisitos conocidos traen sameAs y el cache nunca se guardaba.
+test('el cache de verificacion se guarda sin RegExp de los requisitos conocidos', async () => {
+  const f = travelFixture();
+  const jamaica = { pais: 'Jamaica', pais_codigo: 'JAM', aeropuerto_iata: 'MBJ', tipo: 'destino', requisitos: [] };
+  await f.verify([jamaica]);
+  const tieneRegExp = v => v instanceof RegExp || (v && typeof v === 'object' && Object.values(v).some(tieneRegExp));
+  const guardados = [...f.docs.keys()].filter(k => k.startsWith('travelCache/'));
+  assert.ok(guardados.length);
+  for (const k of guardados) assert.equal(tieneRegExp(f.docs.get(k)), false, k);
+});
+
+// Con busqueda web Gemini puede anteponer marcas de cita como [1] al JSON.
+test('la verificacion lee el array aunque venga despues de una marca de cita', async () => {
+  class GoogleGenAI {
+    models = { generateContent: async () => ({ text: 'Segun la fuente oficial [1]:\n[{"pais":"ZZZ","nombre":"Requisito citado","categoria":"otro","obligatorio":false}]' }) };
+  }
+  const f = fixture({ env: { GEMINI_API_KEY: 'dummy' }, modules: { '@google/genai': { GoogleGenAI, HarmCategory: {}, HarmBlockThreshold: {} } } });
+  const response = await f.invoke('gemini-travel', { fase: 'verificacion', nacionalidad: 'ARG', ruta: [stop], segmentos: [] }, 'admin');
+  const data = JSON.parse(response.body).data;
+  assert.equal(data._meta.verificoWeb, true);
+  assert.ok(response.body.includes('Requisito citado'));
+});

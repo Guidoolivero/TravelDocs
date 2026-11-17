@@ -534,6 +534,7 @@ textarea { resize: vertical; min-height: 72px; }
 .travel-alerts-title { font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
 .travel-alert-item { font-size: 13px; color: #7f1d1d; padding: 6px 0; border-bottom: 1px solid #fecaca; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
 .travel-alert-item:last-child { border-bottom: none; padding-bottom: 0; }
+.travel-destino-aviso { font-size: 13px; font-weight: 600; color: var(--red); background: var(--red-bg); border-left: 3px solid var(--red); border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5; }
 
 /* Info del vuelo */
 .flight-info-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
