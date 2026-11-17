@@ -342,3 +342,13 @@ export function planTravelStopView(stop) {
     showHealthSection: requisitos.length > 0
   };
 }
+
+// La IA puede corregir la ruta del vuelo (AR1300 cargado EZE-MAD vuela a JFK).
+// Devuelve el aviso para el agente, o '' si el destino coincide o no hay con que comparar.
+export function avisoDestino(data, destinoCargado) {
+  const cargado = String(destinoCargado || '').trim().toUpperCase();
+  const devuelto = String(data?.vuelo?.destino_iata || '').trim().toUpperCase();
+  if (!cargado || !devuelto || cargado === devuelto) return '';
+  return `Cargaste destino ${cargado}, pero el vuelo ${data.vuelo.numero || ''} figura con destino ${devuelto}. ` +
+    `Los requisitos de abajo son para ${devuelto}. Verificá el número de vuelo y el destino.`;
+}

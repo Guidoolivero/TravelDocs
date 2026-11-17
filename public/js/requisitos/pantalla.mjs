@@ -72,7 +72,7 @@ function recorridoPais(stop) {
 }
 
 // Renderizar resultados
-async function renderTravelResult(data, container) {
+async function renderTravelResult(data, container, destinoCargado) {
   if (!data || typeof data !== 'object') {
     container.innerHTML = `<div class="scan-error" style="margin:0;">⚠ Respuesta inesperada del servidor. Intentá de nuevo.</div>`;
     return;
@@ -113,6 +113,9 @@ async function renderTravelResult(data, container) {
         <span class="confianza-badge ${confianzaClass}">${esc(v.confianza_ruta || 'media')}</span>
       </div>
     </div>`;
+
+  const aviso = tr.avisoDestino(data, destinoCargado);
+  if (aviso) html += `<div class="travel-destino-aviso">${esc(aviso)}</div>`;
 
   // Nota de ruta si hay
   if (v.nota_ruta) {
@@ -448,7 +451,7 @@ export function initRequisitos() {
       const tr = await loadTravelReqs();
       tr.injectKnownForms(json.data, nacionalidad);
       tr.injectKnownAlerts(json.data, nacionalidad);
-      await renderTravelResult(json.data, resultsEl);
+      await renderTravelResult(json.data, resultsEl, bodyPayload.destino);
 
       // 2da llamada (split): verificacion web con presupuesto propio de 26s.
       // Completa URLs oficiales + agrega requisitos omitidos, y re-renderiza.
@@ -485,7 +488,7 @@ export function initRequisitos() {
           json.data._meta = { ...json.data._meta, ...vJson.data._meta };
           tr.injectKnownForms(json.data, nacionalidad);
           tr.injectKnownAlerts(json.data, nacionalidad);
-          await renderTravelResult(json.data, resultsEl);
+          await renderTravelResult(json.data, resultsEl, bodyPayload.destino);
         } else if (json.data._meta) {
           json.data._meta.verificoWeb = false;
         }
