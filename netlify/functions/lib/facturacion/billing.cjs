@@ -11,9 +11,16 @@ function trialDates(createdOn) {
 
 module.exports = { trialDates };
 
+// Consumidor final puede ir sin identificar (ARCA lo permite debajo de su tope); el resto necesita CUIT.
+function missingBillingFields(profile) {
+  const required = profile.condition === 'consumidor_final' ? ['condition', 'currency', 'amount']
+    : ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount'];
+  return required.filter(key => !profile[key]);
+}
+
 function billingStatus(agency, profile = {}, today, enabledOn, initialPeriod) {
   const dates = trialDates(agency?.createdOn);
-  const missing = ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount'].filter(key => !profile[key]);
+  const missing = missingBillingFields(profile);
   if (dates && enabledOn) {
     const start = new Date(`${enabledOn}T12:00:00Z`);
     start.setUTCMonth(start.getUTCMonth() + 1, 1);
@@ -70,7 +77,7 @@ module.exports.parsePrice = parsePrice;
 module.exports.invalid = invalid;
 
 function billingRecord(profile, previous, today) {
-  const complete = ['taxId', 'legalName', 'address', 'condition', 'currency', 'amount'].every(key => profile[key]);
+  const complete = !missingBillingFields(profile).length;
   const prices = [...(previous?.prices || [])];
   if (complete) {
     const start = new Date(`${today}T12:00:00Z`);
@@ -118,7 +125,7 @@ function billingInvoice({ agency, record, period, today, salesPoint, quotation }
   return {
     ...(profile.currency === 'USD' ? { paidInForeignCurrency: true, exchangeRate: String(quotation.rate) } : {}),
     issuer: 'monotributo', salesPoint, date: today,
-    to: { condition: profile.condition, cuit: profile.taxId },
+    to: { condition: profile.condition, ...(profile.taxId ? { cuit: profile.taxId } : {}) },
     concept: 'services', currency: profile.currency,
     service: { from: today, to: today, dueDate: today },
     items: [{ description: `Servicio TravelDocs - ${period}`, quantity: 1, amount: profile.amount,

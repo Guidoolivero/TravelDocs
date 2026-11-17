@@ -24,7 +24,7 @@ exports.handler = async event => {
     }
     const { renderTravelDocsPdf, buildDraftDocument } = require('./invoice-pdf.cjs');
     const doc = preview ? buildDraftDocument(invoice) : buildVoucherDocument({ voucher: invoice.outcome.voucher, items: invoice.input.items,
-      issuer: { ...invoice.issuer, tradeName: 'TravelDocs' }, receiver: { name: invoice.receiver.legalName, address: invoice.receiver.address },
+      issuer: { ...invoice.issuer, tradeName: 'TravelDocs' }, receiver: { name: invoice.receiver.legalName || 'Consumidor Final', address: invoice.receiver.address },
       observations: invoice.outcome.authorization?.observations || [], saleConditions: invoice.receiver.saleCondition || 'Transferencia bancaria' });
     const pdf = await renderTravelDocsPdf(doc, { period: invoice.period, draft: preview, notice: preview ? 'BORRADOR - SIN VALOR FISCAL' : environment === 'test' ? 'HOMOLOGACION - SIN VALOR FISCAL' : '' });
     await auditBilling(admin.firestore(), auth, 'billing-pdf', { ...invoice, id: snap.id });

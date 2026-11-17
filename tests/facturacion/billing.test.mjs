@@ -155,3 +155,36 @@ test('incorporacion inicial permite el mes confirmado sin falsear fecha de alta 
     [{ status: 'active' }, '2026-11', profile], [agency, '2026-11', {}],
   ]) assert.throws(() => initialBillingRecord(receiver, data, period, '2026-11-02'));
 });
+
+test('consumidor final sin CUIT: alcanza condicion, moneda y precio, y se emite sin identificar', async () => {
+  const { billingStatus, billingRecord, billingInvoice } = await import('../../netlify/functions/lib/facturacion/billing.cjs');
+  const agency = { status: 'active', createdOn: '2026-01-01' };
+  const cf = { condition: 'consumidor_final', currency: 'ARS', amount: 4000000 };
+  assert.deepEqual(billingStatus(agency, cf, '2026-11-02').missing, []);
+  // Otras condiciones siguen exigiendo CUIT, razon social y domicilio.
+  assert.deepEqual(billingStatus(agency, { ...cf, condition: 'monotributo' }, '2026-11-02').missing, ['taxId', 'legalName', 'address']);
+  const record = billingRecord(cf, null, '2026-09-20');
+  assert.equal(record.enabledOn, '2026-09-20');
+  const invoice = billingInvoice({ agency, record, period: '2026-11', today: '2026-11-02', salesPoint: 1 });
+  assert.deepEqual(invoice.to, { condition: 'consumidor_final' });
+  // Si cargaron CUIT igual (sin razon social ni domicilio), se usa.
+  const conCuit = billingInvoice({ agency, record: billingRecord({ ...cf, taxId: '20123456786' }, null, '2026-09-20'), period: '2026-11', today: '2026-11-02', salesPoint: 1 });
+  assert.deepEqual(conCuit.to, { condition: 'consumidor_final', cuit: '20123456786' });
+});
+
+test('SDK arma consumidor final sin CUIT como DocTipo 99', async () => {
+  const { createArcaClient } = await import('facturas');
+  const { billingRecord, billingInvoice } = await import('../../netlify/functions/lib/facturacion/billing.cjs');
+  // ARCA solo acepta fechas cercanas a hoy: se arma con la fecha real.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
+  const args = { agency: { status: 'active', createdOn: '2020-01-01' }, period: today.slice(0, 7), today, salesPoint: 1 };
+  const record = billingRecord({ condition: 'consumidor_final', currency: 'ARS', amount: 4000000 }, null, '2020-01-15');
+  const input = billingInvoice({ ...args, record });
+  const client = createArcaClient({ taxId: '20123456786', certificatePem: '-----BEGIN CERTIFICATE-----ficticio', privateKeyPem: '-----BEGIN PRIVATE KEY-----ficticia', environment: 'test', logger: { disabled: true } });
+  const preview = client.preview(input);
+  assert.equal(preview.header.documentType, 99);
+  assert.equal(Number(preview.header.documentNumber), 0);
+  // Desde $10.000.000 ARCA exige identificar al consumidor final: lo frena el SDK antes de emitir.
+  const caro = billingInvoice({ ...args, record: billingRecord({ condition: 'consumidor_final', currency: 'ARS', amount: 1000000000 }, null, '2020-01-15') });
+  assert.throws(() => client.preview(caro), /must be identified/);
+});

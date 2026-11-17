@@ -25,7 +25,7 @@ async function loadBillingInvoices() {
     _billingInvoices = result.invoices;
     const labels = { draft: 'Borrador', issuing: 'Consultar resultado', authorized: 'Autorizada', rejected: 'Rechazada', indeterminate: 'Requiere consulta', conflict: 'Conflicto: requiere revision' };
     document.getElementById('admin-billing-tbody').innerHTML = _billingInvoices.map(invoice => `<tr>
-      <td>${esc(invoice.receiver.legalName)}</td><td>${esc(invoice.period)}</td><td>${esc(billingMoney(invoice))}</td>
+      <td>${esc(invoice.receiver.legalName || 'Consumidor Final')}</td><td>${esc(invoice.period)}</td><td>${esc(billingMoney(invoice))}</td>
       <td>${esc(labels[invoice.status] || invoice.status)}${invoice.lastError || billingOutcomeText(invoice) ? `<p class="billing-status-message">${esc(invoice.lastError || billingOutcomeText(invoice))}</p>` : ''}${invoice.outcome?.issues?.length ? `<details class="billing-technical"><summary>Ver detalle de ARCA</summary><p>${esc(invoice.outcome.issues.map(issue => issue.message || issue.code).join('; '))}</p></details>` : ''}</td>
       <td>${invoice.status === 'authorized' ? `<button class="btn btn-ghost btn-sm" data-billing-view="${esc(invoice.id)}">Vista previa</button><button class="btn btn-ghost btn-sm" data-billing-pdf="${esc(invoice.id)}">Descargar PDF</button>` : ''}
       ${invoice.status === 'draft' || invoice.status === 'rejected' ? `<button class="btn btn-ghost btn-sm" data-billing-preview="${esc(invoice.agencyId)}">${invoice.status === 'rejected' ? 'Revisar correccion' : 'Vista previa'}</button>` : ''}
@@ -55,7 +55,7 @@ function confirmBilling(invoice, action) {
   const real = invoice.environment === 'production';
   showConfirmDialog({
     title: real ? 'Vista previa - Factura C real' : 'Vista previa - Factura C de prueba',
-    message: `${invoice.receiver.legalName}, CUIT ${invoice.receiver.taxId}. ${invoice.receiver.address}. Condicion: ${invoice.receiver.condition}. Concepto: Servicios. Condicion de venta: ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
+    message: `${invoice.receiver.taxId ? [invoice.receiver.legalName, `CUIT ${invoice.receiver.taxId}`, invoice.receiver.address].filter(Boolean).join('. ') + '.' : 'Consumidor final sin identificar.'} Condicion: ${invoice.receiver.condition}. Concepto: Servicios. Condicion de venta: ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}. Servicio TravelDocs del mes ${invoice.period}. Total: ${billingMoney(invoice)} (${invoice.input.currency}).`,
     subtext: `Punto de venta: ${invoice.input.salesPoint || ''}. Desde, hasta y vencimiento: ${fmtDate(invoice.input.date)}. ${invoice.quotation ? `Cotizacion ARCA: ${invoice.quotation.rate}, fecha ${invoice.quotation.date}. Pago en USD.` : ''} ${real ? 'Se solicitara a ARCA una factura con validez fiscal.' : 'Sin valor fiscal.'}`,
     confirmLabel: action === 'retry' ? 'Confirmar reintento' : real ? 'Emitir factura real' : 'Emitir prueba',
     onConfirm: () => runBilling(action, invoice),
@@ -73,7 +73,7 @@ async function showBillingPdfPreview(invoice) {
   const status = document.getElementById('billing-preview-status');
   const issue = document.getElementById('billing-preview-issue');
   document.getElementById('billing-preview-title').textContent = authorized ? 'Factura C autorizada' : 'Vista previa de la factura';
-  document.getElementById('billing-preview-summary').textContent = `${invoice.receiver.legalName}. ${billingMoney(invoice)} (${invoice.input.currency}). Mes ${invoice.period}. ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}.`;
+  document.getElementById('billing-preview-summary').textContent = `${invoice.receiver.legalName || 'Consumidor Final'}. ${billingMoney(invoice)} (${invoice.input.currency}). Mes ${invoice.period}. ${invoice.receiver.saleCondition || SALE_CONDITIONS[0]}.`;
   status.textContent = authorized ? 'Cargando PDF de la factura autorizada...' : 'Preparando PDF del borrador. Todavia no se emitio ninguna factura.';
   document.getElementById('billing-preview-download').textContent = authorized ? 'Descargar PDF' : 'Descargar borrador';
   issue.textContent = invoice.environment === 'production' ? 'Emitir factura real' : 'Emitir prueba';

@@ -73,7 +73,7 @@ function buildDraftDocument(invoice) {
   return {
     voucherClass: 'C', title: 'FACTURA', code: '011', number: 'Sin emitir', salesPoint: input.salesPoint, issueDate: input.date,
     issuer: { ...issuer, tradeName: 'TravelDocs', conditionLegend: 'Responsable Monotributo' },
-    receiver: { name: receiver.legalName, address: receiver.address, conditionLegend: conditions[receiver.condition], document: { label: 'CUIT', number: receiver.taxId } },
+    receiver: { name: receiver.legalName || 'Consumidor Final', address: receiver.address, conditionLegend: conditions[receiver.condition], ...(receiver.taxId ? { document: { label: 'CUIT', number: receiver.taxId } } : {}) },
     saleConditions: receiver.saleCondition || 'Transferencia bancaria', servicePeriod: input.service,
     paymentDueDate: input.service.dueDate,
     currency: { id: input.currency === 'USD' ? 'DOL' : 'PES', ...(input.currency === 'USD' ? { exchangeRate: input.exchangeRate } : {}) },
@@ -106,7 +106,7 @@ async function renderTravelDocsPdf(doc, { period, notice = 'HOMOLOGACION - SIN V
       h(V, { style: s.issuer }, h(V, { style: s.issuerMain }, h(T, { style: s.kicker }, 'EMISOR'), h(T, { style: [s.heading, { fontSize: 11, marginBottom: 4 }] }, doc.issuer.legalName), h(T, null, doc.issuer.address)),
         h(V, { style: s.issuerDetails }, detail('CUIT', taxId(doc.issuer.taxId)), detail('Ingresos Brutos', doc.issuer.grossIncome), detail('Inicio de actividades', date(doc.issuer.activitiesStartDate)), detail('Condicion fiscal', doc.issuer.conditionLegend))),
       h(V, { style: s.meta, wrap: false },
-        h(V, { style: [s.card, { backgroundColor: c.recipient }] }, heading('01', 'FACTURADO A', 'Receptor', c.teal), h(V, { style: s.recipient }, h(T, { style: [s.heading, { fontSize: 11, marginBottom: 5 }] }, doc.receiver.name), h(T, null, (doc.receiver.document?.label || 'CUIT') + ': ' + taxId(doc.receiver.document?.number)), h(T, null, doc.receiver.conditionLegend), h(T, { style: { marginTop: 7 } }, doc.receiver.address))),
+        h(V, { style: [s.card, { backgroundColor: c.recipient }] }, heading('01', 'FACTURADO A', 'Receptor', c.teal), h(V, { style: s.recipient }, h(T, { style: [s.heading, { fontSize: 11, marginBottom: 5 }] }, doc.receiver.name), doc.receiver.document?.number ? h(T, null, (doc.receiver.document.label || 'CUIT') + ': ' + taxId(doc.receiver.document.number)) : null, h(T, null, doc.receiver.conditionLegend), h(T, { style: { marginTop: 7 } }, doc.receiver.address))),
         h(V, { style: [s.card, { backgroundColor: c.operation }] }, heading('02', 'DETALLES', 'Operacion', c.coral), operation('Fecha de emision', date(doc.issueDate)), operation('Condicion de venta', doc.saleConditions), operation('Periodo facturado', doc.servicePeriod ? date(doc.servicePeriod.from) + ' al ' + date(doc.servicePeriod.to) : ''), operation('Vencimiento', date(doc.paymentDueDate)))),
       h(V, { style: s.notice }, h(V, { style: s.rule }), h(T, { style: { fontSize: 6.5, letterSpacing: 0.8, fontWeight: 600 } }, notice), h(V, { style: s.rule })),
       h(V, { style: s.services },

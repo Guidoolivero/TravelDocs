@@ -122,3 +122,11 @@ test('importes del PDF conservan centavos sin redondeos intermedios', async () =
     assert.equal(formatInvoiceAmount(input), expected);
   }
 });
+
+test('borrador a consumidor final sin CUIT no imprime CUIT vacio', async () => {
+  const { buildDraftDocument } = await import('../../netlify/functions/lib/facturacion/invoice-pdf.cjs');
+  const doc = buildDraftDocument({ input: { salesPoint: 1, date: '2026-11-02', currency: 'ARS', service: { from: '2026-11-02', to: '2026-11-02', dueDate: '2026-11-02' }, items: [{ amount: 4000000 }] },
+    issuer: {}, receiver: { condition: 'consumidor_final' } });
+  assert.equal(doc.receiver.name, 'Consumidor Final');
+  assert.equal(doc.receiver.document, undefined);
+});
