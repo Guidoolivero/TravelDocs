@@ -40,6 +40,7 @@ const {
   checkinAlertDue, REQUISITOS_DIAS, isBirthdayToday, anioART, collectEmailAlertCandidates, buildAlertEmail, markNotifiedLegs,
 } = require('../../../../public/js/alertas/alert-core.mjs');
 const { debeEnviarRequisitos, emailAviso, buildRequisitosEmail } = require('../../../../lib/requisitos/requisitos-checkin.mjs');
+const { reservarEnvioRequisitos } = require('../requisitos/reserva-envio.cjs');
 
 const EMAILJS_SEND_URL = 'https://api.emailjs.com/api/v1.0/email/send';
 const RUN_DEADLINE_MS = 22000; // margen sobre los 30s de las scheduled functions
@@ -147,6 +148,7 @@ async function marcarReqs(agenciaRef, items) {
   const ids = [...new Set(items.map(x => x.resId).filter(Boolean))];
   await Promise.all(ids.map(resId => agenciaRef.collection('reservations').doc(resId).update({
     reqs30Notified: true,
+    reqsEnviando: FieldValue.delete(),
     updatedAt: FieldValue.serverTimestamp(),
   })));
 }
@@ -246,6 +248,8 @@ async function processAgency(agencyDoc, { now, started }) {
     if (!toReq) continue;
     pendientesReq.push({
       resId: r.id,
+      // Se vuelve a evaluar en la transaccion con la reserva vigente (checkin-reqs pudo mandarlo).
+      debeEnviar: actual => debeEnviarRequisitos({ ...actual, piernas: piernasDe(actual) }, { alCrear: false, now, pasajeros: pax }),
       to: toReq,
       mail: buildRequisitosEmail({ appName, reserva: vista, pasajeros: pax }),
     });
@@ -331,11 +335,14 @@ async function processAgency(agencyDoc, { now, started }) {
   }
 
   for (const item of pendientesReq) {
+    const ref = agenciaRef.collection('reservations').doc(item.resId);
+    if (!(await reservarEnvioRequisitos(db(), ref, item.debeEnviar, now))) continue;
     try {
       await enviar(item.to, item.mail.subject, item.mail.html);
       await marcarReqs(agenciaRef, [item]);
       console.log(`send-alerts: ${agencyId} requisitos OK -> ${item.to}`);
     } catch (err) {
+      await ref.update({ reqsEnviando: FieldValue.delete() }).catch(() => {});
       if (err.message === 'deadline') throw err;
       console.error(`send-alerts: ${agencyId} FALLÓ requisitos a ${item.to}:`, err?.message || err);
     }

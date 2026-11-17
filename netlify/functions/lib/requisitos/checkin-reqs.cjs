@@ -6,6 +6,7 @@
 const admin = require('firebase-admin');
 const { FieldValue } = require('firebase-admin/firestore');
 const { verifyAuth } = require('../../_auth.cjs');
+const { reservarEnvioRequisitos } = require('./reserva-envio.cjs');
 const { debeEnviarRequisitos, emailAviso, buildRequisitosEmail, marcasTrasEnvioRequisitos } = require('../../../../lib/requisitos/requisitos-checkin.mjs');
 
 const EMAILJS_SEND_URL = 'https://api.emailjs.com/api/v1.0/email/send';
@@ -76,14 +77,8 @@ exports.handler = async event => {
     alCrear: true,
   });
 
-  // Reserva antes de enviar: con dos pedidos a la vez (doble guardado, dos pestanas)
-  // solo uno manda. La reserva vence a los 2 min por si la funcion muere a mitad.
-  const reservado = await db.runTransaction(async tx => {
-    const actual = (await tx.get(ref)).data() || {};
-    if (actual.reqsNotified || Date.now() - (actual.reqsEnviando || 0) < 120000) return false;
-    tx.update(ref, { reqsEnviando: Date.now() });
-    return true;
-  });
+  // Con dos pedidos a la vez (doble guardado, dos pestanas) o el cron enviando, solo uno manda.
+  const reservado = await reservarEnvioRequisitos(db, ref, actual => !actual.reqsNotified);
   if (!reservado) return reply(200, { sent: false, reason: 'ya-avisado' });
 
   try {
