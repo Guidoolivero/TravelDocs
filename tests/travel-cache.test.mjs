@@ -90,7 +90,8 @@ test('modo GDS: fecha y horas con formato invalido no llegan al prompt (la clave
 // Firestore rechaza RegExp: los requisitos conocidos traen sameAs y el cache nunca se guardaba.
 test('el cache de verificacion se guarda sin RegExp de los requisitos conocidos', async () => {
   const f = travelFixture();
-  const jamaica = { pais: 'Jamaica', pais_codigo: 'JAM', aeropuerto_iata: 'MBJ', tipo: 'destino', requisitos: [] };
+  // IATA ZZZ: la respuesta simulada del fixture trae pais ZZZ y asi corresponde a la parada.
+  const jamaica = { pais: 'Jamaica', pais_codigo: 'JAM', aeropuerto_iata: 'ZZZ', tipo: 'destino', requisitos: [] };
   await f.verify([jamaica]);
   const tieneRegExp = v => v instanceof RegExp || (v && typeof v === 'object' && Object.values(v).some(tieneRegExp));
   const guardados = [...f.docs.keys()].filter(k => k.startsWith('travelCache/'));
@@ -108,4 +109,22 @@ test('la verificacion lee el array aunque venga despues de una marca de cita', a
   const data = JSON.parse(response.body).data;
   assert.equal(data._meta.verificoWeb, true);
   assert.ok(response.body.includes('Requisito citado'));
+});
+
+// Si ningun requisito de la respuesta corresponde a la ruta, no hubo verificacion:
+// no se marca verificoWeb ni se cachea por 30 dias.
+test('la verificacion sin requisitos de la ruta no cuenta como verificada ni se cachea', async () => {
+  let searches = 0;
+  class GoogleGenAI {
+    models = { generateContent: async () => {
+      searches++;
+      return { text: 'Segun [1]:\n[{"pais":"QQQ","nombre":"Requisito de otro pais","categoria":"otro","obligatorio":false}]' };
+    } };
+  }
+  const f = fixture({ env: { GEMINI_API_KEY: 'dummy' }, modules: { '@google/genai': { GoogleGenAI, HarmCategory: {}, HarmBlockThreshold: {} } } });
+  const verify = () => f.invoke('gemini-travel', { fase: 'verificacion', nacionalidad: 'ARG', ruta: [stop], segmentos: [] }, 'admin');
+  const data = JSON.parse((await verify()).body).data;
+  assert.equal(data._meta.verificoWeb, false);
+  assert.equal(JSON.parse((await verify()).body).data._meta.deCache, undefined);
+  assert.equal(searches, 2);
 });
