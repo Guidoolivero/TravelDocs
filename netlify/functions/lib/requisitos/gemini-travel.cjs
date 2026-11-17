@@ -422,7 +422,7 @@ async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fn
   }
 
   // Solo cuenta como verificada si algun requisito de la web corresponde a la ruta.
-  let paradasVerificadas = 0;
+  let verifico = false;
   for (const stop of paradas) {
     const stopKeys = [stop.pais_codigo, stop.pais, stop.aeropuerto_iata, stop.ciudad]
       .map(normReq).filter(k => k && k.length >= 2);
@@ -433,12 +433,12 @@ async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fn
       return stopKeys.some(k => wp.includes(k) || k.includes(wp));
     });
     if (!webReqs.length) continue;
-    paradasVerificadas++;
     if (!Array.isArray(stop.requisitos)) stop.requisitos = [];
 
     for (const wr of webReqs) {
       const wrName = normReq(wr.nombre || '');
       if (!wrName) continue;
+      verifico = true;
       const existing = stop.requisitos.find(r => {
         const rName = normReq(r.nombre || '');
         if (!rName) return false;
@@ -477,8 +477,8 @@ async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fn
       }
     }
   }
-  if (!paradasVerificadas) console.warn('verifyAndFillRequirements: ningun requisito de la web corresponde a la ruta');
-  return paradasVerificadas > 0;
+  if (!verifico) console.warn('verifyAndFillRequirements: ningun requisito de la web corresponde a la ruta');
+  return verifico;
 }
 
 // ── Formularios/tasas conocidos por pais (extraidos del Excel verificado) ──

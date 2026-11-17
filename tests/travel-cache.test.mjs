@@ -113,12 +113,16 @@ test('la verificacion lee el array aunque venga despues de una marca de cita', a
 
 // Si ningun requisito de la respuesta corresponde a la ruta, no hubo verificacion:
 // no se marca verificoWeb ni se cachea por 30 dias.
-test('la verificacion sin requisitos de la ruta no cuenta como verificada ni se cachea', async () => {
+// Mismo caso si el requisito es de la ruta pero viene sin nombre (se descarta).
+for (const [caso, text] of [
+  ['de otro pais', 'Segun [1]:\n[{"pais":"QQQ","nombre":"Requisito de otro pais","categoria":"otro","obligatorio":false}]'],
+  ['sin nombre', '[{"pais":"ZZZ","nombre":""}]'],
+]) test(`la verificacion con un requisito ${caso} no cuenta como verificada ni se cachea`, async () => {
   let searches = 0;
   class GoogleGenAI {
     models = { generateContent: async () => {
       searches++;
-      return { text: 'Segun [1]:\n[{"pais":"QQQ","nombre":"Requisito de otro pais","categoria":"otro","obligatorio":false}]' };
+      return { text };
     } };
   }
   const f = fixture({ env: { GEMINI_API_KEY: 'dummy' }, modules: { '@google/genai': { GoogleGenAI, HarmCategory: {}, HarmBlockThreshold: {} } } });
