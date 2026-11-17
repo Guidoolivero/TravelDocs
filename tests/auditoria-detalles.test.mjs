@@ -24,3 +24,11 @@ test('cumpleanos descartado en diciembre sigue descartado el 1/1', async () => {
     assert.equal(getAlertItems().some(i => i.isBirthday), false);
   } finally { mock.timers.reset(); }
 });
+
+test('version de un pasajero: detecta que otro agente lo guardo mientras se editaba', async () => {
+  const { versionDe } = await import('../public/js/compartido/utils.js');
+  const ts = ms => ({ toMillis: () => ms });
+  assert.equal(versionDe({ updatedAt: ts(5) }), versionDe({ updatedAt: ts(5) }));
+  assert.notEqual(versionDe({ updatedAt: ts(5) }), versionDe({ updatedAt: ts(9) }));
+  assert.equal(versionDe({}), null);
+});

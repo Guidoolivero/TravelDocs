@@ -4,7 +4,9 @@ import { emergencyContactsOf } from './contactos.mjs';
 import { estado } from '../compartido/estado.mjs';
 import { matchesPassenger } from './passenger-search.mjs';
 import { addPassenger, updatePassenger, deletePassenger } from '../db.js';
-import { statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr, asistenciaBadge } from '../compartido/utils.js';
+import { statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr, asistenciaBadge, versionDe } from '../compartido/utils.js';
+
+let _versionAlAbrir = null; // updatedAt del pasajero cuando se abrio el formulario de edicion
 import { buildSSRStrings } from '../documentos/ssr.js';
 import { programaFfn } from '../compartido/ffn-programs.mjs';
 import { nombreAerolinea } from '../compartido/airlines.mjs';
@@ -432,6 +434,7 @@ export function initPasajeros() {
     const p = estado.passengers.find(x => x.id === id);
     if (!p) return;
     estado.currentEditId = id;
+    _versionAlAbrir = versionDe(p);
     document.getElementById('modal-passenger-title').textContent = 'Editar pasajero';
     fillForm(p);
     clearScanUI();
@@ -740,6 +743,12 @@ export function initPasajeros() {
 
     try {
       if (estado.currentEditId) {
+        // El formulario manda el pasajero entero: si otro agente lo guardo mientras tanto
+        // (una visa nueva, por ejemplo), guardar ahora la borraria sin aviso.
+        if (versionDe(estado.passengers.find(x => x.id === estado.currentEditId)) !== _versionAlAbrir) {
+          showToast('Otro agente modificó este pasajero mientras lo editabas. Cerrá y volvé a abrirlo para no pisar sus cambios.', true);
+          return;
+        }
         await updatePassenger(estado.currentEditId, data);
         showToast('✓ Pasajero actualizado');
       } else {

@@ -160,3 +160,10 @@ export function escStr(s) {
 export function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
+
+// Version de un doc de Firestore segun su updatedAt (Timestamp). Sirve para avisar
+// si otro agente lo guardo mientras uno lo tenia abierto en un formulario.
+export function versionDe(doc) {
+  const t = doc?.updatedAt;
+  return t?.toMillis ? t.toMillis() : (t ?? null);
+}
