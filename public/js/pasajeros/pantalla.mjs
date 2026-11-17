@@ -7,7 +7,7 @@ import { addPassenger, updatePassenger, deletePassenger } from '../db.js';
 import { statusBadge, passengerOverallStatus, fmtDate, daysUntil, initials, escStr, asistenciaBadge, versionDe } from '../compartido/utils.js';
 
 let _versionAlAbrir = null; // updatedAt del pasajero cuando se abrio el formulario de edicion
-import { buildSSRStrings } from '../documentos/ssr.js';
+import { buildSSRStrings, ageYears } from '../documentos/ssr.js';
 import { programaFfn } from '../compartido/ffn-programs.mjs';
 import { nombreAerolinea } from '../compartido/airlines.mjs';
 import { passengerDetailFlags } from '../reservas/reservation-view.mjs';
@@ -331,7 +331,7 @@ export function initPasajeros() {
     }
     if (delBtn) delBtn.style.display = flags.includeActions ? '' : 'none';
 
-    const age = Math.floor((new Date() - new Date(p.dob + 'T00:00:00')) / (365.25 * 86400000));
+    const age = ageYears(p.dob);
 
     const docCard = (title, num, issue, exp, country) => {
       if (!num) return '';

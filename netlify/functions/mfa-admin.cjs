@@ -49,16 +49,13 @@ function codeMatches(code, recoveryCodes) {
 // Lista los miembros de la agencia del caller con su estado mfaEnrolled.
 async function listMembers(authResult) {
   const membersSnap = await db().collection('agencies').doc(authResult.agencyId).collection('members').get();
-  const out = [];
-  for (const m of membersSnap.docs) {
+  // Una sola llamada a Auth para todos (hasta 100); los que no existen en Auth quedan sin 2FA.
+  const { users } = membersSnap.docs.length ? await auth().getUsers(membersSnap.docs.map(m => ({ uid: m.id }))) : { users: [] };
+  const conTotp = new Set(users.filter(u => (u.multiFactor?.enrolledFactors || []).some(f => f.factorId === 'totp')).map(u => u.uid));
+  const out = membersSnap.docs.map(m => {
     const data = m.data() || {};
-    let mfaEnrolled = false;
-    try {
-      const ur = await auth().getUser(m.id);
-      mfaEnrolled = (ur.multiFactor?.enrolledFactors || []).some(f => f.factorId === 'totp');
-    } catch (_) { /* usuario podría no existir en Auth */ }
-    out.push({ uid: m.id, email: data.email || '', displayName: data.displayName || '', role: data.role || '', mfaEnrolled });
-  }
+    return { uid: m.id, email: data.email || '', displayName: data.displayName || '', role: data.role || '', mfaEnrolled: conTotp.has(m.id) };
+  });
   return reply(200, { members: out });
 }
 

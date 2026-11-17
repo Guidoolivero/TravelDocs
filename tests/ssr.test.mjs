@@ -130,3 +130,12 @@ describe('nombres compatibles con GDS', () => {
     }
   });
 });
+
+it('NM: el dia exacto en que cumple 2 ya es CHD, y el dia que cumple 12 ya no', async () => {
+  const { generateNM } = await import('../public/js/documentos/ssr.js');
+  const pax = dob => ({ lastname: 'PEREZ', firstname: 'ANA', dob });
+  assert.match(generateNM(pax('2024-11-17'), '2026-11-17'), /\(CHD\)/);
+  assert.doesNotMatch(generateNM(pax('2024-11-18'), '2026-11-17'), /\(CHD\)/);
+  assert.doesNotMatch(generateNM(pax('2014-11-17'), '2026-11-17'), /\(CHD\)/);
+  assert.match(generateNM(pax('2014-11-18'), '2026-11-17'), /\(CHD\)/);
+});

@@ -69,6 +69,11 @@ export async function scanDocument(imageFile) {
   if (imageFile.size > 20 * 1024 * 1024) {
     throw new Error('El archivo es demasiado grande. Máximo 20MB.');
   }
+  // Las imagenes se comprimen antes de subir; los PDF no. En base64 pesan un 33% mas y
+  // Netlify corta las funciones en 6 MB: un PDF de mas de 4 MB fallaria con un 413.
+  if (imageFile.type === 'application/pdf' && imageFile.size > 4 * 1024 * 1024) {
+    throw new Error('El PDF es demasiado grande. Máximo 4 MB: escanealo en menor resolución o subí una foto.');
+  }
 
   // Intentar con la Netlify Function (Gemini en el servidor, key segura)
   try {
