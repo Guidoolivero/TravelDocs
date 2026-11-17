@@ -105,7 +105,7 @@ async function resetMfa(authResult, body, force) {
   }
 }
 
-exports.handler = async function handler(event) {
+async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return reply(204, {});
   if (!['GET', 'POST'].includes(event.httpMethod)) return reply(405, { error: 'Method Not Allowed' });
 
@@ -131,4 +131,5 @@ exports.handler = async function handler(event) {
   }
 };
 
-exports.handler = require('./_sentry.cjs').wrapHandler(exports.handler);
+const v2 = require('./_v2.cjs');
+exports.default = v2(require('./_sentry.cjs').wrapHandler(handler));

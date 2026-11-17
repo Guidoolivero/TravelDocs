@@ -39,6 +39,10 @@ await build({
   target: "node22",
   outdir,
   outExtension: { ".js": ".cjs" },
+  // El proxy de Sentry envuelve la entrada CJS: module.exports.default queda { default: fn }.
+  // La primera linea vuelve a exponer el modulo original; la segunda es la marca que Netlify
+  // busca en el nivel superior para tratar la funcion como API v2 (lo comprueba billing-package.smoke).
+  footer: { js: "module.exports = module.exports.default;\nexports.default = module.exports.default;" },
   sourcemap: "external",
   sourcesContent: true,
   logLevel: "warning",

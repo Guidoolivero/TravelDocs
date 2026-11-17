@@ -18,7 +18,7 @@
 
 const crypto = require('crypto');
 
-exports.handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return reply(405, { error: 'Method Not Allowed' });
   }
@@ -131,3 +131,6 @@ function reply(statusCode, body) {
     body: JSON.stringify(body)
   };
 }
+
+const v2 = require('./_v2.cjs');
+exports.default = v2(handler);
