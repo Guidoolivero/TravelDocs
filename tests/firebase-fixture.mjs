@@ -103,7 +103,10 @@ export function fixture({ active = true, missing = false, revoked = false, env =
       if (mocked) return modules[mocked];
       return id.startsWith('.') && !id.endsWith('.mjs') ? load(new URL(id, url)) : nativeRequire(id);
     };
-    runInNewContext(readFileSync(url, 'utf8'), { require, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer, URL, Response, fetch: globalThis.fetch,
+    // vm no permite import() sin un flag experimental: se reemplaza por uno que respeta los mocks.
+    const source = readFileSync(url, 'utf8').replace(/\bimport\(/g, '__import(');
+    const __import = async id => Object.hasOwn(modules, id) ? modules[id] : import(id);
+    runInNewContext(source, { require, __import, module, exports: module.exports, console, Date: TestDate, setTimeout, clearTimeout, AbortController, AbortSignal, Buffer, URL, Response, fetch: globalThis.fetch,
       process: { env: { FIREBASE_SERVICE_ACCOUNT: '{}', PLATFORM_SUPER_ADMIN_EMAILS: 'admin@test.com', ...env } } }, { filename: url.pathname });
     return module.exports;
   }

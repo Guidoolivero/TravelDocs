@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 const { requirePlatformAdmin, initAdmin } = require('../../_platform-admin.cjs');
 const { assertBillingEnvironment } = require('./billing-config.cjs');
-const { buildVoucherDocument } = require('facturas');
 const { auditBilling } = require('./billing-audit.cjs');
 const { reportError } = require('../../_sentry.cjs');
 const reply = (statusCode, body) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
@@ -24,6 +23,8 @@ exports.handler = async event => {
       return reply(409, { error: preview ? 'La vista previa cambio. Volve a abrirla antes de emitir.' : 'La factura todavia no esta autorizada.' });
     }
     const { renderTravelDocsPdf, buildDraftDocument } = require('./invoice-pdf.cjs');
+    // facturas es solo ESM y Lambda no permite require() de ESM.
+    const { buildVoucherDocument } = await import('facturas');
     const doc = preview ? buildDraftDocument(invoice) : buildVoucherDocument({ voucher: invoice.outcome.voucher, items: invoice.input.items,
       issuer: { ...invoice.issuer, tradeName: 'TravelDocs' }, receiver: { name: invoice.receiver.legalName || 'Consumidor Final', address: invoice.receiver.address },
       observations: invoice.outcome.authorization?.observations || [], saleConditions: invoice.receiver.saleCondition || 'Transferencia bancaria' });

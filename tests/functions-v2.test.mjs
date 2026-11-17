@@ -44,3 +44,21 @@ test('v2 pasa el Request al handler como evento y devuelve un Response', async (
   const options = await v2(async () => ({ statusCode: 204, body: '{}' }))(new Request('https://x.test/f', { method: 'OPTIONS' }));
   assert.equal(options.status, 204);
 });
+
+// En v2 (previews y netlify dev) Netlify empaqueta el codigo propio y deja los paquetes npm afuera,
+// y Lambda corre con require() de ESM desactivado: los paquetes solo ESM (facturas) van con import().
+test('las entradas cargan sin require() de ESM, como en Lambda', async () => {
+  const { build } = await import('esbuild');
+  const { execFileSync } = await import('node:child_process');
+  const { mkdtempSync, rmSync } = await import('node:fs');
+  const out = mkdtempSync(new URL('../.netlify-v2-test-', dir).pathname);
+  try {
+    const entries = readdirSync(dir).filter(name => name.endsWith('.cjs') && !name.startsWith('_'));
+    await build({ entryPoints: entries.map(name => new URL(name, dir).pathname), bundle: true, packages: 'external',
+      platform: 'node', format: 'cjs', outdir: out, outExtension: { '.js': '.cjs' }, logLevel: 'silent' });
+    const script = entries.map(name => `require(${JSON.stringify(`${out}/${name}`)});`).join('');
+    execFileSync(process.execPath, ['--no-experimental-require-module', '-e', script], { stdio: 'pipe' });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+});

@@ -3,7 +3,6 @@ const { requirePlatformAdmin, initAdmin } = require('../../_platform-admin.cjs')
 const { assertBillingEnvironment } = require('./billing-config.cjs');
 const { createBillingStore } = require('./billing-store.cjs');
 const { createBillingService } = require('./billing-service.cjs');
-const { createArcaClient } = require('facturas');
 const { billingErrorText } = require('../../../../public/js/facturacion/billing-feedback.mjs');
 const { auditBilling } = require('./billing-audit.cjs');
 const { reportError } = require('../../_sentry.cjs');
@@ -44,6 +43,8 @@ exports.handler = async event => {
     const controller = new AbortController();
     const abortSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(25000)]);
     const store = createBillingStore(db, { onLockLost: err => controller.abort(err) });
+    // facturas es solo ESM y Lambda no permite require() de ESM.
+    const { createArcaClient } = await import('facturas');
     const client = createArcaClient({ taxId: issuer.taxId, certificatePem: credentials.certificatePem, privateKeyPem: credentials.privateKeyPem, environment, store, timeout: 15000, retries: 0, logger: { disabled: true } });
     const service = createBillingService({ db, client, store, issuer, salesPoint, abortSignal, environment,
       today: () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date()) });
