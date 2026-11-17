@@ -940,15 +940,19 @@ exports.handler = async function handler(event) {
 
   if (modoGDS) {
     // Validar y sanitizar segmentos
+    // Fecha y horas no entran en la clave del cache compartido: solo pasan al prompt
+    // si tienen el formato GDS (las arma gds-segmentos.mjs). Texto libre se descarta.
+    const gds = (re, v) => { const t = sanitize(v).toUpperCase(); return re.test(t) ? t : ''; };
+    const FECHA = /^\d{1,2}[A-Z]{3}(\d{2}|\d{4})?$/, HORA = /^\d{4}$|^\d{1,2}:\d{2}$/;
     segmentos = payload.segmentos.slice(0, 12).map(s => ({
       vuelo:   sanitize(s.vuelo).toUpperCase(),
       origen:  sanitize(s.origen).toUpperCase(),
       destino: sanitize(s.destino).toUpperCase(),
-      fecha:   sanitize(s.fecha),
-      hora_salida: sanitize(s.hora_salida),
-      hora_llegada: sanitize(s.hora_llegada),
-      fecha_llegada: sanitize(s.fecha_llegada),
-      mas_dias: sanitize(s.mas_dias),
+      fecha:   gds(FECHA, s.fecha),
+      hora_salida: gds(HORA, s.hora_salida),
+      hora_llegada: gds(HORA, s.hora_llegada),
+      fecha_llegada: gds(FECHA, s.fecha_llegada),
+      mas_dias: gds(/^\d$/, s.mas_dias),
     })).filter(s => s.vuelo && /^[A-Z0-9]{2,3}\d{1,4}$/.test(s.vuelo));
 
     if (segmentos.length === 0) {
