@@ -6,7 +6,7 @@ import { matchesPassenger } from '../pasajeros/passenger-search.mjs';
 import { addReservation, updateReservation, deleteReservation } from '../db.js';
 import { fmtDate, escStr } from '../compartido/utils.js';
 import { requisitosAlertDue, checkinAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje } from '../alertas/alert-core.mjs';
-import { reservationViewPassengers, reservationViewLayout, reservationMatchesSearch } from './reservation-view.mjs';
+import { reservationViewPassengers, reservationViewLayout, reservationMatchesSearch, marcasAlGuardar } from './reservation-view.mjs';
 import { alcanzaConDni } from '../requisitos/cabotaje.mjs';
 import { auth } from '../compartido/firebase.mjs';
 import { esc, showToast } from '../compartido/ui.mjs';
@@ -588,7 +588,7 @@ export function initReservas() {
     document.getElementById('res-pnr-raw').value = '';
     document.getElementById('res-alert-email').value = r.alertEmail || '';
     document.getElementById('res-alert-horas').value = String([24, 48, 72].includes(Number(r.alertHorasAntes)) ? Number(r.alertHorasAntes) : 24);
-    _resPiernasDraft = storedPiernas(r).map(p => { const local = horarioLocal(p); return local ? {...p, fechaLocal:local} : p; });
+    _resPiernasDraft = storedPiernas(r).map(p => { const local = horarioLocal(p); return { ...p, ...(local ? { fechaLocal:local } : {}), checkinAlAbrir: !!p.checkin }; });
     window.renderResPiernasDraft();
     document.getElementById('res-pax-search').value = hintPendingSearch();
     const rawPreview = document.getElementById('res-pnr-preview');
@@ -823,7 +823,8 @@ export function initReservas() {
     // poder salir para la fecha nueva -> se resetea notified. Los tramos que
     // conservan vuelo+fecha mantienen su marca (no se reenvía).
     const original = _resEditingId ? estado.reservations.find(x => x.id === _resEditingId) : null;
-    const clavesOriginales = new Set((original ? storedPiernas(original) : []).map(clavePierna));
+    // Tramos tal como estan ahora (no al abrir el modal): ver marcasAlGuardar.
+    const actuales = new Map((original ? storedPiernas(original) : []).map(p => [clavePierna(p), p]));
     const piernas = _resPiernasDraft
       .map(p => p.fechaLocal !== undefined ? guardarHorario(p,p.fechaLocal) : p)
       .filter(p => p.fecha || p.fechaLocal) // descarta tramos sin fecha
@@ -837,8 +838,7 @@ export function initReservas() {
         transitos: transitosDeEscala(p),
         compania: (p.compania || '').toUpperCase(),
         reservaVuelo: (p.reservaVuelo || '').toUpperCase(),
-        checkin: !!p.checkin,
-        notified: !!p.notified && clavesOriginales.has(clavePierna(p))
+        ...marcasAlGuardar(p, actuales.get(clavePierna(p)))
       }));
 
     if (!piernas.length) {
