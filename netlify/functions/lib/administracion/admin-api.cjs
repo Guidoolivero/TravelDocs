@@ -657,7 +657,7 @@ function aggCost(agg, rates) {
 
 function aggRow(key, label, agg, rates) {
   const total = agg.scans + agg.travel;
-  const claudePct = total > 0 ? Math.round((agg.claudeCount / agg.scans) * 1000) / 10 : 0;
+  const claudePct = agg.scans > 0 ? Math.round((agg.claudeCount / agg.scans) * 1000) / 10 : 0;
   return {
     key,
     label,
@@ -791,3 +791,4 @@ function reply(statusCode, body) {
 }
 
 exports.handler = require('../../_sentry.cjs').wrapHandler(exports.handler);
+exports.aggRow = aggRow;

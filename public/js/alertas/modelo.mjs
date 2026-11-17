@@ -30,7 +30,8 @@ export function getAlertItems() {
     if (p.dob) {
       const days = daysUntilBirthday(p.dob);
       if (days !== null && days >= 0 && days <= 30) {
-        const dismissKey = `dismissed_${p.id}_birthday_${new Date().getFullYear()}`;
+        // Anio del cumpleanos que avisa (no el de hoy): descartar en diciembre uno de enero no reaparece el 1/1.
+        const dismissKey = `dismissed_${p.id}_birthday_${new Date(Date.now() + days * 86400000).getFullYear()}`;
         if (!isDismissed(dismissKey)) {
           items.push({ pid: p.id, name, email, docType: 'Cumpleaños', docNum: '—', expDate: p.dob, days, urgency: days <= 7 ? 2 : 3, isBirthday: true, dismissKey });
         }

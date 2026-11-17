@@ -5,7 +5,7 @@ import { parsePnrPassengers, isAirlineLocatorName } from './parse-pnr-passengers
 import { matchesPassenger } from '../pasajeros/passenger-search.mjs';
 import { addReservation, updateReservation, deleteReservation } from '../db.js';
 import { fmtDate, escStr } from '../compartido/utils.js';
-import { requisitosAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje } from '../alertas/alert-core.mjs';
+import { requisitosAlertDue, checkinAlertDue, diasHastaVuelo, proximaFechaVuelo, claveOrdenCheckin, colorDiasViaje } from '../alertas/alert-core.mjs';
 import { reservationViewPassengers, reservationViewLayout, reservationMatchesSearch } from './reservation-view.mjs';
 import { alcanzaConDni } from '../requisitos/cabotaje.mjs';
 import { auth } from '../compartido/firebase.mjs';
@@ -127,19 +127,6 @@ function resCompaniaLine(r) {
   return r.reservaVuelo ? `${c} · ${r.reservaVuelo}` : c;
 }
 
-// Un tramo está "due" si el vuelo es mañana (día anterior) o hoy antes de salir.
-// Sin importar la hora: al entrar al sistema el día anterior, ya dispara.
-function legIsDue(fecha) {
-  const t = parseResTs(fecha);
-  if (t == null) return false;
-  const now = Date.now();
-  if (now >= t) return false; // ya salió el vuelo
-  const flightDay = new Date(t); flightDay.setHours(0, 0, 0, 0);
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((flightDay - today) / 86400000);
-  return diffDays >= 0 && diffDays <= 1; // hoy o mañana
-}
-
 // Devuelve tramos "due" (día anterior o día del vuelo antes de salir) sin check-in hecho.
 // Cada item: { id, r, idx, route, fecha }
 function upcomingCheckins() {
@@ -147,7 +134,8 @@ function upcomingCheckins() {
   for (const r of estado.reservations) {
     for (const p of resPiernas(r)) {
       if (p.done) continue;
-      if (legIsDue(p.fecha)) out.push({ id: r.id, r, idx: p.idx, route: p.route, fecha: p.fecha, fechaLocal:p.fechaLocal, origen:p.origen });
+      // Misma regla que el mail: respeta el aviso de 24/48/72 hs de la reserva.
+      if (checkinAlertDue(p.fecha, r.alertHorasAntes)) out.push({ id: r.id, r, idx: p.idx, route: p.route, fecha: p.fecha, fechaLocal:p.fechaLocal, origen:p.origen });
     }
   }
   return out;
