@@ -23,7 +23,8 @@ exports.handler = async event => {
     initAdmin();
     const db = admin.firestore();
     if (body.action === 'list') {
-      const snap = await db.collection('billingInvoices').orderBy('period', 'desc').limit(100).get();
+      // shortcut: trae todo el historial (~120 facturas/anio con 10 agencias); paginar si pasa de ~1000.
+      const snap = await db.collection('billingInvoices').orderBy('period', 'desc').get();
       return reply(200, { environment, invoices: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(invoice => (invoice.environment || 'test') === environment) });
     }
     const salesPoint = Number(process.env.ARCA_SALES_POINT);
