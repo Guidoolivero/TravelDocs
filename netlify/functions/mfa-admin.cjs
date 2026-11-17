@@ -14,14 +14,8 @@
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 const { verifyAuth } = require('./_auth.cjs');
-const { requirePlatformAdmin } = require('./_platform-admin.cjs');
+const { requirePlatformAdmin, initAdmin } = require('./_platform-admin.cjs');
 
-function initAdmin() {
-  if (admin.apps.length) return;
-  const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!inline) throw new Error('FIREBASE_SERVICE_ACCOUNT no configurada en Netlify.');
-  admin.initializeApp({ credential: admin.credential.cert(JSON.parse(inline)) });
-}
 
 function db() { initAdmin(); return admin.firestore(); }
 function auth() { initAdmin(); return admin.auth(); }

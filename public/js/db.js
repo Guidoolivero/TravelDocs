@@ -41,10 +41,6 @@ export function getTenantContext() {
   return agencyId;
 }
 
-export function clearTenantContext() {
-  agencyId = null;
-}
-
 function requireAgency() {
   if (!agencyId) {
     throw new Error('Tenant no configurado. Llamá setTenantContext() antes de operar con Firestore.');
@@ -123,10 +119,6 @@ export function listenPassengers(callback, onError) {
   });
 }
 
-export function stopListening() {
-  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-}
-
 export async function addPassenger(data) {
   return await addDoc(passengersCollection(), {
     ...sanitize(data),
@@ -190,10 +182,6 @@ export function listenReservations(callback) {
     lastFp = fp;
     callback(list);
   }, err => { console.error('Error escuchando reservas:', err); });
-}
-
-export function stopListeningReservations() {
-  if (unsubReservations) { unsubReservations(); unsubReservations = null; }
 }
 
 // Canon de fecha de pierna: 'YYYY-MM-DDTHH:mm' (16 chars). El orderBy de la
@@ -312,21 +300,6 @@ export async function reservarEnvioAlertas(now = Date.now()) {
     tx.set(ref, { desde: now });
     return true;
   });
-}
-
-export async function getAllowedEmails() {
-  const ref = doc(db, 'config', 'allowedEmails');
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return [];
-
-  const data = snap.data() || {};
-  const raw = Array.isArray(data.emails)
-    ? data.emails
-    : (Array.isArray(data.allowedEmails) ? data.allowedEmails : []);
-
-  return raw
-    .map(v => (v || '').toString().trim().toLowerCase())
-    .filter(Boolean);
 }
 
 function sanitize(obj) {

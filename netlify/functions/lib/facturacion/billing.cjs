@@ -73,8 +73,6 @@ function validateBillingProfile(input) {
 }
 
 module.exports.validateBillingProfile = validateBillingProfile;
-module.exports.parsePrice = parsePrice;
-module.exports.invalid = invalid;
 
 function billingRecord(profile, previous, today) {
   const complete = !missingBillingFields(profile).length;
