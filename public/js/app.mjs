@@ -264,7 +264,11 @@ async function iniciarSesion(user) {
     // Chequeo de alertas cuando llegaron AMBOS snapshots (pasajeros y reservas)
     estado._paxLoaded = true;
     checkAndSendUnifiedAlerts();
-  }, errorDeCarga);
+  }, err => {
+    // Solo cuenta como falla de carga si la app todavia no habia cargado; un
+    // permission-denied despues (sesion vencida, cierre de sesion) no lo es.
+    if (!estado._paxLoaded) errorDeCarga(err);
+  });
   listenReservations(data => {
     estado.reservations = data;
     // Limpieza automática: los check-ins cuyo último tramo voló ayer o antes
