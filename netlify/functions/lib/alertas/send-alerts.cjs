@@ -104,7 +104,7 @@ const dormir = ms => new Promise(r => setTimeout(r, ms));
 // (nunca del doc de la agencia, que el browser de los miembros puede leer).
 // Timeout propio: un fetch estancado no puede comerse el presupuesto de 30s
 // de la scheduled function (el guard de deadline solo se chequea entre envíos).
-async function sendEmail({ publicKey, privateKey, serviceId, templateId, to, subject, html }) {
+async function sendEmail({ publicKey, privateKey, serviceId, templateId, to, subject, html, timeoutMs = 15000 }) {
   const res = await fetch(EMAILJS_SEND_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -115,7 +115,7 @@ async function sendEmail({ publicKey, privateKey, serviceId, templateId, to, sub
       ...(privateKey ? { accessToken: privateKey } : {}),
       template_params: { to_email: to, subject, message: html },
     }),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -266,7 +266,9 @@ async function processAgency(agencyDoc, { now, started }) {
 
   const enviar = async (to, subject, html) => {
     if (Date.now() - started > RUN_DEADLINE_MS) throw new Error('deadline');
-    await sendEmail({ publicKey: emailjsPublicKey, privateKey, serviceId: emailjsServiceId, templateId: emailjsTemplateId, to, subject, html });
+    // Que un envio lento no pase los 30s de la funcion: si la mata, el mail sale sin marcarse.
+    const timeoutMs = Math.max(1000, Math.min(15000, 28000 - (Date.now() - started)));
+    await sendEmail({ publicKey: emailjsPublicKey, privateKey, serviceId: emailjsServiceId, templateId: emailjsTemplateId, to, subject, html, timeoutMs });
     await dormir(SEND_GAP_MS); // EmailJS: máx 1 request/segundo
     emailsSent++;
   };
@@ -296,13 +298,22 @@ async function processAgency(agencyDoc, { now, started }) {
       checkins: checkinsAgencia.map(itemCheckin),
       cumpleanos: bdCandidates,
     });
-    await enviar(email, subject, html);
-    console.log(`send-alerts: ${agencyId} email unificado OK: ${subject}`);
+    let enviado = false;
+    try {
+      await enviar(email, subject, html);
+      enviado = true;
+      console.log(`send-alerts: ${agencyId} email unificado OK: ${subject}`);
+    } catch (err) {
+      // Igual que los individuales: sin marcar, reintenta la proxima corrida, y los
+      // mails de requisitos de abajo salen igual.
+      if (err.message === 'deadline') throw err;
+      console.error(`send-alerts: ${agencyId} FALLÓ el email unificado a ${email}:`, err?.message || err);
+    }
 
     // Marcas solo tras envío exitoso (send-then-mark: marcar antes perdería
     // el alerta si el envío falla). Un fallo de marca post-envío es RUIDOSO
     // a propósito: el síntoma es reenvío cada hora hasta el vuelo.
-    try {
+    if (enviado) try {
       // Chunks de 450: el batch de Firestore falla determinístico arriba de
       // 500 writes (una agencia grande con muchos vencimientos pendientes).
       const ops = [];
@@ -333,6 +344,14 @@ async function processAgency(agencyDoc, { now, started }) {
   return { emailsSent };
 }
 
+// Cada hora arranca por una agencia distinta: si el deadline corta la corrida,
+// no son siempre las mismas (las ultimas por ID) las que quedan sin procesar.
+function rotarAgencias(docs, now) {
+  const start = docs.length ? Math.floor(now / 3600000) % docs.length : 0;
+  return [...docs.slice(start), ...docs.slice(0, start)];
+}
+exports.rotarAgencias = rotarAgencias;
+
 exports.handler = async event => {
   const started = Date.now();
 
@@ -357,7 +376,7 @@ exports.handler = async event => {
 
   try {
     const agenciesSnap = await db().collection('agencies').get();
-    for (const agencyDoc of agenciesSnap.docs) {
+    for (const agencyDoc of rotarAgencias(agenciesSnap.docs, now)) {
       if (Date.now() - started > RUN_DEADLINE_MS) {
         console.warn('send-alerts: deadline alcanzado, quedan agencias para la próxima corrida.');
         break;
