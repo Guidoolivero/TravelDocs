@@ -108,13 +108,42 @@ test('alta, check-in y baja', { session: 'e2e', timeout: 240_000 }, async ({ app
 
 // Llama a Gemini: en local no hay GEMINI_API_KEY (solo esta en el contexto
 // production de Netlify). Correr contra produccion o excluir con --exclude-tag ia.
+// Espera las dos fases (analisis y verificacion web) y deja en el log cuanto
+// tardo cada una y si la verificacion llego a buscar en la web.
+// E2E_VUELO="IB6844,EZE,MAD" cambia el vuelo (el analisis se cachea por ruta).
 test('requisitos de un vuelo', { session: 'e2e', tags: ['ia'], timeout: 120_000 }, async ({ app, screen, browser }) => {
+  const [vuelo, origen, destino] = (process.env.E2E_VUELO || 'AR1132,EZE,MAD').split(',');
   await app.open('/index.html');
   await screen.getByRole('button', 'Requisitos de Vuelo').tap();
-  await screen.getByLabel('Número de vuelo *').fill('AR1300');
-  await screen.getByLabel('Origen (IATA) *').fill('EZE');
-  await screen.getByLabel('Destino (IATA) *').fill('MAD');
+  await screen.getByLabel('Número de vuelo *').fill(vuelo);
+  await screen.getByLabel('Origen (IATA) *').fill(origen);
+  await screen.getByLabel('Destino (IATA) *').fill(destino);
   await screen.getByLabel('Fecha de viaje').fill('2026-12-01');
+
+  const inicio = Date.now();
+  const analisis = browser.waitForResponse(/gemini-travel/, { timeout: 60_000 });
   await screen.getByRole('button', 'Consultar requisitos').tap();
-  await expect(browser.locator('#tv-results')).toContainText(/MAD/, { timeout: 90_000 });
+  const a = await analisis;
+  const msAnalisis = Date.now() - inicio;
+  const verificacion = browser.waitForResponse(/gemini-travel/, { timeout: 60_000 });
+  const aJson = await a.json<any>();
+  expect(a.status).toBe(200);
+  await expect(browser.locator('#tv-results')).toContainText(destino);
+
+  const v = await verificacion;
+  const vJson = await v.json<any>();
+  console.log('[requisitos]', JSON.stringify({
+    vuelo, origen, destino,
+    msAnalisis,
+    msTotal: Date.now() - inicio,
+    analisisDeCache: !!aJson.data?._meta?.deCache,
+    modelo: aJson.data?._meta?.modeloUsado,
+    fuenteRuta: aJson.data?._meta?.fuenteRuta,
+    verificacionStatus: v.status,
+    verificoWeb: vJson.data?._meta?.verificoWeb,
+    verificacionDeCache: !!vJson.data?._meta?.deCache,
+    msVerificacionServidor: vJson.data?._meta?.duracionVerificacionMs,
+  }));
+  expect(v.status).toBe(200);
+  await expect(browser.locator('#tv-results')).not.toContainText('Verificando requisitos en la web');
 });
