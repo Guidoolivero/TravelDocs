@@ -123,7 +123,7 @@ export function fixture({ active = true, missing = false, revoked = false, env =
     docs, calls, added, sdkAuth, tokens, accounts, clock,
     recordUsage: body => load(new URL('../netlify/functions/_usage.cjs', import.meta.url)).recordUsage(body),
     request: (path, body, method = 'GET', query = {}) => call('admin-api', path, body, 'admin', method, query),
-    invoke: (name, body = {}, actor = 'admin', httpMethod = 'POST') => call(name, '', body, actor, httpMethod),
+    invoke: (name, body = {}, actor = 'admin', httpMethod = 'POST', query) => call(name, '', body, actor, httpMethod, query),
     agency: (agencyId, body, actor = 'admin') => call('admin-api', `/agencies/${agencyId}`, body, actor, 'PATCH'),
     verify: () => load(new URL('../netlify/functions/_auth.cjs', import.meta.url)).verifyAuth({ headers: { authorization: 'Bearer user' } }),
     editUser: body => call('admin-api', '/users/user', body, 'admin', 'PATCH'),

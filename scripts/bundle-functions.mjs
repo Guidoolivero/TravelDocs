@@ -32,7 +32,10 @@ await build({
   absWorkingDir: root,
   entryPoints: handlers.map((name) => path.join(srcDir, name)),
   bundle: true,
-  define: { BILLING_BUILD_CONTEXT: JSON.stringify(process.env.CONTEXT || '') },
+  define: {
+    BILLING_BUILD_CONTEXT: JSON.stringify(process.env.CONTEXT || ''),
+    TRAVEL_BUILD_CONTEXT: JSON.stringify(process.env.CONTEXT || ''),
+  },
   external: ["@react-pdf/renderer"],
   platform: "node",
   format: "cjs",
