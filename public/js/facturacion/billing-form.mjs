@@ -7,3 +7,17 @@ export function parsePrice(value) {
   if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('El importe debe ser mayor a cero.');
   return amount;
 }
+
+const CONDICIONES = { responsable_inscripto: 'Responsable inscripto', monotributo: 'Monotributista', exento: 'Exento', consumidor_final: 'Consumidor final' };
+
+// Datos de la constancia de ARCA sobre la ficha: razon social y domicilio se reemplazan;
+// la condicion IVA solo se completa si estaba vacia, para no pisar un cambio que ARCA
+// todavia no refleja (ej. una agencia que pasa a RI el mes que viene).
+export function aplicarPadron(actual, padron) {
+  const avisos = [...(padron.errors || [])];
+  let condition = actual.condition || padron.condition || '';
+  if (actual.condition && padron.condition && actual.condition !== padron.condition) {
+    avisos.push(`ARCA informa ${CONDICIONES[padron.condition]}; se mantiene ${CONDICIONES[actual.condition]}.`);
+  }
+  return { legalName: padron.legalName, address: padron.address, condition, aviso: avisos.join(' ') };
+}
