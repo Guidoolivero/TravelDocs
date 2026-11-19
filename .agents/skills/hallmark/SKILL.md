@@ -1,7 +1,7 @@
 ---
 name: hallmark
 description: "TravelDocs: ALWAYS use when building or changing HTML, CSS or visible UI (landing, login, SPA, admin). Read this SKILL.md first. Existing app: Floor and Reflex on the surface you touch; full redesign only if the user names redesign. Also when the user names Hallmark."
-argument-hint: "<prompt> | redesign <path> | audit <path>"
+argument-hint: "[prompt] | redesign [ruta] | audit [ruta]"
 version: 2.0.0
 metadata:
   opencode/slash: "true"
