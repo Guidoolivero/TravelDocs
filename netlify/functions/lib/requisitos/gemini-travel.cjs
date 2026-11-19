@@ -15,6 +15,7 @@
 //  Migrado a @google/genai SDK (Paso 2 - 2026)
 // ============================================================
 
+const { medir, estadoError } = require('./medicion.cjs');
 const { verifyAuth } = require('../../_auth.cjs');
 const { recordUsage } = require('../../_usage.cjs');
 const { createHash } = require('node:crypto');
@@ -202,26 +203,21 @@ function makeJsonRequest(promptText, thinkingLevel = 'HIGH') {
 }
 
 async function runRouteSearch(ai, model, text, logLabel, fnStart, stepDeadlineMs, attemptTimeoutMs, thinkingLevel) {
-  try {
-    const { response } = await generateContentWithRetries(
-      ai,
-      model,
-      makeTimedRouteRequest(text, attemptTimeoutMs, thinkingLevel),
-      logLabel,
-      {
-        maxAttemptsPrimary: 1,
-        maxAttemptsFallback: 1,
-        skipBackoffOnAbort: true,
-        deadlineMs: stepDeadlineMs || (fnStart + ROUTE_STEP_BUDGET_MS),
-        minMsBeforeAttempt: (attemptTimeoutMs || ROUTE_ATTEMPT_TIMEOUT_MS) + 300
-      }
-    );
+  const { response } = await generateContentWithRetries(
+    ai,
+    model,
+    makeTimedRouteRequest(text, attemptTimeoutMs, thinkingLevel),
+    logLabel,
+    {
+      maxAttemptsPrimary: 1,
+      maxAttemptsFallback: 1,
+      skipBackoffOnAbort: true,
+      deadlineMs: stepDeadlineMs || (fnStart + ROUTE_STEP_BUDGET_MS),
+      minMsBeforeAttempt: (attemptTimeoutMs || ROUTE_ATTEMPT_TIMEOUT_MS) + 300
+    }
+  );
 
-    return response.text || null;
-  } catch (err) {
-    console.error(`${logLabel} falló:`, err?.message || err);
-    return null;
-  }
+  return response.text || null;
 }
 
 function extractJsonCandidate(raw) {
@@ -371,13 +367,16 @@ function parseJsonArray(raw) {
 
 // Recorre paradas destino/escala, busca en la web los requisitos oficiales
 // (URL + costo) y merguea/agrega a la lista que armó el modelo. Graceful.
-async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fnStart, attemptTimeoutMs) {
+async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fnStart, attemptTimeoutMs, diagnostico = {}) {
   const ruta = Array.isArray(resultData.ruta) ? resultData.ruta : [];
   const paradas = ruta.filter(s => s && s.tipo !== 'origen' && (s.pais || s.pais_codigo || s.aeropuerto_iata || s.ciudad));
   if (!paradas.length) return false;
 
   const deadlineMs = fnStart + NETLIFY_DEADLINE_MS;
-  if (remainingMs(deadlineMs) < 7000) return false; // sin tiempo suficiente, saltear
+  if (remainingMs(deadlineMs) < 7000) {
+    diagnostico.fallo = 'timeout';
+    return false;
+  }
 
   const lista = paradas.map((s, i) => {
     const donde = s.pais_codigo || s.pais || s.aeropuerto_iata || s.ciudad || `parada ${i + 1}`;
@@ -410,6 +409,7 @@ async function verifyAndFillRequirements(ai, model, resultData, nacionalidad, fn
     // Paso 2b: deadline completo (no el budget del Paso 1, que ya se vencio).
     response = await runRouteSearch(ai, model, text, 'gemini-travel: verifyReqs', fnStart, fnStart + NETLIFY_DEADLINE_MS, attemptTimeoutMs);
   } catch (err) {
+    diagnostico.fallo = estadoError(err);
     console.error('verifyAndFillRequirements: búsqueda falló:', err?.message || err);
     return false;
   }
@@ -871,10 +871,6 @@ exports.handler = async function handler(event) {
   // así no hereda el 3.1-flash-lite que Netlify setea para el OCR de gemini-scan.
   const model  = process.env.GEMINI_TRAVEL_MODEL || 'gemini-3.5-flash-lite';
 
-  if (!apiKey) {
-    return reply(500, { error: 'GEMINI_API_KEY no está configurada en Netlify.' });
-  }
-
   let payload;
   try {
     payload = JSON.parse(event.body || '{}');
@@ -892,6 +888,13 @@ exports.handler = async function handler(event) {
   const fase = sanitize(payload.fase);
 
   const fnStart = Date.now();
+
+  return medir({ fase, id: event.queryStringParameters?.consulta, auth, inicio: fnStart }, diagnostico =>
+    resolver({ payload, auth, apiKey, model, nacionalidad, fase, fnStart, diagnostico }));
+};
+
+async function resolver({ payload, auth, apiKey, model, nacionalidad, fase, fnStart, diagnostico }) {
+  if (!apiKey) return reply(500, { error: 'GEMINI_API_KEY no está configurada en Netlify.' });
 
   // ── Fase verificación: solo el Paso 2b (verificación web en vivo) ──
   // Recibe la ruta que armo la fase analisis (con sus requisitos, para dedup).
@@ -914,7 +917,7 @@ exports.handler = async function handler(event) {
 
     const resultData = { ruta };
     const ai = new GoogleGenAI({ apiKey });
-    const verificoWeb = await verifyAndFillRequirements(ai, model, resultData, nacionalidad, fnStart, VERIFY_ATTEMPT_TIMEOUT_MS);
+    const verificoWeb = await verifyAndFillRequirements(ai, model, resultData, nacionalidad, fnStart, VERIFY_ATTEMPT_TIMEOUT_MS, diagnostico);
 
     // Idempotentes (dedup): ya se aplicaron en la fase analisis, re-aplicar es seguro.
     injectKnownForms(resultData, nacionalidad);
@@ -1042,6 +1045,7 @@ exports.handler = async function handler(event) {
 
   const step2Remaining = remainingMs(fnStart + NETLIFY_DEADLINE_MS);
   if (step2Remaining < 4000) {
+    diagnostico.fallo = 'timeout';
     return reply(502, {
       error: 'La búsqueda de ruta tardó demasiado. Intentá de nuevo en unos segundos.'
     });
@@ -1111,6 +1115,7 @@ exports.handler = async function handler(event) {
     return reply(200, { data: resultData });
 
   } catch (err) {
+    diagnostico.fallo = estadoError(err);
     const message = err?.message || err?.toString() || 'error desconocido';
     console.error('gemini-travel: error en llamada JSON final:', message);
     const friendly = /json inválido/i.test(message)
@@ -1118,7 +1123,7 @@ exports.handler = async function handler(event) {
       : `No se pudo conectar con Gemini: ${message}`;
     return reply(502, { error: friendly });
   }
-};
+}
 
 function reply(statusCode, body) {
   return {

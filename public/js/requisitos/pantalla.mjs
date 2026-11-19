@@ -418,9 +418,12 @@ export function initRequisitos() {
     const timeoutId  = setTimeout(() => controller.abort(), 60000);
 
     try {
-      const fnUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8888/.netlify/functions/gemini-travel'
         : '/.netlify/functions/gemini-travel';
+
+      const consulta = globalThis.crypto?.randomUUID?.();
+      const fnUrl = consulta ? baseUrl + '?consulta=' + consulta : baseUrl;
 
       // ID token de Firebase Auth para autenticar la function
       const currentUser = auth.currentUser;

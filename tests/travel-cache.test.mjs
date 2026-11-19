@@ -132,3 +132,116 @@ for (const [caso, text] of [
   assert.equal(JSON.parse((await verify()).body).data._meta.deCache, undefined);
   assert.equal(searches, 2);
 });
+
+test('la muestra de producción enlaza ambas fases, conserva los intentos abiertos y vence a los 30 días', async () => {
+  const consulta = 'ac9e26bf-fae6-41b2-9079-d7690d8cf7e6';
+  const ruta = [stop];
+  const analisis = { vuelo: 'AR1300', origen: 'EZE', destino: 'JFK', nacionalidad: 'ARG', fase: 'analisis' };
+  const verificar = { fase: 'verificacion', nacionalidad: 'ARG', ruta };
+  const muestras = () => [...f.docs.entries()].filter(([k]) => k.startsWith('travelMonitoring/requisitos-30d/consultas/')).map(([, v]) => v);
+  let texto = '[]';
+  class GoogleGenAI {
+    models = { generateContent: async () => {
+      return { text: texto };
+    } };
+  }
+  const f = fixture({ env: { CONTEXT: 'production', GEMINI_API_KEY: 'dummy' }, modules: { '@google/genai': { GoogleGenAI, HarmCategory: {}, HarmBlockThreshold: {} } } });
+  f.docs.set('travelCache/v1_AR1300_EZE_JFK_ARG', { data: { ruta }, expiresAt: new Date(f.clock.now + 86400000) });
+  const invoke = (p, id = consulta, actor = 'admin') => f.invoke('gemini-travel', p, actor, 'POST', { consulta: id });
+  assert.equal((await invoke(analisis)).statusCode, 200);
+  assert.equal(muestras().length, 1);
+  assert.equal(muestras()[0].analisis.estado, 'ok');
+  assert.equal(muestras()[0].analisis.cache, true);
+  await invoke(verificar, consulta, 'user');
+  assert.equal(muestras()[0].verificacion, undefined);
+  await invoke(verificar);
+  assert.equal(muestras()[0].verificacion.estado, 'sin_verificar');
+  assert.equal(muestras()[0].verificacion.cache, false);
+  assert.doesNotMatch(JSON.stringify(muestras()), /JFK|AR1300|admin|ZZZ|ARG/);
+  texto = '[{"pais":"ZZZ","nombre":"Documento"}]';
+  const otra = '49c26fff-1508-4da8-aa5d-03f53bf6b911';
+  await invoke(analisis, otra);
+  await invoke(verificar, otra);
+  assert.equal(muestras()[1].verificacion.estado, 'ok');
+  f.clock.now += 30 * 86400000;
+  f.tokens.get('admin').auth_time = Math.floor(f.clock.now / 1000);
+  const fuera = await invoke({ ...analisis, vuelo: '' }, '3f264604-a7ed-45e5-abaf-12780eaebe18');
+  assert.equal(fuera.statusCode, 400);
+  assert.equal(muestras().length, 2);
+});
+
+test('el informe mantiene cortes y consultas parciales en el denominador y separa caché', async () => {
+  const { resumir } = await import('../scripts/reporte-requisitos.mjs');
+  const ok = { estado: 'ok', inicio: 100, fin: 110, duracionMs: 10, cache: false };
+  const informe = resumir([
+    { analisis: ok, verificacion: { ...ok, fin: 135, cache: true } },
+    { analisis: ok, verificacion: { ...ok, estado: 'sin_verificar' } },
+    { analisis: { inicio: 100, estado: 'sin_cierre' } },
+    { analisis: { ...ok, estado: 'timeout' } },
+  ]);
+  assert.equal(informe.consultas, 4);
+  assert.equal(informe.exitoPct, 25);
+  assert.equal(informe.analisis.sin_cierre, 1);
+  assert.equal(informe.analisis.exitoPct, 50);
+  assert.equal(informe.verificacion.exitoPct, 50);
+  assert.equal(informe.verificacion.cache.exitoPct, 100);
+  assert.equal(informe.analisis.enVivo.estados.timeout, 1);
+  assert.equal(informe.verificacion.cache.estados.ok, 1);
+  assert.equal(informe.verificacion.enVivo.estados.sin_verificar, 1);
+  assert.equal(informe.verificacion.sin_iniciar, 2);
+  assert.equal(informe.hastaVerificacion.p95Ms, 35);
+  assert.equal(resumir([]).exitoPct, null);
+});
+
+test('la fase ya figura abierta al llamar a Gemini y un timeout observado queda identificado', async () => {
+  let estadoDuranteLlamada;
+  let f;
+  const muestras = () => [...f.docs].filter(([k]) => k.includes('/consultas/')).map(([, v]) => v);
+  class GoogleGenAI {
+    models = { generateContent: async () => {
+      estadoDuranteLlamada = muestras()[0]?.verificacion?.estado;
+      throw Object.assign(new Error('provider timeout'), { name: 'TimeoutError' });
+    } };
+  }
+  f = fixture({ env: { CONTEXT: 'production', GEMINI_API_KEY: 'dummy' }, modules: { '@google/genai': { GoogleGenAI, HarmCategory: {}, HarmBlockThreshold: {} } } });
+  const query = { consulta: 'cfdb7466-e0b1-42ae-ae99-4e197ffb54cf' };
+  f.docs.set('travelCache/v1_AR1300_EZE_JFK_ARG', { data: { ruta: [stop] }, expiresAt: new Date(f.clock.now + 86400000) });
+  await f.invoke('gemini-travel', { fase: 'analisis', vuelo: 'AR1300', origen: 'EZE', destino: 'JFK', nacionalidad: 'ARG' }, 'admin', 'POST', query);
+  const verificar = () => f.invoke('gemini-travel', { fase: 'verificacion', ruta: [stop], nacionalidad: 'ARG' }, 'admin', 'POST', query);
+  const res = await verificar();
+  assert.equal(res.statusCode, 200);
+  assert.equal(JSON.parse(res.body).data._meta.verificoWeb, false);
+  assert.equal(estadoDuranteLlamada, 'sin_cierre');
+  assert.equal(muestras()[0].verificacion.estado, 'timeout');
+  const original = muestras()[0].verificacion;
+  await verificar();
+  assert.deepEqual(muestras()[0].verificacion, original);
+});
+
+test('el preview y el cliente anterior siguen respondiendo sin abrir la campaña', async () => {
+  for (const [contexto, query] of [['deploy-preview', { consulta: 'ac9e26bf-fae6-41b2-9079-d7690d8cf7e6' }], ['production', {}]]) {
+    const f = fixture({ env: { CONTEXT: contexto, GEMINI_API_KEY: 'dummy' } });
+    f.docs.set('travelCache/v1_AR1300_EZE_JFK_ARG', { data: { ruta: [stop] }, expiresAt: new Date(f.clock.now + 86400000) });
+    const res = await f.invoke('gemini-travel', { fase: 'analisis', vuelo: 'AR1300', origen: 'EZE', destino: 'JFK', nacionalidad: 'ARG' }, 'admin', 'POST', query);
+    assert.equal(res.statusCode, 200);
+    assert.equal(f.docs.has('travelMonitoring/requisitos-30d'), false);
+  }
+});
+
+test('un fallo de Firestore al abrir la medición conserva la respuesta normal', async () => {
+  const f = fixture({ env: { CONTEXT: 'production', GEMINI_API_KEY: 'dummy' } });
+  const leer = f.docs.get.bind(f.docs);
+  let fallos = 0;
+  f.docs.get = key => {
+    if (key.startsWith('travelMonitoring/')) {
+      fallos++;
+      throw new Error('Firestore no disponible');
+    }
+    return leer(key);
+  };
+  f.docs.set('travelCache/v1_AR1300_EZE_JFK_ARG', { data: { ruta: [stop] }, expiresAt: new Date(f.clock.now + 86400000) });
+  const res = await f.invoke('gemini-travel', { fase: 'analisis', vuelo: 'AR1300', origen: 'EZE', destino: 'JFK', nacionalidad: 'ARG' }, 'admin', 'POST', { consulta: 'ac9e26bf-fae6-41b2-9079-d7690d8cf7e6' });
+  assert.equal(fallos, 1);
+  assert.equal(res.statusCode, 200);
+  assert.equal(JSON.parse(res.body).data._meta.deCache, true);
+});
