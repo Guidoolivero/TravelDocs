@@ -726,3 +726,14 @@ test('dos pedidos simultaneos del mail de requisitos mandan un solo mail', async
   assert.equal(mails, 1);
   assert.equal(f.docs.get('agencies/agency/reservations/r1').reqsNotified, true);
 });
+
+test('Brasil desde Argentina: la fiebre amarilla abre diciendo que no se exige', () => {
+  const { html } = buildRequisitosEmail({
+    reserva: reserva('2026-10-15T09:00', {
+      piernas: [{ fecha: '2026-10-15T09:00', vuelo: 'G3', origen: 'EZE', destino: 'GIG', escalas: [], reservaVuelo: 'ABCDE' }],
+    }),
+    pasajeros: [garcia],
+  });
+  assert.match(html, /Sale de Argentina\. No se exige el certificado internacional de fiebre amarilla\. Recomendado si visita/);
+  assert.equal(/fiebre amarilla\. No obligatori/.test(html), false);
+});

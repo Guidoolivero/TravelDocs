@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { planTravelStopView, splitTravelReqs, injectKnownForms, injectKnownAlerts, dedupeTravelReqs, sameVisa, isSchengenVisa, flagUnverifiedRoute, paradasVisibles, avisoDestino } from '../public/js/requisitos/travel-reqs.mjs';
-import { injectMatrizVisas, injectMatrizSanidad } from '../lib/requisitos/travel-matriz.mjs';
+import { injectMatrizVisas, injectMatrizSanidad, textoSanidad } from '../lib/requisitos/travel-matriz.mjs';
 
 describe('splitTravelReqs', () => {
   it('separa PLF/tasas de salud', () => {
@@ -755,7 +755,7 @@ describe('pantalla Requisitos de vuelo', () => {
     assert.equal(fa.obligatorio, false);
     assert.match(fa.nombre, /Certificado internacional de fiebre amarilla/);
     assert.match(fa.descripcion, /Sale de Argentina/);
-    assert.match(fa.descripcion, /No obligatoria/);
+    assert.match(fa.descripcion, /No se exige el certificado internacional de fiebre amarilla; se recomienda la vacuna si/);
   });
 
   it('escala en Paraguay no cuenta como llegada a Aruba', () => {
@@ -1161,4 +1161,27 @@ describe('avisoDestino', () => {
     assert.equal(avisoDestino({ vuelo: { destino_iata: 'MAD' } }, ''), '');
     assert.equal(avisoDestino({ vuelo: {} }, 'MAD'), '');
   });
+});
+
+describe('textoSanidad: lo no obligatorio abre diciendo que no se exige', () => {
+  const C = 'Certificado internacional de fiebre amarilla';
+  const N = 'No se exige fiebre amarilla';
+  const casos = [
+    [C, 'No exigido (salvo escala >12h en pais de riesgo).', 'No se exige el certificado internacional de fiebre amarilla (salvo escala >12h en pais de riesgo).'],
+    [C, 'No exigido para vuelo directo; solo si transito por zona de riesgo.', 'No se exige el certificado internacional de fiebre amarilla para vuelo directo; solo si transito por zona de riesgo.'],
+    [N, 'No se exige certificado de fiebre amarilla para el ingreso.', 'No se exige el certificado internacional de fiebre amarilla para el ingreso.'],
+    [N, 'No se exige certificado general; obligatorio solo para zonas de riesgo interno.', 'No se exige el certificado internacional de fiebre amarilla; obligatorio solo para zonas de riesgo interno.'],
+    [N, 'No se exige vacuna de fiebre amarilla ni otra para ingresar.', 'No se exige el certificado internacional de fiebre amarilla ni otra para ingresar.'],
+    [N, 'No obligatorio desde Argentina. Exigido si llega de Peru.', 'No se exige el certificado internacional de fiebre amarilla desde Argentina. Exigido si llega de Peru.'],
+    [N, 'Sin requisito sanitario.', 'No se exige fiebre amarilla. Sin requisito sanitario.'],
+    [C, 'Vacuna obligatoria si procede de pais de riesgo.', 'Certificado internacional de fiebre amarilla. Vacuna obligatoria si procede de pais de riesgo.'],
+  ];
+  for (const [nombre, texto, esperado] of casos) {
+    it(texto, () => assert.equal(textoSanidad({ nombre, texto }), esperado));
+  }
+});
+
+it('textoSanidad: la celda que solo dice "No se exige fiebre amarilla." no repite', () => {
+  assert.equal(textoSanidad({ nombre: 'No se exige fiebre amarilla', texto: 'No se exige fiebre amarilla.' }),
+    'No se exige el certificado internacional de fiebre amarilla.');
 });
