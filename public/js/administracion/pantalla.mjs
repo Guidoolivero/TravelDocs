@@ -184,7 +184,13 @@ async function traerPadron() {
     if (datos.legalName) document.getElementById('admin-bill-legalName').value = datos.legalName;
     if (datos.address) document.getElementById('admin-bill-address').value = datos.address;
     condition.value = datos.condition;
-    status.textContent = ('Datos traidos de ARCA. Revisalos antes de guardar. ' + datos.aviso).trim();
+    status.textContent = 'Datos traidos de ARCA. Revisalos antes de guardar.';
+    if (datos.aviso) {
+      const aviso = document.createElement('span');
+      aviso.className = 'padron-aviso';
+      aviso.textContent = datos.aviso;
+      status.append(' ', aviso);
+    }
   } catch (err) {
     status.textContent = err?.error || 'No se pudo consultar ARCA. Cargá los datos a mano.';
   } finally {

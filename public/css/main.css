@@ -751,6 +751,7 @@ textarea { resize: vertical; min-height: 72px; }
 .padron-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .padron-row input { flex: 1 1 160px; min-width: 0; }
 .padron-row .btn { white-space: nowrap; }
+.padron-aviso { color: var(--red); font-weight: 600; }
 #admin-bill-padron-status { display: block; margin-top: 6px; color: var(--text2); line-height: 1.5; }
 .billing-feedback { margin-bottom: 20px; padding: 16px; border-left: 3px solid var(--red); border-radius: 8px; background: var(--red-bg); color: var(--red); line-height: 1.5; }
 .billing-feedback:focus-visible,
