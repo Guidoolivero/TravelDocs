@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { trialDates } from '../../netlify/functions/lib/facturacion/billing.cjs';
+import { aplicarPadron } from '../../public/js/facturacion/billing-form.mjs';
 
 test('30 dias gratuitos desde alta ART, fin el 20 factura el mes siguiente', () => {
   assert.deepEqual(trialDates('2026-10-21'), { trialEndsOn: '2026-11-20', firstPeriod: '2026-12' });
@@ -188,4 +189,16 @@ test('SDK arma consumidor final sin CUIT como DocTipo 99', async () => {
   // Desde $10.000.000 ARCA exige identificar al consumidor final: lo frena el SDK antes de emitir.
   const caro = billingInvoice({ ...args, record: billingRecord({ condition: 'consumidor_final', currency: 'ARS', amount: 1000000000 }, null, '2020-01-15') });
   assert.throws(() => client.preview(caro), /must be identified/);
+});
+
+// Una agencia que cambia de condicion (ej. monotributo a RI en diciembre) no pierde
+// la que cargo el admin: el padron completa lo vacio y avisa si difiere.
+test('aplicarPadron completa razon social y domicilio y no pisa una condicion distinta', () => {
+  const padron = { legalName: 'AVALOS CARLA ANABELA', address: 'SAN MARTIN 123, PUERTO MADRYN, 9120 CHUBUT', condition: 'monotributo', errors: [] };
+  assert.deepEqual(aplicarPadron({ condition: '' }, padron), { legalName: padron.legalName, address: padron.address, condition: 'monotributo', aviso: '' });
+  const ri = aplicarPadron({ condition: 'responsable_inscripto' }, padron);
+  assert.equal(ri.condition, 'responsable_inscripto');
+  assert.match(ri.aviso, /ARCA informa Monotributista/);
+  assert.equal(aplicarPadron({ condition: 'monotributo' }, padron).aviso, '');
+  assert.match(aplicarPadron({ condition: '' }, { ...padron, condition: '', errors: ['Domicilio no resuelto'] }).aviso, /Domicilio no resuelto/);
 });

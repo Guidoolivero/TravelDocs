@@ -100,3 +100,34 @@ test('errores inesperados de facturacion llegan a Sentry; los esperados no', asy
   }
   assert.deepEqual(reportados.map(e => e.message), ['Firestore caido']);
 });
+
+// La ficha fiscal de una agencia se completa con la constancia de inscripcion (Padron A5).
+test('padron trae razon social, domicilio y condicion IVA desde ARCA por CUIT', async () => {
+  const consultas = [];
+  let respuesta = {
+    taxId: '27337174766', name: 'AVALOS CARLA ANABELA', condition: 'monotributo', taxes: [], activities: [], errors: [], raw: {},
+    address: { street: 'SAN MARTIN 123 Piso:2 Dpto:A', city: 'PUERTO MADRYN', postalCode: '9120', province: 'CHUBUT' },
+  };
+  const f = fixture({ env: {
+    BILLING_ENABLED: 'true', ARCA_ENVIRONMENT: 'test', BILLING_FIREBASE_PROJECT_ID: 'demo-billing',
+    FIREBASE_SERVICE_ACCOUNT: '{"project_id":"demo-billing"}', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8185',
+    ARCA_TAX_ID: '20123456786', ARCA_SALES_POINT: '1', ARCA_CERTIFICATE_PEM: 'ficticio', ARCA_PRIVATE_KEY_PEM: 'ficticia',
+    BILLING_ISSUER_JSON: JSON.stringify({ legalName: 'Prueba', address: 'Calle 1', grossIncome: 'Exento', activitiesStartDate: '2026-01-01' }),
+  }, modules: { facturas: { createArcaClient: () => ({ padron: { getTaxpayerDetails: async cuit => { consultas.push(cuit); return respuesta; } } }) } } });
+  assert.equal((await f.invoke('billing-api', { action: 'padron', taxId: '27337174766' }, 'user')).statusCode, 403);
+  assert.equal((await f.invoke('billing-api', { action: 'padron', taxId: '27337174767' })).statusCode, 400);
+  const ok = await f.invoke('billing-api', { action: 'padron', taxId: '27-33717476-6' });
+  assert.equal(ok.statusCode, 200);
+  assert.deepEqual(JSON.parse(ok.body), {
+    taxId: '27337174766', legalName: 'AVALOS CARLA ANABELA',
+    address: 'SAN MARTIN 123 Piso:2 Dpto:A, PUERTO MADRYN, 9120 CHUBUT', condition: 'monotributo', errors: [],
+  });
+  assert.deepEqual(consultas, ['27337174766']);
+  // Sin condicion clara (o no alcanzado, que el formulario no tiene) no se sugiere ninguna.
+  respuesta = { ...respuesta, condition: 'no_alcanzado', errors: ['Domicilio no resuelto'] };
+  const sinCondicion = JSON.parse((await f.invoke('billing-api', { action: 'padron', taxId: '27337174766' })).body);
+  assert.equal(sinCondicion.condition, '');
+  assert.deepEqual(sinCondicion.errors, ['Domicilio no resuelto']);
+  respuesta = null;
+  assert.equal((await f.invoke('billing-api', { action: 'padron', taxId: '27337174766' })).statusCode, 404);
+});

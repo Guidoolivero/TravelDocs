@@ -1,5 +1,5 @@
 import { adminFetch } from './api.mjs';
-import { parsePrice, SALE_CONDITIONS } from '../facturacion/billing-form.mjs';
+import { parsePrice, SALE_CONDITIONS, aplicarPadron } from '../facturacion/billing-form.mjs';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { emailjsParaAlta } from '../tenant.js';
 import { fmtDate, escStr } from '../compartido/utils.js';
@@ -171,8 +171,30 @@ async function handleAgencyLogoChange(e) {
   }
 }
 
+async function traerPadron() {
+  const btn = document.getElementById('admin-bill-padron');
+  const status = document.getElementById('admin-bill-padron-status');
+  const taxId = document.getElementById('admin-bill-taxId').value.trim();
+  if (!taxId) { status.textContent = 'Cargá el CUIT primero.'; return; }
+  btn.disabled = true; status.textContent = 'Consultando ARCA...';
+  try {
+    const padron = await adminFetch('', { method: 'POST', body: JSON.stringify({ action: 'padron', taxId }) }, 'billing-api');
+    const condition = document.getElementById('admin-bill-condition');
+    const datos = aplicarPadron({ condition: condition.value }, padron);
+    if (datos.legalName) document.getElementById('admin-bill-legalName').value = datos.legalName;
+    if (datos.address) document.getElementById('admin-bill-address').value = datos.address;
+    condition.value = datos.condition;
+    status.textContent = ('Datos traidos de ARCA. Revisalos antes de guardar. ' + datos.aviso).trim();
+  } catch (err) {
+    status.textContent = err?.error || 'No se pudo consultar ARCA. Cargá los datos a mano.';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function fillAgencyForm(a) {
   document.getElementById('admin-billing-fields').open = false;
+  document.getElementById('admin-bill-padron-status').textContent = '';
   document.getElementById('admin-bill-saleCondition').value = a.billing?.saleCondition || SALE_CONDITIONS[0];
   for (const key of ['taxId', 'legalName', 'address', 'condition', 'currency']) {
     document.getElementById('admin-bill-' + key).value = a.billing?.[key] || '';
@@ -645,6 +667,7 @@ function renderUsageTable(json, range) {
   }
 }
 export function initAdministracion() {
+  document.getElementById('admin-bill-padron')?.addEventListener('click', traerPadron);
   document.getElementById('admin-bill-saleCondition').innerHTML = SALE_CONDITIONS.map(value => `<option>${esc(value)}</option>`).join('');
 
   window.renderAdmin = function () {

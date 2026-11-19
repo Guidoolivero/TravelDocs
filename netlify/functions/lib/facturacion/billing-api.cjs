@@ -6,6 +6,7 @@ const { createBillingService } = require('./billing-service.cjs');
 const { billingErrorText } = require('../../../../public/js/facturacion/billing-feedback.mjs');
 const { auditBilling } = require('./billing-audit.cjs');
 const { reportError } = require('../../_sentry.cjs');
+const { validateBillingProfile } = require('./billing.cjs');
 
 const reply = (statusCode, body) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 exports.handler = async event => {
@@ -16,9 +17,11 @@ exports.handler = async event => {
     if (event.httpMethod !== 'POST') return reply(405, { error: 'Usar POST.' });
     let body;
     try { body = JSON.parse(event.body || '{}'); } catch { return reply(400, { error: 'JSON invalido.' }); }
-    if (!body || !['preview', 'issue', 'recover', 'retry', 'get', 'list'].includes(body.action)) return reply(400, { error: 'Accion invalida.' });
+    if (!body || !['preview', 'issue', 'recover', 'retry', 'get', 'list', 'padron'].includes(body.action)) return reply(400, { error: 'Accion invalida.' });
     if (body.action === 'preview' && !/^[a-z0-9-]{3,40}$/.test(body.agencyId || '')) return reply(400, { error: 'Agencia invalida.' });
     if (['issue', 'recover', 'retry', 'get'].includes(body.action) && !/^[a-f0-9]{64}$/.test(body.invoiceId || '')) return reply(400, { error: 'Factura invalida.' });
+    if (body.action === 'padron' && !/^[\d-]{11,13}$/.test(body.taxId || '')) return reply(400, { error: 'CUIT invalido.' });
+    const padronTaxId = body.action === 'padron' ? validateBillingProfile({ taxId: body.taxId }).taxId : null;
     initAdmin();
     const db = admin.firestore();
     if (body.action === 'list') {
@@ -46,6 +49,18 @@ exports.handler = async event => {
     // facturas es solo ESM y Lambda no permite require() de ESM.
     const { createArcaClient } = await import('facturas');
     const client = createArcaClient({ taxId: issuer.taxId, certificatePem: credentials.certificatePem, privateKeyPem: credentials.privateKeyPem, environment, store, timeout: 15000, retries: 0, logger: { disabled: true } });
+    if (padronTaxId) {
+      // Constancia de inscripcion (Padron A5): requiere el certificado asociado a ws_sr_constancia_inscripcion.
+      const found = await client.padron.getTaxpayerDetails(padronTaxId);
+      if (!found) return reply(404, { error: 'ARCA no tiene datos para ese CUIT.' });
+      const a = found.address || {};
+      return reply(200, {
+        taxId: found.taxId, legalName: found.name || '',
+        address: [a.street, a.city, [a.postalCode, a.province].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+        condition: ['responsable_inscripto', 'monotributo', 'exento', 'consumidor_final'].includes(found.condition) ? found.condition : '',
+        errors: found.errors || [],
+      });
+    }
     const service = createBillingService({ db, client, store, issuer, salesPoint, abortSignal, environment,
       today: () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date()) });
     const fiscalAction = ['issue', 'recover', 'retry'].includes(body.action);
